@@ -11,7 +11,7 @@ if os.getenv("IMPROVE_DATA_DIR") is None:
 os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
 
 from pathlib import Path
-from typing import List, Set, TypeAlias
+from typing import List, Set, NewType, Dict, Optional # use NewType becuase TypeAlias is available from python 3.10
 
 import torch
 
@@ -22,7 +22,8 @@ str2bool = candle.str2bool
 finalize_parameters = candle.finalize_parameters
 
 
-DataPathDict: TypeAlias = dict[str, Path]
+# DataPathDict: TypeAlias = dict[str, Path]
+DataPathDict = NewType("DataPathDict", Dict[str, Path])
 
 
 # Parameters that are relevant to all IMPROVE models
