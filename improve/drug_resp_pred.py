@@ -8,8 +8,7 @@ from sklearn.preprocessing import StandardScaler, MaxAbsScaler, MinMaxScaler, Ro
 
 # from improve import framework as frm
 from . import framework as frm
-# from .frm import imp_glob
-from .framework import imp_glob
+# from .framework import imp_glob  ## ap; removed
 
 # TODO: omic data files have different mappings for multi-level index mapping.
 # level_map_cell_data = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
@@ -97,6 +96,25 @@ def common_elements(list1: List, list2: List, verbose: bool=False) -> List:
         print("Elements in common count: ", len(in_common))
     return in_common
 
+
+# ==============================================================
+# Omic feature loaders
+# ==============================================================
+
+"""
+Omics data files are multi-level tables with several column types (generally 3
+or 4), each contains gene names using a different gene identifier system:
+Entrez ID, Gene Symbol, Ensembl ID, TSS
+
+The column levels are not organized in the same order across the different
+omic files.
+
+The level_map dict, in each loader function, encodes the column level and the
+corresponding identifier systems.
+
+For example, in the copy number file the level_map is:
+level_map = {"Entrez":0, "Gene_Symbol": 1, "Ensembl": 2}
+"""
 
 def set_col_names_in_multilevel_dataframe(
     df: pd.DataFrame,
@@ -259,6 +277,203 @@ def load_omics_data(params: Dict,
     return df
 
 
+def load_copy_number_data(
+        gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
+        sep: str = "\t",
+        verbose: bool = True) -> pd.DataFrame:
+    """
+    Returns copy number data.
+
+    Args:
+        gene_system_identifier (str or list of str): gene identifier system to use
+            options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
+                     combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+        sep: Separator used in data file.
+
+    Returns:
+        pd.DataFrame: dataframe with the omic data
+    """
+    # level_map encodes the relationship btw the column and gene identifier system
+    # omics_type = "copy_number"
+    level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+    header = [i for i in range(len(level_map))]
+
+    fname = "cancer_copy_number.tsv"  # omics file name
+    # fpath = imp_glob.X_DATA_DIR / fname
+    fpath = params["x_data_path"] / fname  # create path for omics file
+    if fpath.exists() == False:
+        raise Exception(f"ERROR ! {fpath} not found.\n")
+
+    header = [i for i in range(len(level_map))]
+    df = pd.read_csv(fpath, sep=sep, index_col=0, header=header)
+    df.index.name = canc_col_name  # assign index name
+    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+    df = df.reset_index()
+
+    df = pd.read_csv(fpath, sep=sep, index_col=0, header=header)
+    df.index.name = improve_globals.canc_col_name  # assign index name
+    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+    # Test the func
+    # d0 = set_col_names_in_multilevel_dataframe(df, "all")
+    # d1 = set_col_names_in_multilevel_dataframe(df, "Ensembl")
+    # d2 = set_col_names_in_multilevel_dataframe(df, ["Ensembl"])
+    # d3 = set_col_names_in_multilevel_dataframe(df, ["Entrez", "Gene_Symbol", "Ensembl"])
+    # d4 = set_col_names_in_multilevel_dataframe(df, ["Entrez", "Ensembl"])
+    # d5 = set_col_names_in_multilevel_dataframe(df, ["Blah", "Ensembl"])
+    if verbose:
+        print(f"Copy number data: {df.shape}")
+        # print(df.dtypes)
+        # print(df.dtypes.value_counts())
+    return df
+
+
+def load_discretized_copy_number_data(
+        gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
+        sep: str = "\t",
+        verbose: bool = True) -> pd.DataFrame:
+    """
+    Returns discretized copy number data.
+
+    Args:
+        gene_system_identifier (str or list of str): gene identifier system to use
+            options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
+                     combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+
+    Returns:
+        pd.DataFrame: dataframe with the omic data
+    """
+    # level_map encodes the relationship btw the column and gene identifier system
+    level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+    header = [i for i in range(len(level_map))]
+
+    df = pd.read_csv(improve_globals.discretized_copy_number_file_path, sep=sep, index_col=0, header=header)
+
+    df.index.name = improve_globals.canc_col_name  # assign index name
+    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+    if verbose:
+        print(f"Discretized copy number data: {df.shape}")
+
+    return df
+
+
+def load_dna_methylation_data(
+        gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
+        sep: str = "\t",
+        verbose: bool = True) -> pd.DataFrame:
+    """
+    Returns methylation data.
+
+    Args:
+        gene_system_identifier (str or list of str): gene identifier system to use
+            options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
+                     combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+
+    Returns:
+        pd.DataFrame: dataframe with the omic data
+    """
+    level_map = {"Ensembl": 2, "Entrez": 1, "Gene_Symbol": 3, "TSS": 0}
+    header = [i for i in range(len(level_map))]
+
+    df = pd.read_csv(improve_globals.dna_methylation_file_path, sep=sep, index_col=0, header=header)
+
+    df.index.name = improve_globals.canc_col_name  # assign index name
+    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+    if verbose:
+        print(f"DNA methylation data: {df.shape}")
+        # print(df.dtypes)  # TODO: many column are of type 'object'
+        # print(df.dtypes.value_counts())
+    return df
+
+
+def load_gene_expression_data(
+        gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
+        sep: str = "\t",
+        verbose: bool = True) -> pd.DataFrame:
+    """
+    Returns gene expression data.
+
+    Args:
+        gene_system_identifier (str or list of str): gene identifier system to use
+            options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
+                     combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+
+    Returns:
+        pd.DataFrame: dataframe with the omic data
+    """
+    # level_map encodes the relationship btw the column and gene identifier system
+    level_map = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
+    header = [i for i in range(len(level_map))]
+
+    df = pd.read_csv(improve_globals.gene_expression_file_path, sep=sep, index_col=0, header=header)
+
+    df.index.name = improve_globals.canc_col_name  # assign index name
+    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+    if verbose:
+        print(f"Gene expression data: {df.shape}")
+    return df
+
+
+def load_mirna_expression_data(
+        gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
+        sep: str = "\t",
+        verbose: bool = True) -> pd.DataFrame:
+    # TODO
+    raise NotImplementedError("The function is not implemeted yet.")
+    return None
+
+
+def load_mutation_count_data(
+        gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
+        sep: str = "\t",
+        verbose: bool = True) -> pd.DataFrame:
+    """
+    Returns mutation count data.
+
+    Args:
+        gene_system_identifier (str or list of str): gene identifier system to use
+            options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
+                     combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+
+    Returns:
+        pd.DataFrame: dataframe with the omic data
+    """
+    # level_map encodes the relationship btw the column and gene identifier system
+    level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+    header = [i for i in range(len(level_map))]
+
+    df = pd.read_csv(improve_globals.mutation_count_file_path, sep=sep, index_col=0, header=header)
+
+    df.index.name = improve_globals.canc_col_name  # assign index name
+    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+    if verbose:
+        print(f"Mutation count data: {df.shape}")
+
+    return df
+
+
+def load_mutation_data(
+        gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
+        sep: str = "\t",
+        verbose: bool = True) -> pd.DataFrame:
+    # TODO
+    raise NotImplementedError("The function is not implemeted yet.")
+    return None
+
+
+def load_rppa_data(
+        gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
+        sep: str = "\t",
+        verbose: bool = True) -> pd.DataFrame:
+    # TODO
+    raise NotImplementedError("The function is not implemeted yet.")
+    return None
+
+
+# ==============================================================
+# Drug feature loaders
+# ==============================================================
+
+
 def load_smiles_data(
         params: dict,
         sep: str = "\t",
@@ -358,6 +573,11 @@ def load_drug_data(fname: Union[str, Path, List[str], List[Path]] = ["drug_SMILE
     return df
 
 
+# ==============================================================
+# Drug response loaders
+# ==============================================================
+
+
 # source: str,
 # # split: Union[int, None] = None,
 # # split_type: Union[str, List[str], None] = None,
@@ -366,8 +586,7 @@ def load_drug_data(fname: Union[str, Path, List[str], List[Path]] = ["drug_SMILE
 # sep: str = "\t",
 # verbose: bool = True) -> pd.DataFrame:
 
-
-# TODO: consider moving to ./improve/drug_response_prediction
+# moved from graphdrp_preprocess_improve.py
 def load_response_data(
         y_data_fpath,
         # inpath_dict: frm.DataPathDict,
