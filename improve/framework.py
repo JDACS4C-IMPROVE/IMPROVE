@@ -38,10 +38,12 @@ improve_basic_conf = [
     {"name": "pred_col_name_suffix",
      "type": str,
      "default": "_pred",
-     "help": "Suffix to add to column name in data framework to identify predictions \
-              made by the model"
+     "help": "Suffix to add to a column name in the y data file to identify \
+             predictions made by the model (e.g., if y_col_name is 'auc', then \
+             a new column that stores model predictions will be added to the y \
+             data file and will be called 'auc_pred')."
     },
-    {"name": "model_outdir",
+    {"name": "model_outdir",  # TODO: should this be in improve_train_conf?
      "type": str,
      "default": "./out/",
      "help": "Path to save model results.",
@@ -55,39 +57,105 @@ improve_preprocess_conf = [
      "default": False,
      "help": "Flag to indicate if downloading from FTP site."
     },
+    ### TODO: added (start)
+    {"name": "raw_data_dir_name",
+     "type": str,
+     "default": "raw_data",
+     "help": "Data dir name that stores the raw data, including x data, y data, and splits."
+    },
+    {"name": "x_data_dir_name",
+     "type": str,
+     "default": "x_data",
+     "help": "Dir name that contains the files with features data (x data)."
+    },
+    {"name": "y_data_dir_name",
+     "type": str,
+     "default": "y_data",
+     "help": "Dir name that contains the files with target data (y data)."
+    },
+    {"name": "splits_dir_name",
+     "type": str,
+     "default": "splits",
+     "help": "Dir name that contains files that store split ids of the y data file."
+    },
+    {"name": "train_split_file_name",
+     "default": "train_split.txt",  # TODO: what should be the default?
+     "type": str,
+     # "nargs": "+",
+     "required": True,
+     "help": "The path to the file that contains the split ids (e.g., \
+             'split_0_train_id', 'split_0_train_size_1024').",
+    },
+    {"name": "val_split_file_name",
+     "default": "val_split.txt",  # TODO: what should be the default?
+     "type": str,
+     # "nargs": "+",
+     "required": True,
+     "help": "The path to the file that contains the split ids (e.g., 'split_0_val_id').",
+    },
+    {"name": "test_split_file_name",
+     "default": "test_split.txt",  # TODO: what should be the default?
+     "type": str,
+     # "nargs": "+",
+     "required": True,
+     "help": "The path to the file that contains the split ids (e.g., 'split_0_test_id').",
+    },
+    {"name": "y_file_file",
+     "type": str,
+     "default": "y_data.tsv", # "response.tsv",
+     "help": "File with target variable data.",
+    },
+    {"name": "ml_data_outdir",
+     "type": str,
+     "default": "ml_data",
+     "help": "Dir name to save ML data (data files that can be fet to the prediction model).",
+    },
+    ### TODO: added (end)
 ]
 
 # Parameters that are relevant to all IMPROVE training scripts
 improve_train_conf = [
-    {"name": "y_data_suffix",
+    {"name": "y_data_suffix",  # TODO: what's that?
       "type": str,
       "default": "y_data",
-      "help": "Suffix to compose file name for storing true y values."},
-    {"name": "data_suffix",
+      "help": "Suffix to compose file name for storing true y values."
+    },
+    {"name": "data_suffix",  # TODO: what's that?
       "type": str,
       "default": "data",
-      "help": "Suffix to compose file name for storing features (x values)."},
-    {"name": "model_params",
+      "help": "Suffix to compose file name for storing features (x values)."
+    },
+    {"name": "model_params",  # TODO: consider renaming this arg into "model_file_name"
      "type": str,
      "default": "model.pt",
-     "help": "Filename to store trained model parameters."},
+     "help": "Filename to store trained model."
+    },
+    ### TODO: added (start)
+    {"name": "model_file_suffix",  # TODO: new; Should this be a model-specific arg?
+     "type": str,
+     "default": ".pt",
+     "help": "Suffix of the filename to store trained model."
+    },
+    ### TODO: added (end)
     {"name": "train_ml_data_dir",
      "action": "store",
      "type": str,
-     "help": "Datadir where train data is stored."},
+     "help": "Datadir where train data is stored."
+    },
     {"name": "val_ml_data_dir",
      "action": "store",
      "type": str,
-     "help": "Datadir where val data is stored."},
-    {"name": "train_data_processed",
+     "help": "Datadir where val data is stored."
+    },
+    {"name": "train_data_processed",  # TODO: is this train_data.pt?
      "action": "store",
      "type": str,
      "help": "Name of pytorch processed train data file."},
-    {"name": "val_data_processed",
+    {"name": "val_data_processed",  # TODO: is this val_data.pt?
      "action": "store",
      "type": str,
      "help": "Name of pytorch processed val data file."},
-    {"name": "model_eval_suffix",
+    {"name": "model_eval_suffix",  # TODO: what's that?
      "type": str,
      "default": "predicted",
      "help": "Suffix to use for name of file to store inference results."},
@@ -114,7 +182,7 @@ improve_test_conf = [
      "type": str,
      "help": "Datadir where test data is stored."
     },
-    {"name": "test_data_processed",
+    {"name": "test_data_processed",  # TODO: is this test_data.pt?
      "action": "store",
      "type": str,
      "help": "Name of pytorch processed test data file."
@@ -136,6 +204,40 @@ frm_additional_definitions = improve_basic_conf + \
 
 # Required
 frm_required = []
+
+
+def build_paths(params):
+    """ Build paths for raw_data, x_data, y_data. """
+    mainpath = Path(os.environ["IMPROVE_DATA_DIR"])
+    if mainpath.exists() == False:
+        raise Exception(f"ERROR ! {mainpath} not found.\n")
+
+    raw_data_path = mainpath / params["raw_data_dir"]
+    params["raw_data_path"] = raw_data_path
+    if raw_data_path.exists() == False:
+        raise Exception(f"ERROR ! {raw_data_path} not found.\n")
+
+    x_data_path = raw_data_path / params["x_data_dir"]
+    params["x_data_path"] = x_data_path
+    if x_data_path.exists() == False:
+        raise Exception(f"ERROR ! {x_data_path} not found.\n")
+
+    y_data_path = raw_data_path / params["y_data_dir"]
+    params["y_data_path"] = y_data_path
+    if y_data_path.exists() == False:
+        raise Exception(f"ERROR ! {y_data_path} not found.\n")
+
+    splits_path = raw_data_path / params["splits_dir"]
+    params["splits_path"] = splits_path
+    if splits_path.exists() == False:
+        raise Exception(f"ERROR ! {splits_path} not found.\n")
+
+    _path = raw_data_path / params["splits_dir"]
+    params["splits_path"] = splits_path
+    if splits_path.exists() == False:
+        raise Exception(f"ERROR ! {splits_path} not found.\n")
+    return params
+
 
 class ImproveBenchmark(candle.Benchmark):
     """ Benchmark for Improve Models. """
