@@ -58,27 +58,27 @@ improve_preprocess_conf = [
      "help": "Flag to indicate if downloading from FTP site."
     },
     ### TODO: added (start)
-    {"name": "raw_data_dir_name",
+    {"name": "raw_data_dir",
      "type": str,
      "default": "raw_data",
      "help": "Data dir name that stores the raw data, including x data, y data, and splits."
     },
-    {"name": "x_data_dir_name",
+    {"name": "x_data_dir",
      "type": str,
      "default": "x_data",
      "help": "Dir name that contains the files with features data (x data)."
     },
-    {"name": "y_data_dir_name",
+    {"name": "y_data_dir",
      "type": str,
      "default": "y_data",
      "help": "Dir name that contains the files with target data (y data)."
     },
-    {"name": "splits_dir_name",
+    {"name": "splits_dir",
      "type": str,
      "default": "splits",
      "help": "Dir name that contains files that store split ids of the y data file."
     },
-    {"name": "train_split_file_name",
+    {"name": "train_split_file",
      "default": "train_split.txt",  # TODO: what should be the default?
      "type": str,
      # "nargs": "+",
@@ -86,14 +86,14 @@ improve_preprocess_conf = [
      "help": "The path to the file that contains the split ids (e.g., \
              'split_0_train_id', 'split_0_train_size_1024').",
     },
-    {"name": "val_split_file_name",
+    {"name": "val_split_file",
      "default": "val_split.txt",  # TODO: what should be the default?
      "type": str,
      # "nargs": "+",
      "required": True,
      "help": "The path to the file that contains the split ids (e.g., 'split_0_val_id').",
     },
-    {"name": "test_split_file_name",
+    {"name": "test_split_file",
      "default": "test_split.txt",  # TODO: what should be the default?
      "type": str,
      # "nargs": "+",
@@ -228,11 +228,6 @@ def build_paths(params):
         raise Exception(f"ERROR ! {y_data_path} not found.\n")
 
     splits_path = raw_data_path / params["splits_dir"]
-    params["splits_path"] = splits_path
-    if splits_path.exists() == False:
-        raise Exception(f"ERROR ! {splits_path} not found.\n")
-
-    _path = raw_data_path / params["splits_dir"]
     params["splits_path"] = splits_path
     if splits_path.exists() == False:
         raise Exception(f"ERROR ! {splits_path} not found.\n")
