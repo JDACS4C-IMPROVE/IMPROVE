@@ -23,7 +23,6 @@ miRNA_expression_fname = "cancer_miRNA_expression.tsv"  # cancer feature
 mutation_count_fname = "cancer_mutation_count.tsv"  # cancer feature
 mutation_fname = "cancer_mutation.tsv"  # cancer feature
 rppa_fname = "cancer_RPPA.tsv"  # cancer feature
-lincs_fname = "landmark_genes"
 
 # Drug features file names
 smiles_fname = "drug_SMILES.tsv"  # drug feature
@@ -164,6 +163,113 @@ def set_col_names_in_multilevel_dataframe(
 # TODO(done). Renamed func to load_cell_data()
 # def load_omics_data(fname: Union[Path, str],
 # def load_omics_data(fname: Union[str, Path, List[str], List[Path]] = ["cancer_gene_expression.tsv"],
+
+class OmicsLoader():
+    """
+    Example:
+        from improve import drug_resp_pred as drp
+        omics_loader = drp.OmicsLoader(params)
+        print(omics_loader)
+        print(dir(omics_loader))
+        ge = omics_loader["cancer_gene_expression.tsv"]
+    """
+    def __init__(self,
+                 params: Dict,  # improve params
+                 sep: str = "\t",
+                 verbose: bool = True):
+        """ ... """
+        self.copy_number_fname = "cancer_copy_number.tsv"
+        self.discretized_copy_number_fname = "cancer_discretized_copy_number.tsv"
+        self.dna_methylation_fname = "cancer_DNA_methylation.tsv"
+        self.gene_expression_fname = "cancer_gene_expression.tsv"
+        self.miRNA_expression_fname = "cancer_miRNA_expression.tsv"
+        self.mutation_count_fname = "cancer_mutation_count.tsv"
+        self.mutation_fname = "cancer_mutation.tsv"
+        self.rppa_fname = "cancer_RPPA.tsv"
+        self.known_file_names = [self.copy_number_fname,
+                                 self.discretized_copy_number_fname,
+                                 self.dna_methylation_fname,
+                                 self.gene_expression_fname,
+                                 self.miRNA_expression_fname,
+                                 self.mutation_count_fname,
+                                 self.mutation_fname,
+                                 self.rppa_fname]
+
+        self.sep = sep
+        self.inp = params["x_data_canc_files"]
+        self.x_data_path = params["x_data_path"]
+        self.canc_col_name = params["canc_col_name"]
+        self.dfs = {}
+
+        if verbose:
+            print(f"x_data_canc_files: {params['x_data_canc_files']}")
+            print(f"canc_cole_name: {params['canc_col_name']}")
+
+        self.inp_fnames = []
+        for i in self.inp:
+            assert len(i) > 0 and len(i) < 3, f"Inner lists must contain one or two items, but {i} is {len(i)}"
+            self.inp_fnames.append(i[0])
+        # print(self.inp_fnames)
+
+        self.load_all_omics_data()
+
+    def __repr__(self):
+        if self.dfs:
+            return "Loaded data\n" + "\n".join([f"{fname}: {df.shape}" for fname, df in self.dfs.items()])
+        else:
+            return "No data files were loaded."
+
+    @staticmethod
+    def check_path(fpath):
+        if fpath.exists() == False:
+            raise Exception(f"ERROR ! {fpath} not found.\n")
+
+    def load_all_omics_data(self):
+        """ ... """
+        for i in self.inp:
+            fname = i[0]
+            if len(i) > 1:
+                gene_system_identifier = i[1]
+            else:
+                gene_system_identifier = "all"
+
+            if fname == self.copy_number_fname:
+                level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+            elif fname == self.discretized_copy_number_fname: 
+                level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+            elif fname == self.dna_methylation_fname: 
+                level_map = {"Ensembl": 2, "Entrez": 1, "Gene_Symbol": 3, "TSS": 0}
+            elif fname == self.gene_expression_fname: 
+                level_map = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
+            elif fname == self.miRNA_expression_fname: 
+                raise NotImplementedError(f"{fname} not implemeted yet.")
+            elif fname == self.mutation_count_fname: 
+                level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+            elif fname == self.mutation_fname: 
+                raise NotImplementedError(f"{fname} not implemeted yet.")
+            elif fname == self.rppa_fname: 
+                raise NotImplementedError(f"{fname} not implemeted yet.")
+            else:
+                raise NotImplementedError(f"Option '{fname}' not recognized.")
+
+            # fpath = imp_glob.X_DATA_DIR / fname
+            fpath = self.x_data_path / fname
+            OmicsLoader.check_path(fpath)
+
+            header = [i for i in range(len(level_map))]
+            df = pd.read_csv(fpath, sep=self.sep, index_col=0, header=header)
+            df.index.name = self.canc_col_name  # assign index name
+            df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+            df = df.reset_index()
+            self.dfs[fname] = df
+
+        # import ipdb; ipdb.set_trace()
+        # print(self.dfs[self.copy_number_fname].iloc[:4, :4])
+        # print(self.dfs[self.gene_expression_fname].iloc[:4, :4])
+        # print(self.dfs[self.dna_methylation_fname].iloc[:4, :4])
+        # print("done")
+
+
 def load_omics_data(params: Dict,
                     omics_type: str = "gene_expression",
                     canc_col_name: str = "improve_sample_id",
@@ -220,30 +326,38 @@ def load_omics_data(params: Dict,
     if omics_type == "copy_number":
         fname = "cancer_copy_number.tsv"
         level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+
     elif omics_type == "discretized_copy_number":
         fname = "cancer_discretized_copy_number.tsv"
         level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+
     elif omics_type == "methylation":
         fname = "cancer_DNA_methylation.tsv"
         level_map = {"Ensembl": 2, "Entrez": 1, "Gene_Symbol": 3, "TSS": 0}
+
     if omics_type == "gene_expression":
         fname = "cancer_gene_expression.tsv"
         level_map = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
+
     elif omics_type == "mirna_expression":
         # level_map = TODO
         miRNA_expression_fname = "cancer_miRNA_expression.tsv"  # cancer feature
         raise NotImplementedError(f"{omics_type} not implemeted yet.")
+
     elif omics_type == "mutation_count":
         fname = "cancer_mutation_count.tsv"
         level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+
     elif omics_type == "mutation":
         # level_map = TODO
         fname = "cancer_mutation.tsv"
         raise NotImplementedError(f"{omics_type} not implemeted yet.")
+
     elif omics_type == "rppa":
         # level_map = TODO
         fname = "cancer_RPPA.tsv"
         raise NotImplementedError(f"{omics_type} not implemeted yet.")
+
     else:
         raise NotImplementedError(f"Option '{omics_type}' not recognized.")
 
@@ -258,17 +372,6 @@ def load_omics_data(params: Dict,
     df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
     df = df.reset_index()
 
-    # TODO. (Yitan, Priyanka) For which data files does the lincs apply?
-    if use_lincs and omics_type == "gene_expression":
-        with open(imp_glob.X_DATA_DIR/lincs_fname) as f:
-            genes = [str(line.rstrip()) for line in f]
-        # genes = ["ge_" + str(g) for g in genes]  # This is for our legacy data
-        # print("Genes count: {}".format(len(set(genes).intersection(set(df.columns[1:])))))
-        # genes = list(set(genes).intersection(set(df.columns[1:])))
-        genes = common_elements(genes, df.columns[1:])
-        cols = [canc_col_name] + genes
-        df = df[cols]
-
     if verbose:
         print(f"Omics type: {omics_type}")
         print(f"Data read: {fname}")
@@ -277,7 +380,23 @@ def load_omics_data(params: Dict,
     return df
 
 
+def load_and_omics(fpath: str,
+                   level_map: Dict,
+                   sep: str = "\t",
+                   canc_col_name: str = "improve_sample_id",
+                   gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
+                   ):
+    """ Load omics data. """
+    header = [i for i in range(len(level_map))]
+    df = pd.read_csv(fpath, sep=sep, index_col=0, header=header)
+    df.index.name = canc_col_name  # assign index name
+    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+    df = df.reset_index()
+    return df
+
+
 def load_copy_number_data(
+        canc_col_name: str = "improve_sample_id",
         gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
         sep: str = "\t",
         verbose: bool = True) -> pd.DataFrame:
@@ -295,31 +414,21 @@ def load_copy_number_data(
     """
     # level_map encodes the relationship btw the column and gene identifier system
     # omics_type = "copy_number"
-    level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
-    header = [i for i in range(len(level_map))]
-
     fname = "cancer_copy_number.tsv"  # omics file name
+    level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+
+    # Create path for the omics file
     # fpath = imp_glob.X_DATA_DIR / fname
-    fpath = params["x_data_path"] / fname  # create path for omics file
+    fpath = params["x_data_path"] / fname  
     if fpath.exists() == False:
         raise Exception(f"ERROR ! {fpath} not found.\n")
 
-    header = [i for i in range(len(level_map))]
-    df = pd.read_csv(fpath, sep=sep, index_col=0, header=header)
-    df.index.name = canc_col_name  # assign index name
-    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
-    df = df.reset_index()
+    df = load_and_map_omics(fpath=fpath,
+                            level_map=level_map,
+                            sep=sep,
+                            canc_col_name=canc_col_name,
+                            gene_system_identifier=gene_system_identifier)
 
-    df = pd.read_csv(fpath, sep=sep, index_col=0, header=header)
-    df.index.name = improve_globals.canc_col_name  # assign index name
-    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
-    # Test the func
-    # d0 = set_col_names_in_multilevel_dataframe(df, "all")
-    # d1 = set_col_names_in_multilevel_dataframe(df, "Ensembl")
-    # d2 = set_col_names_in_multilevel_dataframe(df, ["Ensembl"])
-    # d3 = set_col_names_in_multilevel_dataframe(df, ["Entrez", "Gene_Symbol", "Ensembl"])
-    # d4 = set_col_names_in_multilevel_dataframe(df, ["Entrez", "Ensembl"])
-    # d5 = set_col_names_in_multilevel_dataframe(df, ["Blah", "Ensembl"])
     if verbose:
         print(f"Copy number data: {df.shape}")
         # print(df.dtypes)
@@ -338,21 +447,28 @@ def load_discretized_copy_number_data(
         gene_system_identifier (str or list of str): gene identifier system to use
             options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
                      combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+        sep: Separator used in data file.
 
     Returns:
         pd.DataFrame: dataframe with the omic data
     """
-    # level_map encodes the relationship btw the column and gene identifier system
+    # omics_type = "discretized_copy_number"
+    fname = "cancer_discretized_copy_number.tsv"
     level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+
+    # Create path for omics file
+    fpath = params["x_data_path"] / fname  
+    if fpath.exists() == False:
+        raise Exception(f"ERROR ! {fpath} not found.\n")
+
     header = [i for i in range(len(level_map))]
-
-    df = pd.read_csv(improve_globals.discretized_copy_number_file_path, sep=sep, index_col=0, header=header)
-
-    df.index.name = improve_globals.canc_col_name  # assign index name
+    df = pd.read_csv(fpath, sep=sep, index_col=0, header=header)
+    df.index.name = canc_col_name  # assign index name
     df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+    df = df.reset_index()
+
     if verbose:
         print(f"Discretized copy number data: {df.shape}")
-
     return df
 
 
@@ -367,6 +483,7 @@ def load_dna_methylation_data(
         gene_system_identifier (str or list of str): gene identifier system to use
             options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
                      combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+        sep: Separator used in data file.
 
     Returns:
         pd.DataFrame: dataframe with the omic data
@@ -386,6 +503,7 @@ def load_dna_methylation_data(
 
 
 def load_gene_expression_data(
+        canc_col_name: str = "improve_sample_id",
         gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
         sep: str = "\t",
         verbose: bool = True) -> pd.DataFrame:
@@ -396,18 +514,28 @@ def load_gene_expression_data(
         gene_system_identifier (str or list of str): gene identifier system to use
             options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
                      combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+        sep: Separator used in data file.
 
     Returns:
         pd.DataFrame: dataframe with the omic data
     """
     # level_map encodes the relationship btw the column and gene identifier system
+    # omics_type = "gene_expression"
+    fname = "cancer_gene_expression.tsv"
     level_map = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
-    header = [i for i in range(len(level_map))]
 
-    df = pd.read_csv(improve_globals.gene_expression_file_path, sep=sep, index_col=0, header=header)
+    # Create path for the omics file
+    # fpath = imp_glob.X_DATA_DIR / fname
+    fpath = params["x_data_path"] / fname  
+    if fpath.exists() == False:
+        raise Exception(f"ERROR ! {fpath} not found.\n")
 
-    df.index.name = improve_globals.canc_col_name  # assign index name
-    df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+    df = load_and_map_omics(fpath=fpath,
+                            level_map=level_map,
+                            sep=sep,
+                            canc_col_name=canc_col_name,
+                            gene_system_identifier=gene_system_identifier)
+
     if verbose:
         print(f"Gene expression data: {df.shape}")
     return df
@@ -417,6 +545,18 @@ def load_mirna_expression_data(
         gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
         sep: str = "\t",
         verbose: bool = True) -> pd.DataFrame:
+    """
+    Returns miRNA expression data.
+
+    Args:
+        gene_system_identifier (str or list of str): gene identifier system to use
+            options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
+                     combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+        sep: Separator used in data file.
+
+    Returns:
+        pd.DataFrame: dataframe with the omic data
+    """
     # TODO
     raise NotImplementedError("The function is not implemeted yet.")
     return None
@@ -433,6 +573,7 @@ def load_mutation_count_data(
         gene_system_identifier (str or list of str): gene identifier system to use
             options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
                      combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+        sep: Separator used in data file.
 
     Returns:
         pd.DataFrame: dataframe with the omic data
@@ -455,6 +596,18 @@ def load_mutation_data(
         gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
         sep: str = "\t",
         verbose: bool = True) -> pd.DataFrame:
+    """
+    Returns mutation data.
+
+    Args:
+        gene_system_identifier (str or list of str): gene identifier system to use
+            options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
+                     combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+        sep: Separator used in data file.
+
+    Returns:
+        pd.DataFrame: dataframe with the omic data
+    """
     # TODO
     raise NotImplementedError("The function is not implemeted yet.")
     return None
@@ -464,6 +617,18 @@ def load_rppa_data(
         gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
         sep: str = "\t",
         verbose: bool = True) -> pd.DataFrame:
+    """
+    Returns mutation data.
+
+    Args:
+        gene_system_identifier (str or list of str): gene identifier system to use
+            options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list
+                     combination of ["Entrez", "Gene_Symbol", "Ensembl"]
+        sep: Separator used in data file.
+
+    Returns:
+        pd.DataFrame: dataframe with the omic data
+    """
     # TODO
     raise NotImplementedError("The function is not implemeted yet.")
     return None
@@ -473,51 +638,156 @@ def load_rppa_data(
 # Drug feature loaders
 # ==============================================================
 
-
-def load_smiles_data(
-        params: dict,
-        sep: str = "\t",
-        verbose: bool = True) -> pd.DataFrame:
-    """ Read smiles data. """
-    # fname = imp_glob.X_DATA_DIR / smiles_fname
-    fpath = params["x_data_path"] / smiles_fname
-    if fpath.exists() == False:
-        raise Exception(f"ERROR ! {fpath} not found.\n")
-
-    df = pd.read_csv(fpath, sep=sep)
-    df.columns = ["improve_chem_id", "smiles"] # Note! We updated this after updating the data
-
-    if verbose:
-        print(f"Shape of SMILES data: {df.shape}")
-        # print(df.dtypes)
-        # print(df.dtypes.value_counts())
-    return df
-
-
-def load_mordred_descriptor_data(
-        sep: str = "\t",
-        verbose: bool = True) -> pd.DataFrame:
+class DrugsLoader():
     """
-    Return Mordred descriptors data.
+    Example:
+        from improve import drug_resp_pred as drp
+        drugs_loader = drp.DrugsLoader(params)
+        print(drugs_loader)
+        print(dir(drugs_loader))
+        smi = drugs_loader["drug_SMILES.tsv"]
     """
-    # df = pd.read_csv(improve_globals.mordred_file_path, sep=sep)
-    # df = df.set_index(improve_globals.drug_col_name)
-    pass
-    if verbose:
-        print(f"Mordred descriptors data: {df.shape}")
-    return df
+    def __init__(self,
+                 params: Dict,  # improve params
+                 sep: str = "\t",
+                 verbose: bool = True):
+        """ ... """
+        self.smiles_fname = "drug_SMILES.tsv"
+        self.mordred_fname = "drug_mordred.tsv"
+        self.ecfp4_512bit_fname = "drug_ecfp4_nbits512.tsv"
+        self.known_file_names = [self.smiles_fname,
+                                 self.mordred_fname,
+                                 self.ecfp4_512bit_fname]
+
+        self.sep = sep
+        self.inp = params["x_data_drug_files"]
+        self.drug_col_name = params["drug_col_name"]
+        self.x_data_path = params["x_data_path"]
+        self.dfs = {}
+
+        if verbose:
+            print(f"x_data_drug_files: {params['x_data_drug_files']}")
+            print(f"drug_col_name: {params['drug_col_name']}")
+
+        self.inp_fnames = []
+        for i in self.inp:
+            assert len(i) == 1, f"Inner lists must contain only one item, but {i} is {len(i)}"
+            self.inp_fnames.append(i[0])
+        # print(self.inp_fnames)
+
+        self.load_all_drug_data()
+
+    def __repr__(self):
+        if self.dfs:
+            return "Loaded data\n" + "\n".join([f"{fname}: {df.shape}" for fname, df in self.dfs.items()])
+        else:
+            return "No data files were loaded."
+
+    @staticmethod
+    def check_path(fpath):
+        if fpath.exists() == False:
+            raise Exception(f"ERROR ! {fpath} not found.\n")
+
+    # def load_smiles_data(self):
+    #     """ ... """
+    #     fpath = self.x_data_path / self.smiles_fname
+    #     DrugsLoader.check_path(fpath)
+    #     df = pd.read_csv(fpath, sep=self.sep)
+    #     # df.columns = [self.drug_col_name, "smiles"] # Note! We updated this after updating the data
+    #     # print(df.dtypes)
+    #     # print(df.dtypes.value_counts())
+    #     return df
+
+    # def load_mordred_descriptor_data(self):
+    #     """ ... """
+    #     fpath = self.x_data_path / self.mordred_fname
+    #     DrugsLoader.check_path(fpath)
+    #     df = pd.read_csv(fpath, sep=self.sep)
+    #     df = df.set_index(self.drug_col_name)
+    #     return df
+
+    # def load_morgan_fingerprint_data(self):
+    #     """ ... """
+    #     fpath = self.x_data_path / self.ecfp4_512bit_fname
+    #     DrugsLoader.check_path(fpath)
+    #     df = pd.read_csv(fpath, sep=self.sep)
+    #     df = df.set_index(self.drug_col_name)
+    #     return df
+
+    def load_drug_data(self, fname):
+        """ ... """
+        fpath = self.x_data_path / fname
+        DrugsLoader.check_path(fpath)
+        df = pd.read_csv(fpath, sep=self.sep)
+        df = df.set_index(self.drug_col_name)
+        return df
+
+    def load_all_drug_data(self):
+        """ ... """
+        for i in self.inp:
+            fname = i[0]
+            self.dfs[fname] = self.load_drug_data(fname)
+
+            # if fname == self.smiles_fname:
+            #     self.dfs[fname] = self.load_smiles_data()
+            # elif fname == self.mordred_fname:
+            #     self.dfs[fname] = self.load_mordred_descriptor_data()
+            # elif fname == self.ecfp4_512bit_fname:
+            #     self.dfs[fname] = self.load_morgan_fingerprint_data()
+            # else:
+            #     raise NotImplementedError(f"Option '{fname}' not recognized.")
+
+        # import ipdb; ipdb.set_trace()
+        # print(self.dfs[self.smiles_fname].iloc[:4, :])
+        # print(self.dfs[self.mordred_fname].iloc[:4, :4])
+        # print(self.dfs[self.ecfp4_512bit_fname].iloc[:4, :4])
+        # print("done")
 
 
-def load_morgan_fingerprint_data(
-        sep: str = "\t",
-        verbose: bool = True) -> pd.DataFrame:
-    """
-    Return Morgan fingerprints data.
-    """
-    # df = pd.read_csv(improve_globals.ecfp4_512bit_file_path, sep=sep)
-    # df = df.set_index(improve_globals.drug_col_name)
-    pass
-    return df
+# def load_smiles_data(
+#         params: dict,
+#         sep: str = "\t",
+#         verbose: bool = True) -> pd.DataFrame:
+#     """ Read smiles data. """
+#     # fname = imp_glob.X_DATA_DIR / smiles_fname
+#     fpath = params["x_data_path"] / smiles_fname
+#     if fpath.exists() == False:
+#         raise Exception(f"ERROR ! {fpath} not found.\n")
+
+#     df = pd.read_csv(fpath, sep=sep)
+#     df.columns = ["improve_chem_id", "smiles"] # Note! We updated this after updating the data
+
+#     if verbose:
+#         print(f"Shape of SMILES data: {df.shape}")
+#         # print(df.dtypes)
+#         # print(df.dtypes.value_counts())
+#     return df
+
+
+# def load_mordred_descriptor_data(
+#         sep: str = "\t",
+#         verbose: bool = True) -> pd.DataFrame:
+#     """
+#     Return Mordred descriptors data.
+#     """
+#     # df = pd.read_csv(improve_globals.mordred_file_path, sep=sep)
+#     # df = df.set_index(improve_globals.drug_col_name)
+#     pass
+#     if verbose:
+#         print(f"Mordred descriptors data: {df.shape}")
+#     return df
+
+
+# def load_morgan_fingerprint_data(
+#         sep: str = "\t",
+#         verbose: bool = True) -> pd.DataFrame:
+#     """
+#     Return Morgan fingerprints data.
+#     """
+#     # df = pd.read_csv(improve_globals.ecfp4_512bit_file_path, sep=sep)
+#     # df = df.set_index(improve_globals.drug_col_name)
+#     pass
+#     return df
 
 
 # def load_drug_data(fname: Union[Path, str],
@@ -585,6 +855,80 @@ def load_drug_data(fname: Union[str, Path, List[str], List[Path]] = ["drug_SMILE
 # y_col_name: str = "auc",
 # sep: str = "\t",
 # verbose: bool = True) -> pd.DataFrame:
+
+
+class DrugResponseLoader():
+    """
+    Example:
+        from improve import drug_resp_pred as drp
+        drp_loader = drp.DrugResponseLoader(params)
+        print(drp_loader)
+        print(dir(drp_loader))
+        rsp = drp_loader["response.tsv"]
+    """
+    def __init__(self,
+                 params: Dict,  # improve params
+                 split_file: str,
+                 sep: str = "\t",
+                 verbose: bool = True):
+        """ ... """
+        self.response_fname = "response.tsv"
+        self.known_file_names = [self.response_fname]
+
+        self.sep = sep
+        self.inp = params["y_data_files"]
+        self.y_col_name = params["y_col_name"]
+        self.canc_col_name = params["canc_col_name"]
+        self.drug_col_name = params["drug_col_name"]
+
+        # self.y_data_path = params["y_data_path"]/params["y_data_files"][0][0]
+        self.y_data_path = params["y_data_path"]
+        self.split_fpath = params["splits_path"]/split_file
+        self.dfs = {}
+
+        if verbose:
+            print(f"y_data_files: {params['y_data_files']}")
+            print(f"y_col_name: {params['y_col_name']}")
+
+        self.inp_fnames = []
+        for i in self.inp:
+            assert len(i) == 1, f"Inner lists must contain only one item, but {i} is {len(i)}"
+            self.inp_fnames.append(i[0])
+        # print(self.inp_fnames)
+
+        self.load_all_response_data()
+
+    def __repr__(self):
+        if self.dfs:
+            to_print = []
+            to_print.append("Loaded data\n")
+            to_print.append( "\n".join([f"{fname}: {df.shape} \nUnique cells: {df[self.canc_col_name].nunique()} \nUnique drugs: {df[self.drug_col_name].nunique()}" for fname, df in self.dfs.items()]) )
+            to_print = "".join(to_print)
+            return to_print
+        else:
+            return "No data files were loaded."
+
+    @staticmethod
+    def check_path(fpath):
+        if fpath.exists() == False:
+            raise Exception(f"ERROR ! {fpath} not found.\n")
+
+    def load_response_data(self, fname):
+        fpath = self.y_data_path / fname
+        DrugResponseLoader.check_path(fpath)
+        df = pd.read_csv(fpath, sep=self.sep)
+        return df
+
+    def load_all_response_data(self, verbose: str = True):
+        """ ... """
+        for i in self.inp:
+            fname = i[0]
+            df = self.load_response_data(fname)
+            DrugResponseLoader.check_path(self.split_fpath)
+            ids = pd.read_csv(self.split_fpath, header=None)[0].tolist()
+            df = df.loc[ids]
+            self.dfs[fname] = df
+
 
 # moved from graphdrp_preprocess_improve.py
 def load_response_data(
