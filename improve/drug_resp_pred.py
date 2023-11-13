@@ -335,7 +335,7 @@ def load_omics_data(params: Dict,
         fname = "cancer_DNA_methylation.tsv"
         level_map = {"Ensembl": 2, "Entrez": 1, "Gene_Symbol": 3, "TSS": 0}
 
-    if omics_type == "gene_expression":
+    elif omics_type == "gene_expression":
         fname = "cancer_gene_expression.tsv"
         level_map = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
 
