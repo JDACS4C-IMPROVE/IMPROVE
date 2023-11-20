@@ -141,83 +141,84 @@ improve_train_conf = [
      "default": "./out_model", # ./models/
      "help": "Dir to save trained models.",
     },
-    # {"name": "model_params",  # TODO: consider renaming to "model_file_name"
-    {"name": "model_file_name",  # default # TODO: consider renaming to "model_file_name"
+    # {"name": "model_params",
+    {"name": "model_file_name",  # default # TODO: this was previously model_file_name
      "type": str,
      # "default": "model.pt",
      "default": "model",
      "help": "Filename to store trained model (str is w/o file_format)."
     },
-    {"name": "model_file_format",  # [Req] Must be specified for the model! TODO: consider making use of it
+    {"name": "model_file_format",  # [Req]
      "type": str,
      "default": ".pt",
      "help": "File format to save the trained model."
     },
-    {"name": "batch_size",
+    # ---------------------------------------
+    {"name": "epochs", # [Req]
+     "type": int,
+     "default": 20,
+     "help": "Training epochs."
+    },
+    {"name": "batch_size", # [Req]
      "type": int,
      "default": 64,
      "help": "Trainig batch size."
     },
-    {"name": "val_batch",
+    {"name": "val_batch", # [Req]
      "type": int,
      "default": 64,
+     # "default": argparse.SUPPRESS,
      "help": "Validation batch size."
+    },
+    {"name": "loss", # [Req] used in compute_metrics
+     "type": str,
+     "default": "mse",
+     "help": "Loss metric."
     },
     # {"name": "optimizer",
     #  "type": str,
     #  "default": "adam",
     #  "help": "Optimizer for backpropagation."
     # },
-    {"name": "learning_rate",
-     "type": float,
-     "default": 0.0001,
-     "help": "Learning rate for the optimizer."
-    },
-    # {"name": "loss",
-    #  "type": str,
-    #  "default": "mse",
-    #  "help": "Loss function."
+    # {"name": "learning_rate",
+    #  "type": float,
+    #  "default": 0.0001,
+    #  "help": "Learning rate for the optimizer."
     # },
-    ### TODO. probably don't need these. these will constructed from args.
-    # {"name": "train_data_processed",  # TODO: is this train_data.pt?
+    # {"name": "train_data_processed",
     #  "action": "store",
     #  "type": str,
     #  "help": "Name of pytorch processed train data file."
     # },
-    # {"name": "val_data_processed",  # TODO: is this val_data.pt?
+    # {"name": "val_data_processed",
     #  "action": "store",
     #  "type": str,
     #  "help": "Name of pytorch processed val data file."
     # },
-    ###
-    # {"name": "model_eval_suffix",  # TODO: what's that?
+    # {"name": "model_eval_suffix", # TODO: what's that?
     # y_data_stage_preds_fname_suffix
-    {"name": "y_data_preds_suffix",  # TODO: what's that? val_y_data_preds.csv
-     "type": str,
-     "default": "predicted",
-     "help": "Suffix to use for name of file to store inference results."
-    },
-    {"name": "json_scores_suffix",
-     "type": str,
-     "default": "scores",
-     "help": "Suffix to use for name of file to store scores."
-    },
-    {"name": "val_batch",
-     "type": int,
-     "default": argparse.SUPPRESS,
-     "help": "Validation batch size.",
-    },
-    {"name": "patience",
-     "type": int,
-     "default": argparse.SUPPRESS,
-     "help": "Iterations to wait for validation metrics getting worse before \
-             stopping training.",
-    },
-    {"name": "early_stop_metric",
+    {"name": "early_stop_metric", # [Req]
      "type": str,
      "default": "mse",
      "help": "Prediction performance metric to monitor for early stopping during \
              model training (e.g., 'mse', 'rmse').",
+    },
+    {"name": "patience", # [Req]
+     "type": int,
+     "default": 20,
+     # "default": argparse.SUPPRESS,
+     "help": "Iterations to wait for validation metrics getting worse before \
+             stopping training.",
+    },
+    {"name": "y_data_preds_suffix", # default
+     "type": str,
+     "default": "predicted",
+     "help": "Suffix to use for name of file to store inference results."
+    },
+    {"name": "json_scores_suffix", # default
+     "type": str,
+     "default": "scores",
+     "help": "Suffix to use for name of file to store scores."
     },
 
 ]
@@ -225,15 +226,16 @@ improve_train_conf = [
 # Parameters that are relevant to all IMPROVE testing scripts
 improve_test_conf = [
     {"name": "test_ml_data_dir",
-     "action": "store",
+     # "action": "store",
      "type": str,
+     "default": "./ml_data",
      "help": "Datadir where test data is stored."
     },
-    {"name": "test_data_processed",  # TODO: is this test_data.pt?
-     "action": "store",
-     "type": str,
-     "help": "Name of pytorch processed test data file."
-    },
+    # {"name": "test_data_processed",  # TODO: is this test_data.pt?
+    #  "action": "store",
+    #  "type": str,
+    #  "help": "Name of pytorch processed test data file."
+    # },
     {"name": "test_batch",
      "type": int,
      "default": argparse.SUPPRESS,
@@ -431,7 +433,10 @@ def compute_performace_scores(params, y_true, y_pred, metrics, stage):
     :return: Python dictionary with metrics evaluated and corresponding scores.
     :rtype: dict
     """
+    # Compute multiple performance scores
     scores = compute_metrics(y_true, y_pred, metrics)
+
+    # Add val_loss metric
     key = f"{stage}_loss"
     # scores[key] = scores["mse"]
     scores[key] = scores[params["loss"]]
