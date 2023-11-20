@@ -1,4 +1,4 @@
-""" Basic Definitions for IMPROVE Framework. """
+""" Basic definitions for IMPROVE framework. """
 
 import os
 import argparse
@@ -30,27 +30,8 @@ DataPathDict = NewType("DataPathDict", Dict[str, Path])
 
 
 # Parameters that are relevant to all IMPROVE models
+# Defaults for these args are expected to be used
 improve_basic_conf = [
-    {"name": "y_col_name",
-     "type": str,
-     "default": "auc",
-     "help": "Column name in the y data file (e.g., response.tsv), that represents \
-              the target variable that the model predicts. In drug response prediction \
-              problem it can be IC50, AUC, and others."
-    },
-    {"name": "pred_col_name_suffix",
-     "type": str,
-     "default": "_pred",
-     "help": "Suffix to add to a column name in the y data file to identify \
-             predictions made by the model (e.g., if y_col_name is 'auc', then \
-             a new column that stores model predictions will be added to the y \
-             data file and will be called 'auc_pred')."
-    },
-
-]
-
-# Parameters that are relevant to all IMPROVE preprocessing scripts
-improve_preprocess_conf = [
     {"name": "raw_data_dir",
      "type": str,
      "default": "raw_data",
@@ -71,7 +52,23 @@ improve_preprocess_conf = [
      "default": "splits",
      "help": "Dir name that contains files that store split ids of the y data file."
     },
-    {"name": "train_split_file",
+    # ---------------------------------------
+    {"name": "pred_col_name_suffix",
+     "type": str,
+     "default": "_pred",
+     "help": "Suffix to add to a column name in the y data file to identify \
+             predictions made by the model (e.g., if y_col_name is 'auc', then \
+             a new column that stores model predictions will be added to the y \
+             data file and will be called 'auc_pred')."
+    },
+
+]
+
+# Parameters that are relevant to all IMPROVE preprocessing scripts
+improve_preprocess_conf = [
+    # Values for these args are expected to be passed:
+    # train_split_file, val_split_file, test_split_file
+    {"name": "train_split_file", # workflow
      "default": "train_split.txt",
      "type": str,
      # "nargs": "+",
@@ -79,36 +76,45 @@ improve_preprocess_conf = [
      "help": "The path to the file that contains the split ids (e.g., \
              'split_0_train_id', 'split_0_train_size_1024').",
     },
-    {"name": "val_split_file",
+    {"name": "val_split_file", # workflow
      "default": "val_split.txt",
      "type": str,
      # "nargs": "+",
      "required": True,
      "help": "The path to the file that contains the split ids (e.g., 'split_0_val_id').",
     },
-    {"name": "test_split_file",
+    {"name": "test_split_file", # workflow
      "default": "test_split.txt",
      "type": str,
      # "nargs": "+",
      "required": True,
      "help": "The path to the file that contains the split ids (e.g., 'split_0_test_id').",
     },
-    {"name": "ml_data_outdir",  # TODO. previously ml_data_outpath
+    # ---------------------------------------
+    {"name": "ml_data_outdir", # workflow # TODO. this was previously ml_data_outpath
      "type": str,
      "default": "./ml_data",
      "help": "Path to save ML data (data files that can be fet to the prediction model).",
     },
-    {"name": "data_format",  # TODO. rename to ml_data_format?
+    {"name": "data_format",  # [Req] Must be specified for the model! TODO. rename to ml_data_format?
       "type": str,
       "default": "",
       "help": "File format to save the ML data file (e.g., '.pt', '.tfrecords')",
     },
+    {"name": "y_col_name", # workflow
+     "type": str,
+     "default": "auc",
+     "help": "Column name in the y data file (e.g., response.tsv), that represents \
+              the target variable that the model predicts. In drug response prediction \
+              problem it can be IC50, AUC, and others."
+    },
+    # ---------------------------------------
     # {"name": "x_data_suffix",  # TODO. rename x_data_stage_fname_suffix?
     #   "type": str,
     #   "default": "data",
     #   "help": "Suffix to compose file name for storing x data (e.g., ...)."
     # },
-    {"name": "y_data_suffix",  # TODO. rename y_data_stage_fname_suffix?
+    {"name": "y_data_suffix", # default # TODO. rename y_data_stage_fname_suffix?
       "type": str,
       "default": "y_data",
       "help": "Suffix to compose file name for storing true y dataframe."
@@ -289,6 +295,16 @@ def create_ml_data_outdir(params):
         os.makedirs(ml_data_outdir, exist_ok=True)
     check_path(ml_data_outdir)
     return ml_data_outdir
+
+
+def create_model_outpath(params):
+    """ Create path to save the trained model """
+    model_outdir = Path(params["model_outdir"])
+    os.makedirs(model_outdir, exist_ok=True)
+    check_path(model_outdir)
+    model_outpath = model_outdir / params["model_params"]
+    # modelpath = model_outdir / params["model_file_name"]
+    return model_outpath
 
 
 def build_ml_data_name(params: Dict, stage: str, data_format: str=""):
