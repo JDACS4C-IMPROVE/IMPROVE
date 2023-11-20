@@ -5,6 +5,7 @@ import argparse
 from pathlib import Path
 from typing import List, Set, NewType, Dict, Optional # use NewType becuase TypeAlias is available from python 3.10
 
+import pandas as pd
 import torch
 
 # Check that environment variable "IMPROVE_DATA_DIR" has been specified
@@ -46,11 +47,6 @@ improve_basic_conf = [
 
 # Parameters that are relevant to all IMPROVE preprocessing scripts
 improve_preprocess_conf = [
-    {"name": "download",
-     "type": candle.str2bool,
-     "default": False,
-     "help": "Flag to indicate if downloading from FTP site."
-    },
     {"name": "raw_data_dir",
      "type": str,
      "default": "raw_data",
@@ -87,28 +83,28 @@ improve_preprocess_conf = [
      "help": "The path to the file that contains the split ids (e.g., 'split_0_val_id').",
     },
     {"name": "test_split_file",
-     "default": "test_split.txt",  # TODO: what should be the default?
+     "default": "test_split.txt",
      "type": str,
      # "nargs": "+",
      "required": True,
      "help": "The path to the file that contains the split ids (e.g., 'split_0_test_id').",
     },
-    # {"name": "y_file",  # TODO: what's that?
-    #  "type": str,
-    #  "default": "y_data.tsv", # "response.tsv",
-    #  "help": "File with target variable data.",
-    # },
-    {"name": "ml_data_outpath",
+    {"name": "ml_data_outdir",  # TODO. previously ml_data_outpath
      "type": str,
      "default": "./ml_data",
      "help": "Path to save ML data (data files that can be fet to the prediction model).",
     },
-    {"name": "data_suffix",
+    {"name": "data_format",  # TODO. rename to ml_data_format?
       "type": str,
-      "default": "data",
-      "help": "Suffix to compose file name for storing ML dataset."
+      "default": "",
+      "help": "File format to save the ML data file (e.g., '.pt', '.tfrecords')",
     },
-    {"name": "y_data_suffix",  # TODO: what's that?
+    # {"name": "x_data_suffix",  # TODO. rename x_data_stage_fname_suffix?
+    #   "type": str,
+    #   "default": "data",
+    #   "help": "Suffix to compose file name for storing x data (e.g., ...)."
+    # },
+    {"name": "y_data_suffix",  # TODO. rename y_data_stage_fname_suffix?
       "type": str,
       "default": "y_data",
       "help": "Suffix to compose file name for storing true y dataframe."
@@ -120,21 +116,44 @@ improve_preprocess_conf = [
 improve_train_conf = [
     {"name": "model_outdir",
      "type": str,
-     "default": "./out", # ./models/
-     "help": "Path to save trained models.",
+     "default": "./out_model", # ./models/
+     "help": "Dir to save trained models.",
     },
-    {"name": "model_params",  # TODO: consider renaming this arg into "model_file_name"
+    {"name": "model_params",  # TODO: consider renaming to "model_file_name"
      "type": str,
      "default": "model.pt",
      "help": "Filename to store trained model."
     },
-    ### TODO: added (start)
-    {"name": "model_file_suffix",  # TODO: new; Should this be a model-specific arg?
+    {"name": "model_file_format",  # TODO: consider making use of it
      "type": str,
      "default": ".pt",
      "help": "Suffix of the filename to store trained model."
     },
-    ### TODO: added (end)
+    {"name": "batch_size",
+     "type": int,
+     "default": 64,
+     "help": "Trainig batch size."
+    },
+    {"name": "val_batch",
+     "type": int,
+     "default": 64,
+     "help": "Validation batch size."
+    },
+    # {"name": "optimizer",
+    #  "type": str,
+    #  "default": "adam",
+    #  "help": "Optimizer for backpropagation."
+    # },
+    {"name": "learning_rate",
+     "type": float,
+     "default": 0.0001,
+     "help": "Learning rate for the optimizer."
+    },
+    # {"name": "loss",
+    #  "type": str,
+    #  "default": "mse",
+    #  "help": "Loss function."
+    # },
     {"name": "train_ml_data_dir",
      "action": "store",
      "type": str,
@@ -145,22 +164,30 @@ improve_train_conf = [
      "type": str,
      "help": "Datadir where val data is stored."
     },
+    ### TODO. probably don't need these. these will constructed from args.
     {"name": "train_data_processed",  # TODO: is this train_data.pt?
      "action": "store",
      "type": str,
-     "help": "Name of pytorch processed train data file."},
+     "help": "Name of pytorch processed train data file."
+    },
     {"name": "val_data_processed",  # TODO: is this val_data.pt?
      "action": "store",
      "type": str,
-     "help": "Name of pytorch processed val data file."},
-    {"name": "model_eval_suffix",  # TODO: what's that?
+     "help": "Name of pytorch processed val data file."
+    },
+    ###
+    # {"name": "model_eval_suffix",  # TODO: what's that?
+    # y_data_stage_preds_fname_suffix
+    {"name": "y_data_preds_suffix",  # TODO: what's that? val_y_data_preds.csv
      "type": str,
      "default": "predicted",
-     "help": "Suffix to use for name of file to store inference results."},
+     "help": "Suffix to use for name of file to store inference results."
+    },
     {"name": "json_scores_suffix",
      "type": str,
      "default": "scores",
-     "help": "Suffix to use for name of file to store scores."},
+     "help": "Suffix to use for name of file to store scores."
+    },
     {"name": "val_batch",
      "type": int,
      "default": argparse.SUPPRESS,
@@ -169,7 +196,14 @@ improve_train_conf = [
     {"name": "patience",
      "type": int,
      "default": argparse.SUPPRESS,
-     "help": "Iterattions to wait for validation metrics getting worse before stopping training.",
+     "help": "Iterations to wait for validation metrics getting worse before \
+             stopping training.",
+    },
+    {"name": "early_stop_metric",
+     "type": str,
+     "default": "mse",
+     "help": "Prediction performance metric to monitor for early stopping during \
+             model training (e.g., 'mse', 'rmse').",
     },
 
 ]
@@ -241,18 +275,42 @@ def build_paths(params):
     return params
 
 
-def create_ml_data_outpath(params):
-    """ ... """
-    ml_data_outpath = Path(params["ml_data_outpath"])
-    os.makedirs(ml_data_outpath, exist_ok=True)
-    check_path(ml_data_outpath)
-    return ml_data_outpath
+def create_ml_data_outdir(params):
+    """ Create a directory to store input data files for ML/DL models. """
+    ml_data_outdir = Path(params["ml_data_outdir"])
+    if ml_data_outdir.exists():
+        print(f"ml_data_outdir already exists: {ml_data_outdir}")
+    else:
+        print(f"Creating ml_data_outdir: {ml_data_outdir}")
+        os.makedirs(ml_data_outdir, exist_ok=True)
+    check_path(ml_data_outdir)
+    return ml_data_outdir
 
 
-def build_ml_data_name(params, stage, file_format: str=""):
-    """ E.g., train_data.pt """
-    file_format = "" if file_format is None else file_format
-    return stage + "_" + params["data_suffix"] + file_format
+def build_ml_data_name(params: Dict, stage: str, data_format: str=""):
+    """ Returns name of the ML/DL data file. E.g., train_data.pt
+    TODO: params is not currently needed here. Consider removing this input arg.
+    """
+    data_format = "" if data_format is None else data_format
+    if data_format != "" and "." not in data_format:
+        data_format = "." + data_format
+    # return stage + "_" + params["x_data_suffix"] + data_format
+    return stage + "_" + "data" + data_format
+
+
+def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
+    """ Save a subset of y data samples (rows of the input dataframe).
+    The "subset" refers to one of the three stages involved in developing ML
+    models, including: "train", "val", or "test".
+
+    ydf : dataframe with y data samples
+    params : parameter dict
+    stage (str) : "train", "val", or "test"
+    """
+    ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"  
+    ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+    ydf.to_csv(ydf_fpath, index=False)
+    return None
 
 
 class ImproveBenchmark(candle.Benchmark):
@@ -332,40 +390,3 @@ def check_path_and_files(folder_name: str, file_list: List, inpath: Path) -> Pat
         raise Exception(f"ERROR ! {folder_name} folder not available.\n")
 
     return outpath
-
-
-# TODO: While the implementation of this func is model-specific, we may want
-# to require that all models have this func defined for their models. Also,
-# we need to decide where this func should be located.
-def predicting(model, device, loader):
-    """ Method to run predictions/inference.
-    This is used in *train.py and *infer.py
-
-    Parameters
-    ----------
-    model : pytorch model
-        Model to evaluate.
-    device : string
-        Identifier for hardware that will be used to evaluate model.
-    loader : pytorch data loader.
-        Object to load data to evaluate.
-
-    Returns
-    -------
-    total_labels: numpy array
-        Array with ground truth.
-    total_preds: numpy array
-        Array with inferred outputs.
-    """
-    model.eval()
-    total_preds = torch.Tensor()
-    total_labels = torch.Tensor()
-    print("Make prediction for {} samples...".format(len(loader.dataset)))
-    with torch.no_grad():
-        for data in loader:
-            data = data.to(device)
-            output, _ = model(data)
-            # Is this computationally efficient?
-            total_preds = torch.cat((total_preds, output.cpu()), 0)  # preds to tensor
-            total_labels = torch.cat((total_labels, data.y.view(-1, 1).cpu()), 0)  # labels to tensor
-    return total_labels.numpy().flatten(), total_preds.numpy().flatten()
