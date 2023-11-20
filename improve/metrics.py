@@ -27,7 +27,7 @@ def compute_metrics(y_true, y_pred, metrics):
     eval: python dictionary
         A dictionary of evaluated metrics.
     """
-    eval = {}
+    scores = {}
     for mtstr in metrics:
         mapstr = mtstr
         if mapstr == "pcc":
@@ -36,9 +36,9 @@ def compute_metrics(y_true, y_pred, metrics):
             mapstr = "spearman"
         elif mapstr == "r2":
             mapstr = "r_square"
-        eval[mtstr] = str2Class(mapstr)(y_true, y_pred)
+        scores[mtstr] = str2Class(mapstr)(y_true, y_pred)
 
-    return eval
+    return scores
 
 
 def mse(y_true, y_pred):
