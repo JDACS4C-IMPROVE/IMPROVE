@@ -2,11 +2,15 @@
 
 import os
 import argparse
+import json
 from pathlib import Path
 from typing import List, Set, NewType, Dict, Optional # use NewType becuase TypeAlias is available from python 3.10
 
+import numpy as np
 import pandas as pd
 import torch
+
+from .metrics import compute_metrics
 
 # Check that environment variable "IMPROVE_DATA_DIR" has been specified
 if os.getenv("IMPROVE_DATA_DIR") is None:
@@ -165,16 +169,16 @@ improve_train_conf = [
      "help": "Datadir where val data is stored."
     },
     ### TODO. probably don't need these. these will constructed from args.
-    {"name": "train_data_processed",  # TODO: is this train_data.pt?
-     "action": "store",
-     "type": str,
-     "help": "Name of pytorch processed train data file."
-    },
-    {"name": "val_data_processed",  # TODO: is this val_data.pt?
-     "action": "store",
-     "type": str,
-     "help": "Name of pytorch processed val data file."
-    },
+    # {"name": "train_data_processed",  # TODO: is this train_data.pt?
+    #  "action": "store",
+    #  "type": str,
+    #  "help": "Name of pytorch processed train data file."
+    # },
+    # {"name": "val_data_processed",  # TODO: is this val_data.pt?
+    #  "action": "store",
+    #  "type": str,
+    #  "help": "Name of pytorch processed val data file."
+    # },
     ###
     # {"name": "model_eval_suffix",  # TODO: what's that?
     # y_data_stage_preds_fname_suffix
@@ -313,6 +317,116 @@ def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
     return None
 
 
+def store_predictions_df(params: Dict,
+                         y_true: np.array,
+                         y_pred: np.array,
+                         stage: str,
+                         round_decimals: int=4):
+    """Store predictions with accompanying data frame.
+
+    This allows to trace original data evaluated (e.g. drug and cell
+    combinations) if corresponding data frame is available, in which case
+    the whole structure as well as the model predictions are stored. If
+    the data frame is not available, only ground truth (read from the
+    PyTorch processed data) and model predictions are stored. The ground
+    truth available (from data frame or PyTorch data) is returned for
+    further evaluations.
+
+    ap: construct output file name as follows:
+            
+            [stage]_[params['y_data_suffix']]_
+
+    :params Dict params: Dictionary of CANDLE/IMPROVE parameters read.
+    :params Dict indtd: Dictionary specifying paths of input data.
+    :params Dict outdtd: Dictionary specifying paths for ouput data.
+    :params array y_true: Ground truth.
+    :params array y_pred: Model predictions.
+
+    :return: Arrays with ground truth. This may have been read from an
+             input data frame or from a processed PyTorch data file.
+    :rtype: np.array
+    """
+    # Check dimensions
+    assert len(y_true) == len(y_pred), f"length of y_true ({len(y_true)}) and y_pred ({len(y_pred)}) don't match"
+    # print(len(y_true))
+    # print(len(y_pred))
+
+    # Define column names
+    pred_col_name = params["y_col_name"] + params["pred_col_name_suffix"]
+    true_col_name = params["y_col_name"] + "_true"
+
+    # -----------------------------
+    # Attempt to concatenate raw predictions with y dataframe (e.g., df that
+    # contains cancer ids, drug ids, and the true response values)
+    ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"  # TODO. f"{stage}_{params['y_data_stage_fname_suffix']}.csv"  
+    ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+
+    # output df fname
+    ydf_out_fname = ydf_fname.split(".")[0] + "_" + params["y_data_preds_suffix"] + ".csv"
+    ydf_out_fpath = Path(params["ml_data_outdir"]) / ydf_out_fname
+
+    # if indtd["df"] is not None:
+    if ydf_fpath.exists():
+        rsp_df = pd.read_csv(ydf_fpath)
+
+        # Check dimensions
+        assert len(y_true) == rsp_df.shape[0], f"length of y_true ({len(y_true)}) and the loaded file ({ydf_fpath} --> {rsp_df.shape[0]}) don't match"
+
+        pred_df = pd.DataFrame(y_pred, columns=[pred_col_name])  # This includes only predicted values
+        mm = pd.concat([rsp_df, pred_df], axis=1)
+        mm = mm.astype({params["y_col_name"]: np.float32, pred_col_name: np.float32})
+        df = mm.round({params["y_col_name"]: round_decimals,
+                       pred_col_name: round_decimals})
+        df.to_csv(ydf_out_fpath, index=False) # Save predictions dataframe
+        # y_true_return = rsp_df[params["y_col_name"]].values # Read from data frame
+
+    else:
+        # Save only ground truth and predictions since did not load the corresponding dataframe
+        df_ = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})  # This includes true and predicted values
+        df_.to_csv(ydf_out_fpath, index=False)
+        # y_true_return = y_true
+
+    # return y_true_return
+    return None
+
+
+def compute_performace_scores(params, y_true, y_pred, metrics, stage):
+    """Evaluate predictions according to specified metrics.
+
+    Metrics are evaluated. Scores are stored in specified path and returned.
+
+    :params array y_true: Array with ground truth values.
+    :params array y_pred: Array with model predictions.
+    :params listr metrics: List of strings with metrics to evaluate.
+    :params Dict outdtd: Dictionary with path to store scores.
+    :params str stage: String specified if evaluation is with respect to
+            validation or testing set.
+
+    :return: Python dictionary with metrics evaluated and corresponding scores.
+    :rtype: dict
+    """
+    scores = compute_metrics(y_true, y_pred, metrics)
+    key = f"{stage}_loss"
+    # scores[key] = scores["mse"]
+    scores[key] = scores[params["loss"]]
+
+    # fname = f"val_{params['json_scores_suffix']}.json"
+    scores_fname = f"{stage}_{params['json_scores_suffix']}.json"
+    scorespath = Path(params["ml_data_outdir"]) / scores_fname
+
+    with open(scorespath, "w", encoding="utf-8") as f:
+        json.dump(scores, f, ensure_ascii=False, indent=4)
+
+    # Performance scores for Supervisor HPO
+    # TODO. do we still need to print IMPROVE_RESULT?
+    if stage == "val":
+        print("\nIMPROVE_RESULT val_loss:\t{}\n".format(scores["mse"]))
+        print("Validation scores:\n\t{}".format(scores))
+    elif stage == "test":
+        print("Inference scores:\n\t{}".format(scores))
+    return scores
+
+
 class ImproveBenchmark(candle.Benchmark):
     """ Benchmark for Improve Models. """
 
@@ -378,6 +492,7 @@ def check_path_and_files(folder_name: str, file_list: List, inpath: Path) -> Pat
     :return: Path to folder requested
     :rtype: Path
     """
+    # TODO. this func is not currently used
     outpath = inpath / folder_name
     # Check if folder is in path
     if outpath.exists():
