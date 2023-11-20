@@ -38,6 +38,8 @@ def compute_metrics(y_true, y_pred, metrics):
             mapstr = "r_square"
         scores[mtstr] = str2Class(mapstr)(y_true, y_pred)
 
+    scores = {k: float(v) for k, v in scores.items()}
+
     return scores
 
 
