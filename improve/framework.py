@@ -124,20 +124,34 @@ improve_preprocess_conf = [
 
 # Parameters that are relevant to all IMPROVE training scripts
 improve_train_conf = [
-    {"name": "model_outdir",
+    {"name": "train_ml_data_dir", # workflow
+     # "action": "store",
+     "type": str,
+     "default": "./ml_data",
+     "help": "Datadir where train data is stored."
+    },
+    {"name": "val_ml_data_dir", # workflow
+     # "action": "store",
+     "type": str,
+     "default": "./ml_data",
+     "help": "Datadir where val data is stored."
+    },
+    {"name": "model_outdir", # workflow
      "type": str,
      "default": "./out_model", # ./models/
      "help": "Dir to save trained models.",
     },
-    {"name": "model_params",  # TODO: consider renaming to "model_file_name"
+    # {"name": "model_params",  # TODO: consider renaming to "model_file_name"
+    {"name": "model_file_name",  # default # TODO: consider renaming to "model_file_name"
      "type": str,
-     "default": "model.pt",
-     "help": "Filename to store trained model."
+     # "default": "model.pt",
+     "default": "model",
+     "help": "Filename to store trained model (str is w/o file_format)."
     },
-    {"name": "model_file_format",  # TODO: consider making use of it
+    {"name": "model_file_format",  # [Req] Must be specified for the model! TODO: consider making use of it
      "type": str,
      "default": ".pt",
-     "help": "Suffix of the filename to store trained model."
+     "help": "File format to save the trained model."
     },
     {"name": "batch_size",
      "type": int,
@@ -164,16 +178,6 @@ improve_train_conf = [
     #  "default": "mse",
     #  "help": "Loss function."
     # },
-    {"name": "train_ml_data_dir",
-     "action": "store",
-     "type": str,
-     "help": "Datadir where train data is stored."
-    },
-    {"name": "val_ml_data_dir",
-     "action": "store",
-     "type": str,
-     "help": "Datadir where val data is stored."
-    },
     ### TODO. probably don't need these. these will constructed from args.
     # {"name": "train_data_processed",  # TODO: is this train_data.pt?
     #  "action": "store",
@@ -297,25 +301,31 @@ def create_ml_data_outdir(params):
     return ml_data_outdir
 
 
-def create_model_outpath(params):
+def get_file_format(file_format: str=""):
+    """ Clean file_format """
+    file_format = "" if file_format is None else file_format
+    if file_format != "" and "." not in file_format:
+        file_format = "." + file_format
+    return file_format
+
+
+def build_ml_data_name(params: Dict, stage: str, file_format: str=""):
+    """ Returns name of the ML/DL data file. E.g., train_data.pt
+    TODO: params is not currently needed here. Consider removing this input arg.
+    """
+    file_format = get_file_format(file_format=file_format)
+    return stage + "_" + "data" + file_format
+
+
+def create_model_outpath(params: Dict):
     """ Create path to save the trained model """
     model_outdir = Path(params["model_outdir"])
     os.makedirs(model_outdir, exist_ok=True)
     check_path(model_outdir)
-    model_outpath = model_outdir / params["model_params"]
-    # modelpath = model_outdir / params["model_file_name"]
+    # model_outpath = model_outdir / params["model_params"]
+    model_file_format = get_file_format(file_format=params["model_file_format"])
+    model_outpath = model_outdir / (params["model_file_name"] + model_file_format)
     return model_outpath
-
-
-def build_ml_data_name(params: Dict, stage: str, data_format: str=""):
-    """ Returns name of the ML/DL data file. E.g., train_data.pt
-    TODO: params is not currently needed here. Consider removing this input arg.
-    """
-    data_format = "" if data_format is None else data_format
-    if data_format != "" and "." not in data_format:
-        data_format = "." + data_format
-    # return stage + "_" + params["x_data_suffix"] + data_format
-    return stage + "_" + "data" + data_format
 
 
 def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
