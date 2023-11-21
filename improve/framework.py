@@ -4,7 +4,7 @@ import os
 import argparse
 import json
 from pathlib import Path
-from typing import List, Set, NewType, Dict, Optional # use NewType becuase TypeAlias is available from python 3.10
+from typing import List, Set, Union, NewType, Dict, Optional # use NewType becuase TypeAlias is available from python 3.10
 
 import numpy as np
 import pandas as pd
@@ -138,7 +138,7 @@ improve_train_conf = [
     },
     {"name": "model_outdir", # workflow
      "type": str,
-     "default": "./out_model", # ./models/
+     "default": "./out_model", # csa_data/models/
      "help": "Dir to save trained models.",
     },
     # {"name": "model_params",
@@ -225,11 +225,21 @@ improve_train_conf = [
 
 # Parameters that are relevant to all IMPROVE testing scripts
 improve_test_conf = [
-    {"name": "test_ml_data_dir",
+    {"name": "test_ml_data_dir", # workflow
      # "action": "store",
      "type": str,
      "default": "./ml_data",
      "help": "Datadir where test data is stored."
+    },
+    {"name": "model_dir", # workflow
+     "type": str,
+     "default": "./out_model", # csa_data/models/
+     "help": "Dir to save inference results.",
+    },
+    {"name": "infer_outdir", # workflow
+     "type": str,
+     "default": "./out_infer", # csa_data/infer/
+     "help": "Dir to save inference results.",
     },
     # {"name": "test_data_processed",  # TODO: is this test_data.pt?
     #  "action": "store",
@@ -261,7 +271,10 @@ def check_path(path):
 
 
 def build_paths(params):
-    """ Build paths for raw_data, x_data, y_data, splits. """
+    """ Build paths for raw_data, x_data, y_data, splits.
+    These paths determine directories for benchmark datasets.
+    TODO: consider renaming to build_benchmark_data_paths()
+    """
     mainpath = Path(os.environ["IMPROVE_DATA_DIR"])
     check_path(mainpath)
 
@@ -282,52 +295,101 @@ def build_paths(params):
     params["splits_path"] = splits_path
     check_path(splits_path)
 
-    # # ML data
+    # # ML data dir
     # ml_data_path = mainpath / params["ml_data_outdir"]
     # params["ml_data_path"] = ml_data_path
     # os.makedirs(ml_data_path, exist_ok=True)
     # check_path(ml_data_path)
+    # os.makedirs(params["ml_data_outdir"], exist_ok=True)
+    # check_path(params["ml_data_outdir"])
+
+    # Models dir
+    # os.makedirs(params["model_outdir"], exist_ok=True)
+    # check_path(params["model_outdir"])
+
+    # Infer dir
+    # os.makedirs(params["infer_outdir"], exist_ok=True)
+    # check_path(params["infer_outdir"])
 
     return params
 
 
-def create_ml_data_outdir(params):
-    """ Create a directory to store input data files for ML/DL models. """
-    ml_data_outdir = Path(params["ml_data_outdir"])
-    if ml_data_outdir.exists():
-        print(f"ml_data_outdir already exists: {ml_data_outdir}")
+def create_outdir(outdir: Union[Path, str]):
+    """ Create directory. """
+    outdir = Path(outdir)
+    if outdir.exists():
+        print(f"Dir already exists: {outdir}")
     else:
-        print(f"Creating ml_data_outdir: {ml_data_outdir}")
-        os.makedirs(ml_data_outdir, exist_ok=True)
-    check_path(ml_data_outdir)
-    return ml_data_outdir
+        print(f"Creating dir: {outdir}")
+        os.makedirs(outdir, exist_ok=True)
+    check_path(outdir)
+    return outdir
 
 
-def get_file_format(file_format: str=""):
-    """ Clean file_format """
+# def create_ml_data_outdir(params: Dict):
+#     """ Create directory to store data files for ML/DL models.
+#     Used in *preprocess*.py
+#     """
+#     ml_data_dir = Path(params["ml_data_outdir"])
+#     if ml_data_dir.exists():
+#         print(f"ml_data_outdir already exists: {ml_data_dir}")
+#     else:
+#         print(f"Creating ml_data_outdir: {ml_data_dir}")
+#         os.makedirs(ml_data_dir, exist_ok=True)
+#     check_path(ml_data_dir)
+#     return ml_data_dir
+
+
+def get_file_format(file_format: Union[str, None]=None):
+    """ Clean file_format.
+    Exmamples of (input, return) pairs:
+    input, return: "", ""
+    input, return: None, ""
+    input, return: "pt", ".pt"
+    input, return: ".pt", ".pt"
+    """
     file_format = "" if file_format is None else file_format
     if file_format != "" and "." not in file_format:
         file_format = "." + file_format
     return file_format
 
 
-def build_ml_data_name(params: Dict, stage: str, file_format: str=""):
+# def build_ml_data_name(params: Dict, stage: str, file_format: str=""):
+def build_ml_data_name(params: Dict, stage: str):
     """ Returns name of the ML/DL data file. E.g., train_data.pt
     TODO: params is not currently needed here. Consider removing this input arg.
+    TODO: consider renaming build_ml_data_file_name()
+    Used in *preprocess*.py*, *train*.py, and *infer*.py
     """
-    file_format = get_file_format(file_format=file_format)
-    return stage + "_" + "data" + file_format
+    # data_file_format = get_file_format(file_format=file_format)
+    data_file_format = get_file_format(file_format=params["data_format"])
+    ml_data_file_name = stage + "_" + "data" + data_file_format
+    return ml_data_file_name
 
 
-def create_model_outpath(params: Dict):
-    """ Create path to save the trained model """
-    model_outdir = Path(params["model_outdir"])
-    os.makedirs(model_outdir, exist_ok=True)
-    check_path(model_outdir)
-    # model_outpath = model_outdir / params["model_params"]
+def build_model_path(params: Dict, model_dir: Union[Path, str]):
+    """ Returns path to store the trained model. Creates dir if needed.
+    Used in *train*.py and *infer*.py
+    """
+    # model_dir = Path(params["model_outdir"])
+    # create_outdir(outdir=model_dir)
     model_file_format = get_file_format(file_format=params["model_file_format"])
-    model_outpath = model_outdir / (params["model_file_name"] + model_file_format)
-    return model_outpath
+    model_path = Path(model_dir) / (params["model_file_name"] + model_file_format)
+    return model_path
+
+
+# def create_model_outpath(params: Dict):
+# # def create_model_outpath(params: Dict, model_dir):
+#     """ Create path to save the trained model
+#     Used in *train*.py
+#     """
+#     model_dir = Path(params["model_outdir"])
+#     os.makedirs(model_dir, exist_ok=True)
+#     check_path(model_dir)
+#     # model_file_format = get_file_format(file_format=params["model_file_format"])
+#     # model_path = model_dir / (params["model_file_name"] + model_file_format)
+#     model_path = build_model_path(params, model_dir)
+#     return model_path
 
 
 def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
@@ -349,6 +411,7 @@ def store_predictions_df(params: Dict,
                          y_true: np.array,
                          y_pred: np.array,
                          stage: str,
+                         outdir: Union[Path, str],
                          round_decimals: int=4):
     """Store predictions with accompanying data frame.
 
@@ -391,7 +454,8 @@ def store_predictions_df(params: Dict,
 
     # output df fname
     ydf_out_fname = ydf_fname.split(".")[0] + "_" + params["y_data_preds_suffix"] + ".csv"
-    ydf_out_fpath = Path(params["ml_data_outdir"]) / ydf_out_fname
+    # ydf_out_fpath = Path(params["ml_data_outdir"]) / ydf_out_fname
+    ydf_out_fpath = Path(outdir) / ydf_out_fname
 
     # if indtd["df"] is not None:
     if ydf_fpath.exists():
@@ -418,7 +482,12 @@ def store_predictions_df(params: Dict,
     return None
 
 
-def compute_performace_scores(params, y_true, y_pred, metrics, stage):
+def compute_performace_scores(params: Dict,
+                              y_true: np.array,
+                              y_pred: np.array,
+                              stage: str,
+                              outdir: Union[Path, str],
+                              metrics: List):
     """Evaluate predictions according to specified metrics.
 
     Metrics are evaluated. Scores are stored in specified path and returned.
@@ -443,7 +512,8 @@ def compute_performace_scores(params, y_true, y_pred, metrics, stage):
 
     # fname = f"val_{params['json_scores_suffix']}.json"
     scores_fname = f"{stage}_{params['json_scores_suffix']}.json"
-    scorespath = Path(params["ml_data_outdir"]) / scores_fname
+    # scorespath = Path(params["ml_data_outdir"]) / scores_fname
+    scorespath = Path(outdir) / scores_fname
 
     with open(scorespath, "w", encoding="utf-8") as f:
         json.dump(scores, f, ensure_ascii=False, indent=4)
