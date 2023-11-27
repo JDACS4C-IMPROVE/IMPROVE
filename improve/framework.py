@@ -224,7 +224,7 @@ improve_train_conf = [
 ]
 
 # Parameters that are relevant to all IMPROVE testing scripts
-improve_test_conf = [
+improve_infer_conf = [
     {"name": "test_ml_data_dir", # workflow
      # "action": "store",
      "type": str,
@@ -259,7 +259,7 @@ improve_test_conf = [
 frm_additional_definitions = improve_basic_conf + \
     improve_preprocess_conf + \
     improve_train_conf + \
-    improve_test_conf
+    improve_infer_conf
 
 # Required
 frm_required = []
