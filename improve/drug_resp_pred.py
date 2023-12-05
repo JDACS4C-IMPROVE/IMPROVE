@@ -7,7 +7,6 @@ import pandas as pd
 
 # from improve import framework as frm
 from . import framework as frm
-
 # from .framework import imp_glob  ## ap; removed
 
 # ---------------------------------------------------------------
@@ -29,8 +28,9 @@ from . import framework as frm
 
 
 def get_common_samples(
-    df1: pd.DataFrame, df2: pd.DataFrame, ref_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        df1: pd.DataFrame,
+        df2: pd.DataFrame,
+        ref_col: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Search for common data in reference column and retain only .
 
     Args:
@@ -74,7 +74,7 @@ def get_common_samples(
     return df1, df2
 
 
-def common_elements(list1: List, list2: List, verbose: bool = False) -> List:
+def common_elements(list1: List, list2: List, verbose: bool=False) -> List:
     """
     Return list of elements that the provided lists have in common.
 
@@ -111,13 +111,11 @@ For example, in the copy number file the level_map is:
 level_map = {"Entrez":0, "Gene_Symbol": 1, "Ensembl": 2}
 """
 
-
 def set_col_names_in_multilevel_dataframe(
     df: pd.DataFrame,
     level_map: Dict,
-    gene_system_identifier: Union[str, List[str]] = "Gene_Symbol",
-) -> pd.DataFrame:
-    """Util function that supports loading of the omic data files.
+    gene_system_identifier: Union[str, List[str]] = "Gene_Symbol") -> pd.DataFrame:
+    """ Util function that supports loading of the omic data files.
     Returns the input dataframe with the multi-level column names renamed as
     specified by the gene_system_identifier arg.
 
@@ -142,31 +140,23 @@ def set_col_names_in_multilevel_dataframe(
 
     if isinstance(gene_system_identifier, str):
         if gene_system_identifier == "all":
-            df.columns = df.columns.rename(
-                level_names, level=level_values
-            )  # assign multi-level col names
+            df.columns = df.columns.rename(level_names, level=level_values)  # assign multi-level col names
         else:
-            df.columns = df.columns.get_level_values(
-                level_map[gene_system_identifier]
-            )  # retain specific column level
+            df.columns = df.columns.get_level_values(level_map[gene_system_identifier])  # retain specific column level
     else:
         if len(gene_system_identifier) > n_levels:
-            raise Exception(
-                f"ERROR ! 'gene_system_identifier' can't contain more than {n_levels} items.\n"
-            )
+            raise Exception(f"ERROR ! 'gene_system_identifier' can't contain more than {n_levels} items.\n")
         set_diff = list(set(gene_system_identifier).difference(set(level_names)))
         if len(set_diff) > 0:
             raise Exception(f"ERROR ! Passed unknown gene identifiers: {set_diff}.\n")
         kk = {i: level_map[i] for i in level_map if i in gene_system_identifier}
-        df.columns = df.columns.rename(
-            list(kk.keys()), level=kk.values()
-        )  # assign multi-level col names
+        df.columns = df.columns.rename(list(kk.keys()), level=kk.values())  # assign multi-level col names
         drop_levels = list(set(level_map.values()).difference(set(kk.values())))
         df = df.droplevel(level=drop_levels, axis=1)
     return df
 
 
-class OmicsLoader:
+class OmicsLoader():
     """
     Class aggregates methods to load omics data.
 
@@ -181,10 +171,11 @@ class OmicsLoader:
         print(dir(omics_loader))
         ge = omics_loader["cancer_gene_expression.tsv"]
     """
+    def __init__(self,
+                 params: Dict,  # improve params
+                 sep: str = "\t",
+                 verbose: bool = True):
 
-    def __init__(
-        self, params: Dict, sep: str = "\t", verbose: bool = True  # improve params
-    ):
         self.copy_number_fname = "cancer_copy_number.tsv"
         self.discretized_copy_number_fname = "cancer_discretized_copy_number.tsv"
         self.dna_methylation_fname = "cancer_DNA_methylation.tsv"
@@ -193,16 +184,14 @@ class OmicsLoader:
         self.mutation_count_fname = "cancer_mutation_count.tsv"
         self.mutation_fname = "cancer_mutation.tsv"
         self.rppa_fname = "cancer_RPPA.tsv"
-        self.known_file_names = [
-            self.copy_number_fname,
-            self.discretized_copy_number_fname,
-            self.dna_methylation_fname,
-            self.gene_expression_fname,
-            self.miRNA_expression_fname,
-            self.mutation_count_fname,
-            self.mutation_fname,
-            self.rppa_fname,
-        ]
+        self.known_file_names = [self.copy_number_fname,
+                                 self.discretized_copy_number_fname,
+                                 self.dna_methylation_fname,
+                                 self.gene_expression_fname,
+                                 self.miRNA_expression_fname,
+                                 self.mutation_count_fname,
+                                 self.mutation_fname,
+                                 self.rppa_fname]
 
         self.sep = sep
         self.inp = params["x_data_canc_files"]
@@ -216,9 +205,7 @@ class OmicsLoader:
 
         self.inp_fnames = []
         for i in self.inp:
-            assert (
-                len(i) > 0 and len(i) < 3
-            ), f"Inner lists must contain one or two items, but {i} is {len(i)}"
+            assert len(i) > 0 and len(i) < 3, f"Inner lists must contain one or two items, but {i} is {len(i)}"
             self.inp_fnames.append(i[0])
         # print(self.inp_fnames)
 
@@ -226,9 +213,7 @@ class OmicsLoader:
 
     def __repr__(self):
         if self.dfs:
-            return "Loaded data\n" + "\n".join(
-                [f"{fname}: {df.shape}" for fname, df in self.dfs.items()]
-            )
+            return "Loaded data\n" + "\n".join([f"{fname}: {df.shape}" for fname, df in self.dfs.items()])
         else:
             return "No data files were loaded."
 
@@ -238,7 +223,7 @@ class OmicsLoader:
             raise Exception(f"ERROR ! {fpath} not found.\n")
 
     def load_all_omics_data(self):
-        """Load all omics data appear in self.inp"""
+        """ Load all omics data appear in self.inp """
         for i in self.inp:
             fname = i[0]
             if len(i) > 1:
@@ -248,19 +233,19 @@ class OmicsLoader:
 
             if fname == self.copy_number_fname:
                 level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
-            elif fname == self.discretized_copy_number_fname:
+            elif fname == self.discretized_copy_number_fname: 
                 level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
-            elif fname == self.dna_methylation_fname:
+            elif fname == self.dna_methylation_fname: 
                 level_map = {"Ensembl": 2, "Entrez": 1, "Gene_Symbol": 3, "TSS": 0}
-            elif fname == self.gene_expression_fname:
+            elif fname == self.gene_expression_fname: 
                 level_map = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
-            elif fname == self.miRNA_expression_fname:
+            elif fname == self.miRNA_expression_fname: 
                 raise NotImplementedError(f"{fname} not implemeted yet.")
-            elif fname == self.mutation_count_fname:
+            elif fname == self.mutation_count_fname: 
                 level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
-            elif fname == self.mutation_fname:
+            elif fname == self.mutation_fname: 
                 raise NotImplementedError(f"{fname} not implemeted yet.")
-            elif fname == self.rppa_fname:
+            elif fname == self.rppa_fname: 
                 raise NotImplementedError(f"{fname} not implemeted yet.")
             else:
                 raise NotImplementedError(f"Option '{fname}' not recognized.")
@@ -272,9 +257,7 @@ class OmicsLoader:
             header = [i for i in range(len(level_map))]
             df = pd.read_csv(fpath, sep=self.sep, index_col=0, header=header)
             df.index.name = self.canc_col_name  # assign index name
-            df = set_col_names_in_multilevel_dataframe(
-                df, level_map, gene_system_identifier
-            )
+            df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
             df = df.reset_index()
             self.dfs[fname] = df
 
@@ -285,12 +268,13 @@ class OmicsLoader:
         # print("done")
 
 
+
+
 # ==============================================================
 # Drug feature loaders
 # ==============================================================
 
-
-class DrugsLoader:
+class DrugsLoader():
     """
     Example:
         from improve import drug_resp_pred as drp
@@ -299,18 +283,17 @@ class DrugsLoader:
         print(dir(drugs_loader))
         smi = drugs_loader["drug_SMILES.tsv"]
     """
+    def __init__(self,
+                 params: Dict,  # improve params
+                 sep: str = "\t",
+                 verbose: bool = True):
 
-    def __init__(
-        self, params: Dict, sep: str = "\t", verbose: bool = True  # improve params
-    ):
         self.smiles_fname = "drug_SMILES.tsv"
         self.mordred_fname = "drug_mordred.tsv"
         self.ecfp4_512bit_fname = "drug_ecfp4_nbits512.tsv"
-        self.known_file_names = [
-            self.smiles_fname,
-            self.mordred_fname,
-            self.ecfp4_512bit_fname,
-        ]
+        self.known_file_names = [self.smiles_fname,
+                                 self.mordred_fname,
+                                 self.ecfp4_512bit_fname]
 
         self.sep = sep
         self.inp = params["x_data_drug_files"]
@@ -324,9 +307,7 @@ class DrugsLoader:
 
         self.inp_fnames = []
         for i in self.inp:
-            assert (
-                len(i) == 1
-            ), f"Inner lists must contain only one item, but {i} is {len(i)}"
+            assert len(i) == 1, f"Inner lists must contain only one item, but {i} is {len(i)}"
             self.inp_fnames.append(i[0])
         # print(self.inp_fnames)
 
@@ -334,9 +315,7 @@ class DrugsLoader:
 
     def __repr__(self):
         if self.dfs:
-            return "Loaded data\n" + "\n".join(
-                [f"{fname}: {df.shape}" for fname, df in self.dfs.items()]
-            )
+            return "Loaded data\n" + "\n".join([f"{fname}: {df.shape}" for fname, df in self.dfs.items()])
         else:
             return "No data files were loaded."
 
@@ -346,14 +325,15 @@ class DrugsLoader:
             raise Exception(f"ERROR ! {fpath} not found.\n")
 
     def load_drug_data(self, fname):
-        """..."""
+        """ ... """
         fpath = self.x_data_path / fname
         DrugsLoader.check_path(fpath)
         df = pd.read_csv(fpath, sep=self.sep)
+        df = df.set_index(self.drug_col_name)
         return df
 
     def load_all_drug_data(self):
-        """..."""
+        """ ... """
         for i in self.inp:
             fname = i[0]
             self.dfs[fname] = self.load_drug_data(fname)
@@ -363,6 +343,8 @@ class DrugsLoader:
         # print(self.dfs[self.mordred_fname].iloc[:4, :4])
         # print(self.dfs[self.ecfp4_512bit_fname].iloc[:4, :4])
         # print("done")
+
+
 
 
 # ==============================================================
@@ -379,7 +361,7 @@ class DrugsLoader:
 # verbose: bool = True) -> pd.DataFrame:
 
 
-class DrugResponseLoader:
+class DrugResponseLoader():
     """
     Class for loading monotherapy drug response data.
 
@@ -395,14 +377,12 @@ class DrugResponseLoader:
         print(dir(drp_loader))
         rsp = drp_loader["response.tsv"]
     """
+    def __init__(self,
+                 params: Dict,  # improve params
+                 split_file: str,
+                 sep: str = "\t",
+                 verbose: bool = True):
 
-    def __init__(
-        self,
-        params: Dict,  # improve params
-        split_file: str,
-        sep: str = "\t",
-        verbose: bool = True,
-    ):
         self.response_fname = "response.tsv"
         self.known_file_names = [self.response_fname]
 
@@ -414,7 +394,7 @@ class DrugResponseLoader:
 
         # self.y_data_path = params["y_data_path"]/params["y_data_files"][0][0]
         self.y_data_path = params["y_data_path"]
-        self.split_fpath = params["splits_path"] / split_file
+        self.split_fpath = params["splits_path"]/split_file
         self.dfs = {}
 
         if verbose:
@@ -423,9 +403,7 @@ class DrugResponseLoader:
 
         self.inp_fnames = []
         for i in self.inp:
-            assert (
-                len(i) == 1
-            ), f"Inner lists must contain only one item, but {i} is {len(i)}"
+            assert len(i) == 1, f"Inner lists must contain only one item, but {i} is {len(i)}"
             self.inp_fnames.append(i[0])
         # print(self.inp_fnames)
 
@@ -435,14 +413,7 @@ class DrugResponseLoader:
         if self.dfs:
             to_print = []
             to_print.append("Loaded data\n")
-            to_print.append(
-                "\n".join(
-                    [
-                        f"{fname}: {df.shape} \nUnique cells: {df[self.canc_col_name].nunique()} \nUnique drugs: {df[self.drug_col_name].nunique()}"
-                        for fname, df in self.dfs.items()
-                    ]
-                )
-            )
+            to_print.append( "\n".join([f"{fname}: {df.shape} \nUnique cells: {df[self.canc_col_name].nunique()} \nUnique drugs: {df[self.drug_col_name].nunique()}" for fname, df in self.dfs.items()]) )
             to_print = "".join(to_print)
             return to_print
         else:
@@ -460,7 +431,7 @@ class DrugResponseLoader:
         return df
 
     def load_all_response_data(self, verbose: str = True):
-        """..."""
+        """ ... """
         for i in self.inp:
             fname = i[0]
             df = self.load_response_data(fname)
