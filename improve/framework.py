@@ -8,7 +8,6 @@ from typing import List, Set, Union, NewType, Dict, Optional # use NewType becua
 
 import numpy as np
 import pandas as pd
-import torch
 
 from .metrics import compute_metrics
 
@@ -265,15 +264,21 @@ frm_additional_definitions = improve_basic_conf + \
 frm_required = []
 
 
-def check_path(path):
+def check_path(path: Path):
     if path.exists() == False:
         raise Exception(f"ERROR ! {path} not found.\n")
 
 
-def build_paths(params):
+def build_paths(params: Dict):
     """ Build paths for raw_data, x_data, y_data, splits.
-    These paths determine directories for benchmark datasets.
+    These paths determine directories for a benchmark dataset.
     TODO: consider renaming to build_benchmark_data_paths()
+
+    Args:
+        params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
+
+    Returns:
+        dict: updated dict of CANDLE/IMPROVE parameters and parsed values.
     """
     mainpath = Path(os.environ["IMPROVE_DATA_DIR"])
     check_path(mainpath)
@@ -315,7 +320,14 @@ def build_paths(params):
 
 
 def create_outdir(outdir: Union[Path, str]):
-    """ Create directory. """
+    """ Create directory.
+
+    Args:
+        outdir (Path or str): dir path to create
+
+    Returns:
+        pathlib.Path: returns the created dir path
+    """
     outdir = Path(outdir)
     if outdir.exists():
         print(f"Dir already exists: {outdir}")
@@ -368,8 +380,15 @@ def build_ml_data_name(params: Dict, stage: str):
 
 
 def build_model_path(params: Dict, model_dir: Union[Path, str]):
-    """ Returns path to store the trained model. Creates dir if needed.
+    """ Build path to save the trained model.
     Used in *train*.py and *infer*.py
+
+    Args:
+        params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
+        model_dir (Path or str): dir path to save the model
+
+    Returns:
+        pathlib.Path: returns the build model dir path
     """
     # model_dir = Path(params["model_outdir"])
     # create_outdir(outdir=model_dir)
@@ -450,7 +469,8 @@ def store_predictions_df(params: Dict,
     # Attempt to concatenate raw predictions with y dataframe (e.g., df that
     # contains cancer ids, drug ids, and the true response values)
     ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"  # TODO. f"{stage}_{params['y_data_stage_fname_suffix']}.csv"  
-    ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+    # ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+    ydf_fpath = Path(params[f"{stage}_ml_data_dir"]) / ydf_fname
 
     # output df fname
     ydf_out_fname = ydf_fname.split(".")[0] + "_" + params["y_data_preds_suffix"] + ".csv"
@@ -464,8 +484,12 @@ def store_predictions_df(params: Dict,
         # Check dimensions
         assert len(y_true) == rsp_df.shape[0], f"length of y_true ({len(y_true)}) and the loaded file ({ydf_fpath} --> {rsp_df.shape[0]}) don't match"
 
-        pred_df = pd.DataFrame(y_pred, columns=[pred_col_name])  # This includes only predicted values
+        #pred_df = pd.DataFrame(y_pred, columns=[pred_col_name])  # Include only predicted values
+        pred_df = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})  # This includes only predicted values
         mm = pd.concat([rsp_df, pred_df], axis=1)
+        v1 = mm[params["y_col_name"]].values.astype(np.float32)
+        v2 = pred_df[true_col_name].values.astype(np.float32)
+        assert all(v1 == v2), "Loaded y data vector is not equal to the true vector"
         mm = mm.astype({params["y_col_name"]: np.float32, pred_col_name: np.float32})
         df = mm.round({params["y_col_name"]: round_decimals,
                        pred_col_name: round_decimals})
