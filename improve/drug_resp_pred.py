@@ -201,7 +201,7 @@ class OmicsLoader():
 
         if verbose:
             print(f"x_data_canc_files: {params['x_data_canc_files']}")
-            print(f"canc_cole_name: {params['canc_col_name']}")
+            print(f"canc_col_name: {params['canc_col_name']}")
 
         self.inp_fnames = []
         for i in self.inp:
