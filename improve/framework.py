@@ -369,7 +369,6 @@ def get_file_format(file_format: Union[str, None]=None):
 # def build_ml_data_name(params: Dict, stage: str, file_format: str=""):
 def build_ml_data_name(params: Dict, stage: str):
     """ Returns name of the ML/DL data file. E.g., train_data.pt
-    TODO: params is not currently needed here. Consider removing this input arg.
     TODO: consider renaming build_ml_data_file_name()
     Used in *preprocess*.py*, *train*.py, and *infer*.py
     """
