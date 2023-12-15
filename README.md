@@ -1,16 +1,20 @@
 # IMPROVE
 Libraries and scripts for basic IMPROVE functionalities 
 
-## Example
-This example shows how to the use the improve library with the GraphDRP model.
+## Examples
+Two repositories demonstrating the use for IMPROVE lib for drug response prediction.
+* https://github.com/JDACS4C-IMPROVE/GraphDRP/tree/develop -- GraphDRP (deep learning model based on graph neural network)
+* https://github.com/JDACS4C-IMPROVE/LGBM/tree/master -- LightGBM model
 
 ### GraphDRP
+This example shows how to the use the improve library with the GraphDRP model.
+
 Clone the model into some directory. E.g., `/lambda_stor/data/apartin/projects/IMPROVE/pan-models`
 ```bash
 cd /lambda_stor/data/apartin/projects/IMPROVE/pan-models
 git clone https://github.com/JDACS4C-IMPROVE/GraphDRP
 cd GraphDRP
-git checkout cristina/candleize-ap
+git checkout develop
 ```
 
 ### Download data
@@ -38,11 +42,3 @@ cd /lambda_stor/data/apartin/projects/IMPROVE/pan-models/GraphDRP
 export PYTHONPATH=$PYTHONPATH:/lambda_stor/data/apartin/projects/IMPROVE/pan-models/IMPROVE
 export IMPROVE_DATA_DIR="./csa_data/"
 ```
-
-## Packages
-TODO
-
-### Utils
-TODO
-
-- name: utils.py
