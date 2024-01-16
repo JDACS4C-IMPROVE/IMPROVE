@@ -30,7 +30,7 @@ DRP_model
 Specify the full path to the IMPROVE library with $PYTHONPATH and the path to the CSA data with $IMPROVE_DATA_DIR.
 ```bash
 cd DRP_model
-export PYTHONPATH=$PYTHONPATH:/lambda_stor/data/apartin/projects/IMPROVE/pan-models/IMPROVE
+export PYTHONPATH=$PYTHONPATH::/your/path/to/IMPROVE
 export IMPROVE_DATA_DIR="./csa_data/"
 ```
 
