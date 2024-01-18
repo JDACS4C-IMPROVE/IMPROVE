@@ -28,7 +28,7 @@ DRP_model
 
 ## Set environment variables
 
-Specify the full path to the IMPROVE library with $PYTHONPATH and the path to the CSA data with $IMPROVE_DATA_DIR.
+Specify the full path to the `IMPROVE` library with $PYTHONPATH and the path to the CSA data with $IMPROVE_DATA_DIR.
 ```bash
 cd DRP_model
 export PYTHONPATH=$PYTHONPATH:/your/path/to/IMPROVE
@@ -36,9 +36,9 @@ export IMPROVE_DATA_DIR="./csa_data/"
 ```
 
 ## Tutorial
-For a detailed guide on how to use the IMPROVE library using an example model, LightGBM, see https://jdacs4c-improve.github.io/docs/content/unified_interface.html.
+For a detailed guide on how to use the `IMPROVE` library using an example model, LightGBM, see https://jdacs4c-improve.github.io/docs/content/unified_interface.html.
 
 ## Examples
-Two repositories demonstrating the use of the IMPROVE library for drug response prediction:
+Two repositories demonstrating the use of the `IMPROVE` library for drug response prediction:
 * https://github.com/JDACS4C-IMPROVE/GraphDRP/tree/develop -- GraphDRP (deep learning model based on graph neural network)
 * https://github.com/JDACS4C-IMPROVE/LGBM/tree/develop -- LightGBM model
