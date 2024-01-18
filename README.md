@@ -8,6 +8,7 @@ Clone the `IMPROVE` repository to a directory of your preference (outside of you
 
 ```bash
 git clone https://github.com/JDACS4C-IMPROVE/IMPROVE
+cd IMPROVE
 git checkout develop
 ```
 
@@ -30,7 +31,7 @@ DRP_model
 Specify the full path to the IMPROVE library with $PYTHONPATH and the path to the CSA data with $IMPROVE_DATA_DIR.
 ```bash
 cd DRP_model
-export PYTHONPATH=$PYTHONPATH::/your/path/to/IMPROVE
+export PYTHONPATH=$PYTHONPATH:/your/path/to/IMPROVE
 export IMPROVE_DATA_DIR="./csa_data/"
 ```
 
@@ -41,13 +42,3 @@ For a detailed guide on how to use the IMPROVE library using an example model, L
 Two repositories demonstrating the use of the IMPROVE library for drug response prediction:
 * https://github.com/JDACS4C-IMPROVE/GraphDRP/tree/develop -- GraphDRP (deep learning model based on graph neural network)
 * https://github.com/JDACS4C-IMPROVE/LGBM/tree/develop -- LightGBM model
-
-
-
-
-
-3. specify $PYTHOPATH and $IMPROVE_DATA_DIR environment variables.
-```bash
-export PYTHONPATH=$PYTHONPATH:/lambda_stor/data/apartin/projects/IMPROVE/pan-models/IMPROVE
-export IMPROVE_DATA_DIR="./csa_data/"
-```
