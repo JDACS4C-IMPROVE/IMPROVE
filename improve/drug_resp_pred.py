@@ -182,7 +182,8 @@ class OmicsLoader():
         self.gene_expression_fname = "cancer_gene_expression.tsv"
         self.miRNA_expression_fname = "cancer_miRNA_expression.tsv"
         self.mutation_count_fname = "cancer_mutation_count.tsv"
-        self.mutation_fname = "cancer_mutation.tsv"
+        self.mutation_long_format_fname = "cancer_mutation_long_format.tsv"
+        self.mutation_fname = "cancer_mutation.parquet"
         self.rppa_fname = "cancer_RPPA.tsv"
         self.known_file_names = [self.copy_number_fname,
                                  self.discretized_copy_number_fname,
@@ -190,18 +191,23 @@ class OmicsLoader():
                                  self.gene_expression_fname,
                                  self.miRNA_expression_fname,
                                  self.mutation_count_fname,
+                                 self.mutation_long_format_fname,
                                  self.mutation_fname,
                                  self.rppa_fname]
 
+        self.params = params
         self.sep = sep
         self.inp = params["x_data_canc_files"]
         self.x_data_path = params["x_data_path"]
         self.canc_col_name = params["canc_col_name"]
         self.dfs = {}
+        self.verbose = verbose
 
-        if verbose:
-            print(f"x_data_canc_files: {params['x_data_canc_files']}")
+        if self.verbose:
             print(f"canc_col_name: {params['canc_col_name']}")
+            print(f"x_data_canc_files:")
+            for i, o in enumerate(params['x_data_canc_files']):
+                print(f"{i+1}. {o}")
 
         self.inp_fnames = []
         for i in self.inp:
@@ -213,7 +219,7 @@ class OmicsLoader():
 
     def __repr__(self):
         if self.dfs:
-            return "Loaded data\n" + "\n".join([f"{fname}: {df.shape}" for fname, df in self.dfs.items()])
+            return "Loaded data:\n" + "\n".join([f"{fname}: {df.shape}" for fname, df in self.dfs.items()])
         else:
             return "No data files were loaded."
 
@@ -240,13 +246,15 @@ class OmicsLoader():
             elif fname == self.gene_expression_fname: 
                 level_map = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
             elif fname == self.miRNA_expression_fname: 
-                raise NotImplementedError(f"{fname} not implemeted yet.")
+                level_map = {"miRNA_ID": 0}
             elif fname == self.mutation_count_fname: 
                 level_map = {"Ensembl": 2, "Entrez": 0, "Gene_Symbol": 1}
+            elif fname == self.mutation_long_format_fname:
+                level_map = None  # no levels in long format omics files
             elif fname == self.mutation_fname: 
-                raise NotImplementedError(f"{fname} not implemeted yet.")
+                level_map = None  # level_map is not used with parquet file
             elif fname == self.rppa_fname: 
-                raise NotImplementedError(f"{fname} not implemeted yet.")
+                level_map = {"Antibody": 0}
             else:
                 raise NotImplementedError(f"Option '{fname}' not recognized.")
 
@@ -254,18 +262,35 @@ class OmicsLoader():
             fpath = self.x_data_path / fname
             OmicsLoader.check_path(fpath)
 
-            header = [i for i in range(len(level_map))]
-            df = pd.read_csv(fpath, sep=self.sep, index_col=0, header=header)
-            df.index.name = self.canc_col_name  # assign index name
-            df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
-            df = df.reset_index()
+            if self.verbose:
+                print(f"Loading {fpath}")
+
+            if fname.split(".")[-1] == "parquet":
+                df = pd.read_parquet(fpath)
+            elif "long_format" in fname:
+                df = pd.read_csv(fpath, sep=self.sep)
+            else:
+                # header is used for multilevel omics files
+                header = [i for i in range(len(level_map))]
+                df = pd.read_csv(fpath, sep=self.sep, index_col=0, header=header)
+
+            if level_map is not None:
+            # if "long_format" not in fname:
+                # print(df.iloc[:4, :5])
+                df.index.name = self.canc_col_name  # assign index name
+                # print(df.iloc[:4, :5])
+                df = set_col_names_in_multilevel_dataframe(df, level_map, gene_system_identifier)
+                # print(df.iloc[:4, :4])
+                df = df.reset_index()
+                # print(df.iloc[:4, :5])
+
             self.dfs[fname] = df
 
-        # import ipdb; ipdb.set_trace()
+        # breakpoint()
         # print(self.dfs[self.copy_number_fname].iloc[:4, :4])
         # print(self.dfs[self.gene_expression_fname].iloc[:4, :4])
         # print(self.dfs[self.dna_methylation_fname].iloc[:4, :4])
-        # print("done")
+        print("Finished loading omics data.")
 
 
 
@@ -295,15 +320,20 @@ class DrugsLoader():
                                  self.mordred_fname,
                                  self.ecfp4_512bit_fname]
 
+        self.params = params
         self.sep = sep
         self.inp = params["x_data_drug_files"]
         self.drug_col_name = params["drug_col_name"]
         self.x_data_path = params["x_data_path"]
         self.dfs = {}
+        self.verbose = verbose
 
-        if verbose:
-            print(f"x_data_drug_files: {params['x_data_drug_files']}")
+        if self.verbose:
+            # print(f"x_data_drug_files: {params['x_data_drug_files']}")
             print(f"drug_col_name: {params['drug_col_name']}")
+            print("x_data_drug_files:")
+            for i, d in enumerate(params['x_data_drug_files']):
+                print(f"{i+1}. {d}")
 
         self.inp_fnames = []
         for i in self.inp:
@@ -315,7 +345,7 @@ class DrugsLoader():
 
     def __repr__(self):
         if self.dfs:
-            return "Loaded data\n" + "\n".join([f"{fname}: {df.shape}" for fname, df in self.dfs.items()])
+            return "Loaded data:\n" + "\n".join([f"{fname}: {df.shape}" for fname, df in self.dfs.items()])
         else:
             return "No data files were loaded."
 
@@ -328,6 +358,8 @@ class DrugsLoader():
         """ ... """
         fpath = self.x_data_path / fname
         DrugsLoader.check_path(fpath)
+        # if self.verbose:
+        #     print(f"Loading {fpath}")
         df = pd.read_csv(fpath, sep=self.sep)
         df = df.set_index(self.drug_col_name)
         return df
@@ -338,11 +370,10 @@ class DrugsLoader():
             fname = i[0]
             self.dfs[fname] = self.load_drug_data(fname)
 
-        # import ipdb; ipdb.set_trace()
         # print(self.dfs[self.smiles_fname].iloc[:4, :])
         # print(self.dfs[self.mordred_fname].iloc[:4, :4])
         # print(self.dfs[self.ecfp4_512bit_fname].iloc[:4, :4])
-        # print("done")
+        print("Finished loading drug data.")
 
 
 
@@ -386,6 +417,7 @@ class DrugResponseLoader():
         self.response_fname = "response.tsv"
         self.known_file_names = [self.response_fname]
 
+        self.params = params
         self.sep = sep
         self.inp = params["y_data_files"]
         self.y_col_name = params["y_col_name"]
@@ -396,8 +428,9 @@ class DrugResponseLoader():
         self.y_data_path = params["y_data_path"]
         self.split_fpath = params["splits_path"]/split_file
         self.dfs = {}
+        self.verbose = verbose
 
-        if verbose:
+        if self.verbose:
             print(f"y_data_files: {params['y_data_files']}")
             print(f"y_col_name: {params['y_col_name']}")
 
@@ -412,7 +445,7 @@ class DrugResponseLoader():
     def __repr__(self):
         if self.dfs:
             to_print = []
-            to_print.append("Loaded data\n")
+            to_print.append("Loaded data:\n")
             to_print.append( "\n".join([f"{fname}: {df.shape} \nUnique cells: {df[self.canc_col_name].nunique()} \nUnique drugs: {df[self.drug_col_name].nunique()}" for fname, df in self.dfs.items()]) )
             to_print = "".join(to_print)
             return to_print
