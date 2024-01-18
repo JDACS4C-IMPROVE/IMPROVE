@@ -485,20 +485,26 @@ def store_predictions_df(params: Dict,
 
         #pred_df = pd.DataFrame(y_pred, columns=[pred_col_name])  # Include only predicted values
         pred_df = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})  # This includes only predicted values
+        v1 = np.round(rsp_df[params["y_col_name"]].values.astype(np.float32),
+                      decimals=round_decimals)
+        v2 = np.round(pred_df[true_col_name].values.astype(np.float32),
+                      decimals=round_decimals)
+        assert np.array_equal(v1, v2), "Loaded y data vector is not equal to the true vector"
         mm = pd.concat([rsp_df, pred_df], axis=1)
-        v1 = mm[params["y_col_name"]].values.astype(np.float32)
-        v2 = pred_df[true_col_name].values.astype(np.float32)
-        assert all(v1 == v2), "Loaded y data vector is not equal to the true vector"
-        mm = mm.astype({params["y_col_name"]: np.float32, pred_col_name: np.float32})
-        df = mm.round({params["y_col_name"]: round_decimals,
+        mm = mm.astype({params["y_col_name"]: np.float32,
+                        true_col_name: np.float32,
+                        pred_col_name: np.float32})
+        df = mm.round({true_col_name: round_decimals,
                        pred_col_name: round_decimals})
         df.to_csv(ydf_out_fpath, index=False) # Save predictions dataframe
         # y_true_return = rsp_df[params["y_col_name"]].values # Read from data frame
 
     else:
         # Save only ground truth and predictions since did not load the corresponding dataframe
-        df_ = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})  # This includes true and predicted values
-        df_.to_csv(ydf_out_fpath, index=False)
+        df = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})  # This includes true and predicted values
+        df = mm.round({true_col_name: round_decimals,
+                       pred_col_name: round_decimals})
+        df.to_csv(ydf_out_fpath, index=False)
         # y_true_return = y_true
 
     # return y_true_return
