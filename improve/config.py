@@ -1,6 +1,7 @@
 import os
 import logging
 import configparser
+from pathlib import Path
 
 
 
@@ -18,7 +19,12 @@ class Config:
         self.params = {}
         self.file = None
         self.logger = logging.getLogger('Config')
-        self.config = configparser.ConfigParser() 
+        self.config = configparser.ConfigParser()
+
+        # Set Defaults
+        self.config.set("DEFAULT" , "input_dir" , "./")
+        self.config.set("DEFAULT" , "output_dir" , "./")
+
     
         
     def load_config(self, ):
@@ -31,8 +37,19 @@ class Config:
 
         
 
-    def save_config(self,):
-        pass
+    def save_config(self, file , config=None):
+        if os.path.isabs(file):
+            self.config.read(file)
+        else:
+            path = Path(config['output_dir'] , file)
+
+            if not Path(path.parent).exists() :
+                self.logger.debug("Creating directory %s for saving config file." , path.parent)
+                path.parent.mkdir(exist_ok = True)
+    
+
+            with path.open("w") as f:
+                self.config.write(f)
 
     def param(self, section="DEFAULT" , key=None , value=None) -> list[str, ConfigError]:
         """
@@ -58,9 +75,27 @@ class Config:
 
         return (value, error)
 
-    def dict(self) -> dict :
-        return self.config
-        pass
+    def dict(self, section=None) -> dict :
+
+        params = {}
+        sections=[]
+
+        if section :
+            sections=[section]
+        else:
+            sections=cfg.config.sections()
+        
+        if section:
+            for i in cfg.config.items(section):
+                params[i[0]]=i[1]
+        else:
+            for s in cfg.config.sections():
+                params[s]={}
+                for i in cfg.config.items(s):
+                    params[s][i[0]]=i[1]
+
+        return params
+    
 
 if __name__ == "__main__":
     cfg=Config()
@@ -75,3 +110,5 @@ if __name__ == "__main__":
         for item in cfg.config.items(section[0], raw=False):
             print(item)
     print(cfg.param( "Infer" , 'weihgts' , None))
+    print(cfg.dict('Infer'))
+    cfg.save_config("./tmp/saved.config" , config=cfg.config['DEFAULT'])
