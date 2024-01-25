@@ -14,16 +14,36 @@ class Config:
         # Default format 
         FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
         logging.basicConfig(format=FORMAT)
-      
        
         self.params = {}
         self.file = None
+        self.input_dir = None
+        self.output_dir = None
         self.logger = logging.getLogger('Config')
+        self.logger.setLevel(logging.DEBUG)
         self.config = configparser.ConfigParser()
 
-        # Set Defaults
-        self.config.set("DEFAULT" , "input_dir" , "./")
-        self.config.set("DEFAULT" , "output_dir" , "./")
+        # Set Defaults and conventions
+        
+        if "CANDLE_DATA_DIR" in os.environ and "IMPROVE_DATA_DIR" in os.environ:
+            if not os.getenv('IMPROVE_DATA_DIR') == os.getenv("CANDLE_DATA_DIR"):
+                self.logger.error("Found CANDLE_DATA_DIR and IMPROVE_DATA_DIR but not identical.")
+                raise ValueError('Alias not identical')
+            else:
+                self.config.set("DEFAULT" , "input_dir" , os.getenv("IMPROVE_DATA_DIR","./"))
+
+        elif "CANDLE_DATA_DIR" in os.environ:
+            os.environ["IMPROVE_DATA_DIR"] = os.environ["CANDLE_DATA_DIR"] 
+        else:
+            pass
+
+        if not "IMPOVE_OUTPUT_DIR" in os.environ :
+            self.logger.debug('Setting output directory')
+            os.environ["IMPROVE_OUTPUT_DIR"] = os.environ.get("IMPROVE_DATA_DIR" , "./")
+
+        self.config.set("DEFAULT" , "input_dir" , os.environ.get("IMPROVE_DATA_DIR" , "./"))
+        self.config.set("DEFAULT" , "output_dir" , os.environ.get("IMPROVE_OUTPUT_DIR" , "./"))
+
 
     
         
@@ -45,7 +65,7 @@ class Config:
 
             if not Path(path.parent).exists() :
                 self.logger.debug("Creating directory %s for saving config file." , path.parent)
-                path.parent.mkdir(exist_ok = True)
+                Path(path.parent).mkdir(parents=True , exist_ok = True)
     
 
             with path.open("w") as f:
