@@ -1,13 +1,14 @@
 import os
 import logging
 import configparser
+
 from pathlib import Path
 
 
 
 class Config:
 
-    ConfigError = str
+    # ConfigError = str
 
     def __init__(self) -> None:
 
@@ -47,7 +48,7 @@ class Config:
 
     
         
-    def load_config(self, ):
+    def load_config(self):
 
         if self.file and os.path.isfile(self.file) :
             self.logger.info("Loading config from %s" , self.file)
@@ -71,7 +72,7 @@ class Config:
             with path.open("w") as f:
                 self.config.write(f)
 
-    def param(self, section="DEFAULT" , key=None , value=None) -> list[str, ConfigError]:
+    def param(self, section="DEFAULT" , key=None , value=None) -> (str,str):
         """
         Get or set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
@@ -103,15 +104,15 @@ class Config:
         if section :
             sections=[section]
         else:
-            sections=cfg.config.sections()
+            sections=self.config.sections()
         
         if section:
-            for i in cfg.config.items(section):
+            for i in self.config.items(section):
                 params[i[0]]=i[1]
         else:
-            for s in cfg.config.sections():
+            for s in self.config.sections():
                 params[s]={}
-                for i in cfg.config.items(s):
+                for i in self.config.items(s):
                     params[s][i[0]]=i[1]
 
         return params
