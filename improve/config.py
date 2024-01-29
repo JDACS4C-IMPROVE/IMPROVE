@@ -3,6 +3,7 @@ import logging
 import configparser
 
 from pathlib import Path
+from improve.cli import CLI
 
 
 
@@ -16,12 +17,17 @@ class Config:
         FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
         logging.basicConfig(format=FORMAT)
        
+        required=[ "input_dir", "output_dir", "log_level", 'config_file']
+        
+  
+
         self.params = {}
         self.file = None
         self.input_dir = None
         self.output_dir = None
         self.logger = logging.getLogger('Config')
         self.logger.setLevel(logging.DEBUG)
+        self.required = required
         self.config = configparser.ConfigParser()
 
         # Set Defaults and conventions
@@ -93,8 +99,33 @@ class Config:
             self.logger.error(error)
             value=None
 
-
         return (value, error)
+    
+    def set_param(self, section="DEFAULT" , key=None , value=None) -> (str,str):
+        """
+        Get or set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
+        Allowed section names are: Preprocess, Train and Infer
+        """
+        
+        msg=None
+
+        if key:
+            if not self.config.has_section(section) and not section=="DEFAULT":
+                msg="Unknow section " + str(section)
+                self.logger.debug(msg)
+                self.config[section] = {}      
+            
+            if value is None :
+                value = ''
+            
+            self.logger.debug("Key:%s\tValue:%s", key , value)
+            self.config[section][key]=str(value)
+        else:
+            msg = "Can't update config, empty key"
+            self.logger.error(msg)
+            return (None, msg)
+
+        return (self.config[section][key], msg)
 
     def dict(self, section=None) -> dict :
 
@@ -117,6 +148,62 @@ class Config:
 
         return params
     
+    def check_required(self):
+        pass
+
+    def initialize_parameters(self,
+                              pathToModelDir,
+                              section='DEFAULT',
+                              default_config='default.cfg', # located in ModelDir
+                              default_model=None,
+                              additional_definitions=None,
+                              required=None,):
+        
+        # Set and get command line args
+        #
+        # additonal_definitions in argparse format plus name:
+        # [{ 'action' : 'store' , 'choices' : [ 'A' , 'B' , 'C' ] , 'type' : str , 'name' : "dest" }]
+        # use set_set_command_line_options or cli.parser.add_argument(....)
+        
+        cli=CLI()
+        cli.set_command_line_options(options=additional_definitions)
+        cli.get_command_line_options()
+        options = cli.params
+        
+
+        # Load Config
+        if os.path.isdir(cli.args.input_dir) :
+
+            # Set config file name
+            if cli.args.config_file:        
+                self.file = cli.args.config_file
+            else:
+                self.file = pathToModelDir + "/" + default_config
+            
+            # Set full path for config
+            if not os.path.abspath(self.file):
+                self.logger.debug("Not absolute path for config file. Should be relative to input_dir")
+                self.file = self.input_dir + "/" + self.file
+                self.logger.debug("New file path: %s", self.file)
+
+            # Load config if file exists
+            if os.path.isfile(self.file):
+                self.load_config()
+            else:
+                self.logger.warning("Can't find config file: %s", self.file)
+                self.config[section] = {}
+            
+
+        else:
+            self.logger.critical("No input directory: %s", cli.args.input_dir)
+
+        # Set/update config with arguments from command line
+        self.logger.debug("Updating config")
+        for k in cli.params :
+            self.logger.debug("Setting %s to %s", k, cli.params[k])
+            self.set_param(section=section, key=k, value= cli.params[k])
+
+
 
 if __name__ == "__main__":
     cfg=Config()
@@ -133,3 +220,11 @@ if __name__ == "__main__":
     print(cfg.param( "Infer" , 'weihgts' , None))
     print(cfg.dict('Infer'))
     cfg.save_config("./tmp/saved.config" , config=cfg.config['DEFAULT'])
+    cfg.initialize_parameters("./", additional_definitions=[ 
+        { "name" : "chkpt", 
+         "dest" : "checkpointing",
+        #  "action" : "store_true",
+        "type" : "str2bool" ,
+         "default" : False,
+         "help" : "Flag to enable checkpointing" } ])
+    print(cfg.config.items('DEFAULT', raw=False))
