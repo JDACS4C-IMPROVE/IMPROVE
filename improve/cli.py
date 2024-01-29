@@ -3,7 +3,7 @@ import argparse
 import os
 
 from candle import parse_from_dictlist
-from improve import config as BaseConfig
+# from improve import config as BaseConfig
 
 
 
@@ -58,25 +58,23 @@ class CLI:
         pass
     
 
-    def config(self, section) -> BaseConfig :
-        cfg=BaseConfig.Config()
-        if self.params['config_file']:
-            if os.path.isfile(self.params['config_file']) :
-                self.logger.info('Loading Config from %s', self.params['config_file'])
-                cfg.file = self.params['config_file']
-                cfg.load_config()
-            else:
-                self.logger.critical("Can't load Config from %s", self.params['config_file'])
-        else: 
-            self.logger.debug('No config file')
+    # def config(self, section) -> BaseConfig :
+    #     cfg=BaseConfig.Config()
+    #     if self.params['config_file']:
+    #         if os.path.isfile(self.params['config_file']) :
+    #             self.logger.info('Loading Config from %s', self.params['config_file'])
+    #             cfg.file = self.params['config_file']
+    #             cfg.load_config()
+    #         else:
+    #             self.logger.critical("Can't load Config from %s", self.params['config_file'])
+    #     else: 
+    #         self.logger.debug('No config file')
 
-        for s in cfg.config.items():
-            print(s)
-        for k in self.params :
-            (value,error) = cfg.param(section=section, key=k , value=self.params[k])
-            print(value)
-        
-        return cfg
+    #     # Set params in config
+    #     for k in self.params :
+    #         (value,error) = cfg.param(section=section, key=k , value=self.params[k])
+
+    #     return cfg
 
 
     def initialize_parameters( self,
@@ -92,10 +90,11 @@ if __name__ == "__main__":
     defaults=[{ 'action' : 'store' , 'choices' : [ 'A' , 'B' , 'C' ] , 'type' : str , 'name' : "dest" }]
     cli.set_command_line_options(options=defaults)
     cli.get_command_line_options()
-    print(vars(cli.args))
-    cfg=cli.config("Preprocess")
+    # cfg=cli.config("Preprocess")
    
    
-    for k in cli.params :
-        print(k , cli.params[k])
-    print(cfg.dict(section="Preprocess"))
+    # for k in cli.params :
+    #     print("\t".join([k , cli.params[k]]))
+    # print(cfg.dict(section="Preprocess"))
+    # setattr(cfg, "version" , "0.1")
+    # print(cfg.version)
