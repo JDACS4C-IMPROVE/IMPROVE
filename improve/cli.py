@@ -43,6 +43,20 @@ class CLI:
 
     def set_command_line_options(self,options=[]):
         self.logger.debug("Setting Command Line Options")
+        for o in ['input_dir', 'output_dir', 'log_level', 'config_file']:
+            # check if o is the value of name in one of the dicts in options
+            for d in options:
+                if o == d['name']:
+                    self.logger.warning("Found %s in options. This option is predifined and can not be overwritten." , o)
+                    self.logger.debug("Removing %s from options" , o)
+                    options.remove(d)
+                
+
+            # if in dict then remove and log warning
+            # if not in dict then add to parser
+
+
+
         parse_from_dictlist( options , self.parser)
        
 
