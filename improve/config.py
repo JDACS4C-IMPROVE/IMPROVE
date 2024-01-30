@@ -164,7 +164,23 @@ class Config:
         # additonal_definitions in argparse format plus name:
         # [{ 'action' : 'store' , 'choices' : [ 'A' , 'B' , 'C' ] , 'type' : str , 'name' : "dest" }]
         # use set_set_command_line_options or cli.parser.add_argument(....)
-        
+
+        # Find duplicate dicts in additon_definitions for the key 'name'
+        # if in dict then remove and log warning
+        if additional_definitions:
+            duplicates = []
+            names = []
+            for i in range(len(additional_definitions)):
+                print(i,additional_definitions[i])
+                if additional_definitions[i]['name'] in names:
+                    self.logger.warning("Duplicate definition for %s", additional_definitions[i]['name'])
+                    duplicates.append(i)
+                else:
+                    names.append(additional_definitions[i]['name'])
+            # Loop through duplicates in reverse order and remove from additional_definitions
+            for i in duplicates[::-1]:
+                additional_definitions.pop(i)
+                
         cli=CLI()
         cli.set_command_line_options(options=additional_definitions)
         cli.get_command_line_options()
