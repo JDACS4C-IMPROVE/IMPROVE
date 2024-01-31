@@ -8,7 +8,7 @@ from improve.cli import CLI
 
 
 class Config:
-
+    """Class to handle configuration files."""
     # ConfigError = str
 
     def __init__(self) -> None:
@@ -128,7 +128,7 @@ class Config:
         return (self.config[section][key], msg)
 
     def dict(self, section=None) -> dict :
-
+        """Return a dictionary of all options in the config file. If section is provided, return a dictionary of options in that section"""
         params = {}
         sections=[]
 
