@@ -23,13 +23,14 @@ class Config:
 
         self.params = {}
         self.file = None
-        self.input_dir = None
-        self.output_dir = None
         self.logger = logging.getLogger('Config')
         self.logger.setLevel(logging.DEBUG)
         self.required = required
         self.config = configparser.ConfigParser()
         self.cli = CLI()
+        # Default values are set in command line parser
+        self.input_dir = None
+        self.output_dir = None
 
         # Set Defaults and conventions
         
