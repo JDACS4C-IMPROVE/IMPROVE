@@ -29,6 +29,7 @@ class Config:
         self.logger.setLevel(logging.DEBUG)
         self.required = required
         self.config = configparser.ConfigParser()
+        self.cli = CLI()
 
         # Set Defaults and conventions
         
@@ -149,6 +150,7 @@ class Config:
         return params
     
     def check_required(self):
+        """Check if all required parameters are set."""
         pass
 
     def initialize_parameters(self,
@@ -158,6 +160,7 @@ class Config:
                               default_model=None,
                               additional_definitions=None,
                               required=None,):
+        """Initialize parameters from command line and config file."""
         
         # Set and get command line args
         #
@@ -170,8 +173,8 @@ class Config:
         if additional_definitions:
             duplicates = []
             names = []
-            for i in range(len(additional_definitions)):
-                print(i,additional_definitions[i])
+            for i,v in enumerate(additional_definitions):
+                # print(i,additional_definitions[i])
                 if additional_definitions[i]['name'] in names:
                     self.logger.warning("Duplicate definition for %s", additional_definitions[i]['name'])
                     duplicates.append(i)
@@ -181,12 +184,11 @@ class Config:
             for i in duplicates[::-1]:
                 additional_definitions.pop(i)
                 
-        cli=CLI()
+        # cli=CLI()
+        cli = self.cli
         cli.set_command_line_options(options=additional_definitions)
         cli.get_command_line_options()
-        options = cli.params
         
-
         # Load Config
         if os.path.isdir(cli.args.input_dir) :
 
@@ -218,6 +220,20 @@ class Config:
         for k in cli.params :
             self.logger.debug("Setting %s to %s", k, cli.params[k])
             self.set_param(section=section, key=k, value= cli.params[k])
+        
+        # Update input and output directories    
+        self.output_dir = self.config[section]['output_dir']
+        self.input_dir = self.config[section]['input_dir']
+
+        # Create output directory if not exists
+        if not os.path.isdir(self.output_dir):
+            self.logger.debug("Creating output directory: %s", self.output_dir)
+            os.makedirs(self.output_dir)
+    
+        return self.params
+    
+    
+
 
 
 
