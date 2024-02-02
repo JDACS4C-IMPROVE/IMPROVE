@@ -12,9 +12,11 @@ class CLI:
 
     def __init__(self):
 
+        # Default format for logging
         FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
         logging.basicConfig(format=FORMAT)
-    
+
+        # attributes
         self.parser=argparse.ArgumentParser(description='IMPROVE Command Line Parser')
         self.logger=logging.getLogger('CLI')
         self.args = None # Placeholder for args from argparse
@@ -22,7 +24,8 @@ class CLI:
         
         # set logger level
         self.logger.setLevel(logging.INFO)
-        self.logger.setLevel("DEBUG")
+        self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.DEBUG))
+      
 
         # Set default options
         self.parser.add_argument('-i', '--input_dir', metavar='DIR', type=str, dest="input_dir",
@@ -42,6 +45,8 @@ class CLI:
 
 
     def set_command_line_options(self,options=[]):
+        """Set Command Line Options, saveguard standard options."""
+
         self.logger.debug("Setting Command Line Options")
         for o in ['input_dir', 'output_dir', 'log_level', 'config_file']:
             # check if o is the value of name in one of the dicts in options
@@ -50,21 +55,17 @@ class CLI:
                     self.logger.warning("Found %s in options. This option is predifined and can not be overwritten." , o)
                     self.logger.debug("Removing %s from options" , o)
                     options.remove(d)
-                
 
-            # if in dict then remove and log warning
-            # if not in dict then add to parser
-
-
-
+        # From Candle, can't handle bool
         parse_from_dictlist( options , self.parser)
        
 
         
 
     def get_command_line_options(self):
+        """Get Command Line Options"""
 
-        # set standard options
+        self.logger.debug("Getting Command Line Options")
         self.args = self.parser.parse_args()
         self.params = vars(self.args)
 
