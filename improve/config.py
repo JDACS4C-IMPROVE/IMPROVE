@@ -25,6 +25,8 @@ class Config:
         self.file = None
         self.logger = logging.getLogger('Config')
         self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.DEBUG))
+
         self.required = required
         self.config = configparser.ConfigParser()
         self.cli = CLI()
