@@ -101,8 +101,6 @@ class Preprocess(Config):
         """Initialize Command line Interfcace and config for Preprocessing."""
         if additional_definitions :
             self.options = self.options + additional_definitions
-            print(self.options)
-            sys.exit()
 
         return super().initialize_parameters(pathToModelDir, section, default_config, default_model, self.options , required)
 
