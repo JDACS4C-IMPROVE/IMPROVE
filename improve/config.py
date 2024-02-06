@@ -196,7 +196,15 @@ class Config:
             if cli.args.config_file:        
                 self.file = cli.args.config_file
             else:
+                # Make pathToModelDir and default_config same type. Possible types are: str, Path
+                if isinstance(pathToModelDir, Path):
+                    pathToModelDir = str(pathToModelDir)
+                if isinstance(default_config, Path):
+                    default_config = str(default_config)
+
                 self.file = pathToModelDir + "/" + default_config
+                self.logger.debug("No config file provided. Using default: %s", self.file)
+
             
             # Set full path for config
             if not os.path.abspath(self.file):
