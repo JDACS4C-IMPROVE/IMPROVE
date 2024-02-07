@@ -3,7 +3,6 @@ import pandas as pd
 import pyarrow as pa
 import h5py
 import logging
-import importlib
 import numpy as np
 # import tensorflow as tf
 # import torch
@@ -66,7 +65,7 @@ class DataInputOutput:
         elif format == 'hdf5':
             df = pd.read_hdf(file)
         elif format == 'npy':
-            df = np.load(file)
+            df = np.load(file, allow_pickle=True)
         elif format == 'BenchmarkV1':
             self.logger.critical("Not Implemented: Loading BenchmarkV1")
         elif not self.loader is None:
@@ -139,12 +138,12 @@ if __name__ == "__main__":
     df = io.load_data("./tmp/iris.csv", format="CSV")
     print(df)
     io.save_data("./tmp/iris.parquet", df, format="parquet")
-    io.save_data("./tmp/iris.hdf5", df, format="hdf5")
+    # io.save_data("./tmp/iris.hdf5", df, format="hdf5")
     io.save_data("./tmp/iris.npy", df, format="npy")
    
 
     print(io.load_data("./tmp/iris.parquet", format="parquet"))
-    print(io.load_data("./tmp/iris.hdf5", format="hdf5"))
+    # print(io.load_data("./tmp/iris.hdf5", format="hdf5"))
     print(io.load_data("./tmp/iris.npy", format="npy"))
 
     # print(io.load_data("./tmp/iris.csv", loader=candle.CandleLoader()))
