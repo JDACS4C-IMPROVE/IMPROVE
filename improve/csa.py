@@ -1,205 +1,162 @@
-"""Functionality for Cross-Study Analysis (CSA) in IMPROVE."""
+""" Post-processing results from Cross-Study Analysis (CSA) runs. """
 
-from pathlib import Path
 import os
-import configparser
-from collections import deque
-from pathlib import Path
-from typing import Callable, Deque, Dict, Tuple, Union
+import pandas as pd
+from sklearn.metrics import r2_score, mean_absolute_error
+from scipy.stats import pearsonr, spearmanr, sem
+from typing import Optional
 
-import improve.framework as frm
-
-filepath = Path(__file__).resolve().parent
-
-csa_conf = [
-    {"name": "source_data",
-     "nargs": "+",
-     "type": str,
-     "help": "List of data sources to use for training/validation.",
-    },
-    {"name": "target_data",
-     "nargs": "+",
-     "type": str,
-     "help": "List of data sources to use for testing.",
-    },
-    {"name": "split_ids",
-     "nargs": "+",
-     "type": int,
-     "help": "List of data samples to use for training/validation/testing.",
-    },
-    {"name": "model_config",
-     "default": frm.SUPPRESS,
-     "type": str,
-     "help": "File for model configuration.",
-    },
-]
-
-req_csa_args = [elem["name"] for elem in csa_conf]
+from improve.metrics import compute_metrics
 
 
-class DataSplit:
-    """Define structure of information for split."""
-    def __init__(self, dsource: str, dtarget: str, sindex: int, tindex: int):
-        self.data_source = dsource
-        self.data_target = dtarget
-        self.split_source_index = sindex
-        self.split_target_index = tindex
-
-
-def directory_tree_from_parameters(
-    params: Dict,
-    raw_data_check: Callable = None,
-    step: str = "preprocess",
-) -> Tuple[Deque, Union[frm.DataPathDict, None]]:
+def cross_study_postprocess(res_dir_path,
+                            model_name: str,
+                            y_col_name: str,
+                            round_digits: int = 3,
+                            outdir: str = None,
+                            verbose: bool = False):
     """
-    Check input data and construct output directory trees from parameters for cross-study analysis (CSA).
+    Args:
+        res_dir_path: full path to the cross-study results dir
+        model_name: name of the model (e.g., GraphDRP, IGTD)
+        y_col_name: prediction variable
+        outdir: full path to save the csa post-processing results
 
-    Input and output structure depends on step.
-    For preprocess step, input structure is represented by DataPathDict.
-    In other steps, raw input is None and the output queue contains input and output paths.
-
-    :param Dict params: Dictionary of parameters read
-    :param Callable raw_data_check: Function that checks raw data input and returns paths to x-data/y-data/splits.
-    :param string step: String to specify if this is applied during preprocess, train or test.
-
-    :return: Paths and info about processed data output directories and raw data input.
-    :rtype: (Deque, (Path, Path, Path))
+    Return:
+        performance scores for all source-target pairs and splits
     """
-    inpath_dict = None
-    if step == "preprocess":
-        # Check that raw data is available
-        inpath_dict = raw_data_check(params)
-    # Create subdirectory if it does not exist
-    # Structure:
-    # ml_data -> {source_data-target_data} -> {split_id}
-    mainpath = Path(os.environ["IMPROVE_DATA_DIR"]) # Already checked
-    outpath = mainpath / "ml_data"
-    os.makedirs(outpath, exist_ok=True)
-    # If used during train or test structure is slightly different
-    # ml_data -> models -> {source_data-target_data} -> {split_id}
-    inpath = outpath
-    if step == "train": # Create structured output path
-        outpath = outpath / "models"
-        os.makedirs(outpath, exist_ok=True)
-    elif step == "test": # Check that expected input path exists
-        inpath = inpath / "models"
-        if inpath.exists() == False:
-            raise Exception(f"ERROR ! '{inpath}' not found.\n")
-        outpath = inpath
-    print("Preparing to store output under: ", outpath)
+    infer_dir_name = "infer"
+    infer_dir_path = res_dir_path/infer_dir_name
+    dirs = list(infer_dir_path.glob("*-*")); print(dirs)
+    # print(split_files)
 
-    # Create queue of cross study combinations to process and check inputs
-    split_queue = deque()
-    for sdata in params["source_data"]:
-        for tdata in params["target_data"]:
-            tag = sdata + "-" + tdata
-            tagpath = outpath / tag
-            inpath = inpath / tag
-            if step != "preprocess" and inpath.exists() == False:
-                raise Exception(f"ERROR ! '{inpath}' not found.\n")
-            elif step != "test":
-                os.makedirs(tagpath, exist_ok=True)
+    os.makedirs(outdir, exist_ok=True)
 
-            # From this point on the depth of the path does not increase
-            itagpath = inpath
-            otagpath = tagpath
+    data_sources = ["ccle", "ctrp", "gcsi", "gdsc1", "gdsc2"]  # TODO: extract this from res_dir
 
-            if len(params["split_ids"]) == 0:
-                # Need defined split ids
-                raise Exception(f"ERROR ! No split ids have been defined.\n")
-            else:
-                for id in params["split_ids"]:
-                    index = "split_" + str(id)
-                    outpath = otagpath / index
-                    inpath = itagpath / index
-                    if step != "preprocess" and inpath.exists() == False:
-                        raise Exception(f"ERROR ! '{inpath}' not found.\n")
-                    elif step != "test":
-                        os.makedirs(outpath, exist_ok=True)
+    def calc_mae(y_true, y_pred):
+        return sklearn.metrics.mean_absolute_error(y_true=y_true, y_pred=y_pred)
 
-                    tid = -1 # Used to indicate all splits
-                    if sdata == tdata:
-                        tid = id # Need to limit to the defined split id
-                    if step == "train": # Check existence of x_data and y_data
-                        for stg in ["train", "val", "test"]:
-                            fname = f"{stg}_{params['y_data_suffix']}.csv"
-                            ydata = inpath / fname
-                            if ydata.exists() == False:
-                                raise Exception(f"ERROR ! Ground truth data '{ydata}' not found.\n")
-                            fname = f"{stg}_{params['data_suffix']}.pt"
-                            xdata = inpath / "processed" / fname
-                            if xdata.exists() == False:
-                                raise Exception(f"ERROR ! Feature data '{xdata}' not found.\n")
-                    elif step == "test": # Check existence of trained model
-                        trmodel = inpath / params["model_params"]
-                        if trmodel.exists() == False:
-                            raise Exception(f"ERROR ! Trained model '{trmodel}' not found.\n")
-                    split_queue.append((DataSplit(sdata, tdata, id, tid), inpath, outpath))
-    return split_queue, inpath_dict
+    def calc_r2(y_true, y_pred):
+        return sklearn.metrics.r2_score(y_true=y_true, y_pred=y_pred)
 
+    def calc_pcc(y_true, y_pred):
+        return pearsonr(y_true, y_pred)[0]
 
-class CSAImproveBenchmark(frm.ImproveBenchmark):
-    """ Benchmark for Cross-Study Analysis (CSA) Improve Models. """
+    def calc_scc(y_true, y_pred):
+        return spearmanr(y_true, y_pred)[0]
 
-    def read_config_file(self, file: str):
-        """
-        Functionality to read the configue file specific for each
-        benchmark.
+    scores_names = {"mae": calc_mae,
+                    "r2": calc_r2,
+                    "pcc": calc_pcc,
+                    "scc": calc_scc}
 
-        :param string file: path to the configuration file
+    # ====================
+    # Aggregate raw scores
+    # ====================
 
-        :return: parameters read from configuration file
-        :rtype: ConfigDict
-        """
+    preds_file_name = "test_y_data_predicted.csv"
+    # scores_file_name = "test_scores.json"
+    metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]  
 
-        # Read CSA workflow configuration
-        fileParams = super().read_config_file(file)
+    sep = ','
+    scores_fpath = outdir/"all_scores.csv"
+    if scores_fpath.exists():
+        print("Load scores")
+        scores = pd.read_csv(scores_fpath, sep=sep)
+    else:
+        print("Calc scores")
+        dfs = []
+        for dir_path in dirs:
+            print("Experiment:", dir_path)
+            src = str(dir_path.name).split("-")[0]
+            trg = str(dir_path.name).split("-")[1]
+            split_dirs = list((dir_path).glob(f"split_*"))
 
-        # Read model configuration
-        confmodelfile = fileParams["model_config"]
-        fileparams_model = super().read_config_file(confmodelfile)
+            jj = {}  # dict (key: split id, value: dict of scores)
 
-        # Combine both specifications
-        fileParams.update(fileparams_model)
+            for split_dir in split_dirs:
+                # Load preds
+                preds_file_path = split_dir/preds_file_name
+                preds = pd.read_csv(preds_file_path, sep=sep)
 
-        return fileParams
+                # Compute scores
+                y_true = preds[f"{y_col_name}_true"].values
+                y_pred = preds[f"{y_col_name}_pred"].values
+                sc = compute_metrics(y_true, y_pred, metrics_list)
 
+                split = int(split_dir.name.split("split_")[1])
+                jj[split] = sc
+                # df = pd.DataFrame(jj)
+                # df = df.T.reset_index().rename(columns={"index": "split"})
 
+            # Convert dict to df, and aggregate dfs
+            df = pd.DataFrame(jj)
+            df = df.stack().reset_index()
+            df.columns = ['met', 'split', 'value']
+            df['src'] = src
+            df['trg'] = trg
+            dfs.append(df)
 
-def initialize_parameters(filepath, default_model="csa_default_model.txt", additional_definitions=None, required=None, topop=None):
-    """ Parse execution parameters from file or command line.
+        # Concat dfs and save
+        scores = pd.concat(dfs, axis=0)
+        scores.to_csv(outdir/"all_scores.csv", index=False)
 
-    Parameters
-    ----------
-    default_model : string
-        File containing the default parameter definition.
-    additional_definitions : List
-        List of additional definitions from calling script.
-    required: Set
-        Required arguments from calling script.
+    # Average across splits
+    sc_mean = scores.groupby(["met", "src", "trg"])["value"].mean().reset_index()
+    sc_std = scores.groupby(["met", "src", "trg"])["value"].std().reset_index()
 
-    Returns
-    -------
-    gParameters: python dictionary
-        A dictionary of Candle keywords and parsed values.
-    """
-    if required is not None:
-        req_csa_args.extend(required)
+    # Generate csa table
+    mean_tb = {}
+    std_tb = {}
+    for met in scores.met.unique():
+        df = scores[scores.met == met]
+        # df = df.sort_values(["src", "trg", "met", "split"])
+        df.to_csv(outdir/f"{met}_scores.csv", index=True)
+        # Mean
+        mean = df.groupby(["src", "trg"])["value"].mean()
+        mean = mean.unstack()
+        mean.to_csv(outdir/f"{met}_mean_csa_table.csv", index=True)
+        print(f"{met} mean:\n{mean}")
+        mean_tb[met] = mean
+        # Std
+        std = df.groupby(["src", "trg"])["value"].std()
+        std = std.unstack()
+        std.to_csv(outdir/f"{met}_std_csa_table.csv", index=True)
+        print(f"{met} std:\n{std}")
+        std_tb[met] = std
 
-    # Build benchmark object
-    csabmk = CSAImproveBenchmark(
-        filepath=filepath,
-        defmodel=default_model,
-        framework="pytorch",
-        prog="csa",
-        desc="CSA workflow functionality in improve",
-        additional_definitions=additional_definitions + csa_conf,
-        required=req_csa_args,
-    )
+    # Quick test
+    # met="mse"; src="CCLE"; trg="GDSCv1" 
+    # print(f"src: {src}; trg: {trg}; met: {met}; mean: {scores[(scores.met==met) & (scores.src==src) & (scores.trg==trg)].value.mean()}")
+    # print(f"src: {src}; trg: {trg}; met: {met}; std:  {scores[(scores.met==met) & (scores.src==src) & (scores.trg==trg)].value.std()}")
+    # met="mse"; src="CCLE"; trg="GDSCv2" 
+    # print(f"src: {src}; trg: {trg}; met: {met}; mean: {scores[(scores.met==met) & (scores.src==src) & (scores.trg==trg)].value.mean()}")
+    # print(f"src: {src}; trg: {trg}; met: {met}; std:  {scores[(scores.met==met) & (scores.src==src) & (scores.trg==trg)].value.std()}")
 
-    gParameters = frm.finalize_parameters(csabmk)
-    if topop is not None:
-        for k in topop:
-            gParameters.pop(k)
+    # Generate densed csa table
+    # breakpoint()
+    df_on = scores[scores.src == scores.trg].reset_index()
+    on_mean = df_on.groupby(["met"])["value"].mean().reset_index().rename(columns={"value": "mean"})
+    on_std = df_on.groupby(["met"])["value"].std().reset_index().rename(columns={"value": "std"})
+    on = on_mean.merge(on_std, on="met", how="inner")
+    on["summary"] = "within"
 
-    return gParameters
+    df_off = scores[scores.src != scores.trg]
+    off_mean = df_off.groupby(["met"])["value"].mean().reset_index().rename(columns={"value": "mean"})
+    off_std = df_off.groupby(["met"])["value"].std().reset_index().rename(columns={"value": "std"})
+    off = off_mean.merge(off_std, on="met", how="inner")
+    off["summary"] = "cross"
+
+    if verbose:
+        print(f"On-diag mean:\n{on_mean}")
+        print(f"On-diag std: \n{on_std}")
+        print(f"Off-diag mean:\n{off_mean}")
+        print(f"Off-diag std: \n{off_std}")
+
+    # Combine dfs
+    # breakpoint()
+    df = pd.concat([on, off], axis=0).sort_values("met")
+    df.to_csv(outdir/"densed_csa_table.csv", index=False)
+    print(f"Densed CSA table:\n{df}")
+    return scores
