@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+import improve.drug_resp_pred as drp
 
-class DRP(Base.Base):
+class DRP(Base.Base, drp.OmicsLoader):
     """Class to handle configuration files for Drug Response Prediction."""
     # Set section for config file
     section = 'DRPBenchmark_v1.0'
@@ -59,6 +60,41 @@ class DRP(Base.Base):
         self.y_data_path = None
         self.splits_path = None
 
+    def init(self, cfg):
+        """Initialize Drug Response Prediction Benchmark. Takes Config object as input."""
+        self.logger.debug("Initializing Drug Response Prediction Benchmark.")
+        self.set_input_dir(cfg.get_param('input_dir'))
+        self.set_output_dir(cfg.get_param('output_dir'))
+        self.check_input_paths()
+        self.check_output_dir()
+
+        self.response_fname = "response.tsv"
+        self.known_file_names = [self.response_fname]
+
+        self.params = cfg.dict()
+        self.sep = sep
+        self.inp = self.params["y_data_files"]
+        self.y_col_name = self.params["y_col_name"]
+        self.canc_col_name = self.params["canc_col_name"]
+        self.drug_col_name = self.params["drug_col_name"]
+
+        # self.y_data_path = params["y_data_path"]/params["y_data_files"][0][0]
+        # self.y_data_path = self.params["y_data_path"]
+        self.split_fpath = self.splits_path/split_file
+        self.dfs = {}
+        self.verbose = verbose
+
+        
+
+
+
+        if self.verbose:
+            print(f"y_data_files: {params['y_data_files']}")
+            print(f"y_col_name: {params['y_col_name']}")
+
+        self.inp_fnames = []
+
+
     def set_input_dir(self, input_dir: str) -> None:
         """Set input directory for Drug Response Prediction Benchmark."""
 
@@ -101,6 +137,18 @@ class DRP(Base.Base):
         """Get Drug Response Prediction Benchmark data from ftp site or URL and save to input directory."""
         pass
         
+    # Load Omics Data from input directory using drp module
+    def load_omics_data(self,cfg) -> None:
+        """Load omics data from input directory using drp module."""
+
+        # Check if cfg is dict or BaseConfig object
+        if isinstance(cfg, dict):
+            raise TypeError("cfg Config object.")
+        elif not isinstance(cfg, Config):
+            raise TypeError("cfg must be a dict or Config object.")
+
+        return drp.OmicsLoader(cfg)
+        pass
         
 if __name__ == "__main__":
     drp = DRP()
