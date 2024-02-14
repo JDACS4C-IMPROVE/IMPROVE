@@ -54,14 +54,55 @@ class DRP(Base.Base):
     def __init__(self) -> None:
         super().__init__()
         self.options = DRP.drp_options
-        self.cli.parser.add_argument('--supplemental', nargs=2, action='append', metavar=('TYPE', 'FILE'), 
-                              type=str, help='Supplemental data FILE and TYPE. FILE is in INPUT_DIR.')
-        benchmark_cli=self.cli.parser.add_argument_group('DRPBenchmark_v1.0', 'Options for drug response prediction benchmark v1.0')
-        benchmark_cli.add_argument('--benchmark', action='store_true', help='Use DRPBenchmark_v1.0')
-        benchmark_cli.add_argument('--benchmark_dir', metavar='DIR', type=str, dest="benchmark_dir",
-                                  default=os.getenv("IMPROVE_BENCHMARK_DIR" , "./"), 
-                                  help='Base directory for DRPBenchmark_v1.0 data. Default is IMPROVE_BENCHMARK_DIR or if not specified current working directory. All additional input pathes will be relative to the base input directory.')
+        self.input_dir = None
+        self.x_data_path = None
+        self.y_data_path = None
+        self.splits_path = None
+
+    def set_input_dir(self, input_dir: str) -> None:
+        """Set input directory for Drug Response Prediction Benchmark."""
+
+        # check if input_dir is Path object otherwise convert to Path object
+        if not isinstance(input_dir, Path):
+            input_dir = Path(input_dir)
+
+        self.input_dir = input_dir
+        self.x_data_path = Path(input_dir) / "x_data_dir"
+        self.y_data_path = Path(input_dir) / "y_data_dir"
+        self.splits_path = Path(input_dir) / "splits_dir"
+
+    def set_output_dir(self, output_dir: str) -> None:
+        """Set output directory for Drug Response Prediction Benchmark."""
+        if not isinstance(output_dir, Path):
+            output_dir = Path(output_dir)
+        self.output_dir = output_dir
+
+    # Check all paths and directories are valid and exist, otherwise create them
+    def check_input_paths(self) -> None:
+        """Check input directory for Drug Response Prediction Benchmark. Return error if path does not exist.
+        """
+        if not Path(self.x_data_path).exists():
+            raise FileNotFoundError(f"Path {self.x_data_path} does not exist.")
+        if not Path(self.y_data_path).exists():
+            raise FileNotFoundError(f"Path {self.y_data_path} does not exist.")
+        if not Path(self.splits_path).exists():
+            raise FileNotFoundError(f"Path {self.splits_path} does not exist.") 
+        
+    def mkdir_input_dirs(self) -> None:
+        self.x_data_path.mkdir(parents=True, exist_ok=True)
+        self.y_data_path.mkdir(parents=True, exist_ok=True)
+        self.splits_path.mkdir(parents=True, exist_ok=True)
+
+    def check_output_dir(self) -> None:
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Get Benchmark Data from ftp site or URL and save to input directory. Retrieve recursively if necessary
+    def get_benchmark_data(self) -> None:
+        """Get Drug Response Prediction Benchmark data from ftp site or URL and save to input directory."""
+        pass
+        
         
 if __name__ == "__main__":
     drp = DRP()
-    print(drp.params)
+    drp.set_input_dir("input_dir")
+    print(drp.__dict__)
