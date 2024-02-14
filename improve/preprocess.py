@@ -115,7 +115,10 @@ class Preprocess(Config):
         drp.add_argument("--x_data_canc_file", nargs=2, action="append", metavar=("FILE", "IDENTIFIERS"), 
                          default=[],
                          help="List of tuples, each tuple has two elements, the first element is the file name and the second element is a comma separated list of gene system identifiers. Example: 'cancer_copy_number.tsv', 'Ensembl,Entrez'") 
+        drp.add_argument("--canc_col_name", type=str, default="improve_sample_id" , 
+                         help="Column name in the y data file (reponse) that represents the cancer sample identifier. Default is improve_sample_id.")
        
+        drp.add_argument("--drug_col_name", type=str, default="improve_chem_id" , help="Column name in the y data file (reponse) that represents the drug identifier. Default is improve_chem_id.")
 
 
         # File subparser
