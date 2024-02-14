@@ -105,9 +105,26 @@ class Config:
 
         return (value, error)
     
+    def get_param(self, section="DEFAULT" , key=None) -> str:
+        """
+        Get value for given option. Gets or sets value in DEFAULT section if section is not provided. 
+        Allowed section names are: Preprocess, Train and Infer
+        """
+        
+        error=None
+
+        if self.config.has_option(section, key):
+            value=self.config[section][key]
+        else:
+            error="Can't find option " + str(key)
+            self.logger.error(error)
+            value=None
+
+        return value  
+
     def set_param(self, section="DEFAULT" , key=None , value=None) -> (str,str):
         """
-        Get or set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
+        Set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
         
@@ -173,6 +190,9 @@ class Config:
 
         # Find duplicate dicts in additon_definitions for the key 'name'
         # if in dict then remove and log warning
+
+        self.logger.debug("Initializing parameters for %s", section)
+
         if additional_definitions:
             duplicates = []
             names = []
