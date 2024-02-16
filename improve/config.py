@@ -24,9 +24,9 @@ class Config:
         self.params = {}
         self.file = None
         self.logger = logging.getLogger('Config')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.DEBUG))
-
+        self.log_level = os.getenv("IMPROVE_LOG_LEVEL" , logging.DEBUG)
+        self.logger.setLevel(self.log_level)
+       
         self.required = required
         self.config = configparser.ConfigParser()
         self.cli = CLI()
@@ -211,7 +211,12 @@ class Config:
         cli = self.cli
         cli.set_command_line_options(options=additional_definitions)
         cli.get_command_line_options()
-        
+
+        # Set log level
+        if cli.args.log_level:
+            self.logger.setLevel(cli.args.log_level)
+            self.log_level = cli.args.log_level
+
         # Load Config
         if os.path.isdir(cli.args.input_dir) :
 
@@ -261,7 +266,7 @@ class Config:
             self.logger.debug("Creating output directory: %s", self.output_dir)
             os.makedirs(self.output_dir)
     
-        return self.params
+        return self.dict()
     
     
 

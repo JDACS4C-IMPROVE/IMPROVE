@@ -420,7 +420,7 @@ def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
     stage (str) : "train", "val", or "test"
     """
     ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"  
-    ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+    ydf_fpath = Path(params["output_dir"]) / ydf_fname
     ydf.to_csv(ydf_fpath, index=False)
     return None
 

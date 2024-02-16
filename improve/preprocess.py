@@ -155,6 +155,9 @@ class Preprocess(Config):
         """Get a parameter from the Preprocessing config."""
         return super().get_param(Preprocess.section, key)
 
+    def dict(self):
+        """Get the Preprocessing config as a dictionary."""
+        return super().dict(Preprocess.section)
 
     def initialize_parameters(self, pathToModelDir, section='Preprocess', default_config='default.cfg', default_model=None, additional_definitions=None, required=None):
         """Initialize Command line Interfcace and config for Preprocessing."""

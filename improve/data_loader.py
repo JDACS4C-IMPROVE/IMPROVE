@@ -114,7 +114,19 @@ class DataInputOutput:
         
 
     def save_data(self, file, data, format=None, loader=None):
-        """Save data to a file."""
+        """Save data to a file. Data is a pandas dataframe or numpy array."""
+
+        # if data is a numpy array convert it to a pandas dataframe
+        if isinstance(data, np.ndarray):
+            data = pd.DataFrame(data)
+        
+        # if data is a tensorflow or pytorch tensor convert it to a dataframe
+        # if self.framework == 'tensorflow':
+        #     if isinstance(data, tf.Tensor):
+        #         data = pd.DataFrame(data.numpy())
+        # elif self.framework == 'pytorch':
+        #     if isinstance(data, torch.Tensor):
+        #         data = pd.DataFrame(data.numpy())
 
         if format == 'CSV':
             data.to_csv(file)

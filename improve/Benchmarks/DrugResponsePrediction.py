@@ -2,14 +2,23 @@ from improve.Benchmarks import Base as Base
 
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
+import logging
+import os
 
 import pandas as pd
 import improve.drug_resp_pred as drp
 
-class DRP(Base.Base, drp.OmicsLoader):
+class DRP(Base.Base):
     """Class to handle configuration files for Drug Response Prediction."""
     # Set section for config file
     section = 'DRPBenchmark_v1.0'
+
+    # Default format for logging
+    FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
+    logging.basicConfig(format=FORMAT)
+    logger=logging.getLogger('DRP')
+    # logger=logging.getLogger(__name__)
+    logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.ERROR))
 
     # Set options for command line
     drp_options = [
@@ -54,14 +63,22 @@ class DRP(Base.Base, drp.OmicsLoader):
 
     def __init__(self) -> None:
         super().__init__()
+        self.logger = DRP.logger
         self.options = DRP.drp_options
         self.input_dir = None
         self.x_data_path = None
         self.y_data_path = None
         self.splits_path = None
 
-    def init(self, cfg):
+    def init(self, cfg , verbose=False):
         """Initialize Drug Response Prediction Benchmark. Takes Config object as input."""
+        
+        if cfg.log_level:
+            self.logger.setLevel(cfg.log_level)
+            self.logger.debug(f"Log level set to {cfg.log_level}.")
+        else:
+             self.logger.warning("No log level set in Config object. Using default log level.")
+
         self.logger.debug("Initializing Drug Response Prediction Benchmark.")
         self.set_input_dir(cfg.get_param('input_dir'))
         self.set_output_dir(cfg.get_param('output_dir'))
@@ -72,7 +89,7 @@ class DRP(Base.Base, drp.OmicsLoader):
         self.known_file_names = [self.response_fname]
 
         self.params = cfg.dict()
-        self.sep = sep
+        self.sep = "\t"
         self.inp = self.params["y_data_files"]
         self.y_col_name = self.params["y_col_name"]
         self.canc_col_name = self.params["canc_col_name"]
@@ -80,7 +97,7 @@ class DRP(Base.Base, drp.OmicsLoader):
 
         # self.y_data_path = params["y_data_path"]/params["y_data_files"][0][0]
         # self.y_data_path = self.params["y_data_path"]
-        self.split_fpath = self.splits_path/split_file
+        # self.split_fpath = self.splits_path/split_file
         self.dfs = {}
         self.verbose = verbose
 
@@ -94,6 +111,45 @@ class DRP(Base.Base, drp.OmicsLoader):
 
         self.inp_fnames = []
 
+    def load_data(self, verbose=False):
+        """Load data from input directory."""
+        self.verbose = verbose
+
+        params = self.params
+        params['x_data_path'] = self.x_data_path
+        params['y_data_path'] = self.y_data_path
+        params['splits_path'] = self.splits_path
+
+        self.logger.debug("Loading Omics Data.")
+        self.omics = drp.OmicsLoader(params)
+        self.logger.info(self.omics)
+
+        self.logger.debug("Loading Drug Data.")
+        self.drugs = drp.DrugsLoader(params)
+        self.logger.info(self.drugs)
+        
+        self.logger.debug("Loading Response Data.")
+        self.train = drp.DrugResponseLoader(params, 
+                                        split_file=params["train_split_file"],
+                                        verbose=False).dfs["response.tsv"]
+        self.validate = drp.DrugResponseLoader(params, 
+                                        split_file=params["val_split_file"],
+                                        verbose=False).dfs["response.tsv"]
+        if params["test_split_file"] and os.path.exists(Path(self.splits_path) / params["test_split_file"]):
+            self.test = drp.DrugResponseLoader(params, 
+                                        split_file=params["test_split_file"],
+                                        verbose=False).dfs["response.tsv"]
+        else:
+            self.logger.warning(f"Test split file {params['test_split_file']} does not exist.")
+
+
+
+        
+        
+        
+
+
+
 
     def set_input_dir(self, input_dir: str) -> None:
         """Set input directory for Drug Response Prediction Benchmark."""
@@ -103,9 +159,9 @@ class DRP(Base.Base, drp.OmicsLoader):
             input_dir = Path(input_dir)
 
         self.input_dir = input_dir
-        self.x_data_path = Path(input_dir) / "x_data_dir"
-        self.y_data_path = Path(input_dir) / "y_data_dir"
-        self.splits_path = Path(input_dir) / "splits_dir"
+        self.x_data_path = Path(input_dir) / "x_data"
+        self.y_data_path = Path(input_dir) / "y_data"
+        self.splits_path = Path(input_dir) / "splits"
 
     def set_output_dir(self, output_dir: str) -> None:
         """Set output directory for Drug Response Prediction Benchmark."""
