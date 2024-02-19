@@ -2,6 +2,8 @@ import os
 import sys
 import logging
 from improve.config import Config
+from improve.Benchmarks.DrugResponsePrediction import DRP as BenchmanrkDRP
+
 
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
 logging.basicConfig(format=FORMAT)
@@ -154,6 +156,14 @@ class Preprocess(Config):
     def get_param(self, key):
         """Get a parameter from the Preprocessing config."""
         return super().get_param(Preprocess.section, key)
+    
+    def set_params(self, key=None, value=None):
+        print( "set_params" + type(self))
+        return super().set_param(Preprocess.section, key, value)
+    
+    def set_param(self, key=None, value=None):
+        print( "set_param" + type(self) )
+        return super().set_param(Preprocess.section, key, value)
 
     def dict(self):
         """Get the Preprocessing config as a dictionary."""
@@ -162,15 +172,68 @@ class Preprocess(Config):
     def initialize_parameters(self, pathToModelDir, section='Preprocess', default_config='default.cfg', default_model=None, additional_definitions=None, required=None):
         """Initialize Command line Interfcace and config for Preprocessing."""
         self.logger.debug("Initializing parameters for Preprocessing.")
+        print( "initialize_parameters" + str(type(self)) )
+
         if additional_definitions :
             self.options = self.options + additional_definitions
 
+       
         p = super().initialize_parameters(pathToModelDir, section, default_config, default_model, self.options , required)
         print(self.get_param("log_level"))
         self.logger.setLevel(self.get_param("log_level"))
         return p
 
+    def load_data(self, loader=None):
+        """Get data from files or benchmarks."""
 
+        self.logger.debug("Loading data from preprocess.")
+
+        # Defined here but set after loading data. Value is an object with a dfs attribute.
+        self.omics = None
+        self.drugs = None
+
+        try:
+            if self.get_param("subparser_name") is None or self.get_param("subparser_name") == "":
+                logger.error("Subparser name is not set.")
+                # throw error
+                raise ValueError("Missing mandatory positional parameter: subparser_name.")
+            else:
+                logger.info(f"Subparser name: {self.get_param('subparser_name')}")
+        except Exception as e:
+            self.logger.error(f"Error: {e}")
+            sys.exit(1)
+        
+        # if subparser_name is benchmark, then use the BenchmarkDRP class
+        # to load the data
+        if self.get_param("subparser_name") == "benchmark":
+            DRP = BenchmanrkDRP()
+            self.drp = DRP
+            DRP.init(self)
+            DRP.set_input_dir(self.get_param("input_dir"))
+            DRP.set_output_dir(self.get_param("output_dir"))
+            # Check all paths and directories are valid and exist
+            DRP.check_input_paths()
+            # Create output dir for model input data (to save preprocessed ML data)
+            DRP.check_output_dir()
+            # Load data
+            logger.debug("Loading from DRP class")
+            DRP.load_data(verbose=True)
+            self.set_param("Preprocess", "x_data_path", DRP.x_data_path)
+            self.set_params("x_data_path", DRP.x_data_path)
+            self.set_param("y_data_path", DRP.y_data_path)  
+            self.set_param("splits_path", DRP.splits_path)
+            # print(DRP.__dict__)
+        else:
+            raise ValueError("Not implemented.")
+
+        self.omics = None
+        self.drugs = None
+
+        self.omics = self.drp.omics
+        self.drugs = self.drp.drugs
+
+
+        pass
     
 
 if __name__ == "__main__":
