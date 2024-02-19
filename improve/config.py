@@ -182,6 +182,12 @@ class Config:
                               required=None,):
         """Initialize parameters from command line and config file."""
         
+        # preserve the type of the object
+        current_class = self.__class__
+        self.__class__ = Config
+
+        print( "initialize_parameters" + str(type(self)) )
+
         # Set and get command line args
         #
         # additonal_definitions in argparse format plus name:
@@ -255,7 +261,8 @@ class Config:
         self.logger.debug("Updating config")
         for k in cli.params :
             self.logger.debug("Setting %s to %s", k, cli.params[k])
-            self.set_param(section=section, key=k, value= cli.params[k])
+            self.set_param(section, k, cli.params[k])
+            # self.config[section][k] = cli.params[k]
         
         # Update input and output directories    
         self.output_dir = self.config[section]['output_dir']
@@ -266,6 +273,7 @@ class Config:
             self.logger.debug("Creating output directory: %s", self.output_dir)
             os.makedirs(self.output_dir)
     
+        self.__class__ = current_class
         return self.dict()
     
     
