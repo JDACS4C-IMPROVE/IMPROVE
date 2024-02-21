@@ -15,7 +15,7 @@ git checkout develop
 ## Download data
 Download the [cross-study analysis (CSA) benchmark data](https://web.cels.anl.gov/projects/IMPROVE_FTP/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/) into your model's directory. For example:
 ```bash
-./scripts/get-benchmarks $DESTINATION/raw_data
+./scripts/get-benchmarks $DESTINATION/csa_data/raw_data
 ```
 
 The directory structure should look like this after the above steps have been completed:
