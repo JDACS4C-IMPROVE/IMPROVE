@@ -12,10 +12,10 @@ import pandas as pd
 from .metrics import compute_metrics
 
 # Check that environment variable "IMPROVE_DATA_DIR" has been specified
-if os.getenv("IMPROVE_DATA_DIR") is None:
-    raise Exception("ERROR ! Required system variable not specified.  \
-                    You must define IMPROVE_DATA_DIR ... Exiting.\n")
-os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
+# if os.getenv("IMPROVE_DATA_DIR") is None:
+#     raise Exception("ERROR ! Required system variable not specified.  \
+#                     You must define IMPROVE_DATA_DIR ... Exiting.\n")
+# os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
 
 SUPPRESS = argparse.SUPPRESS
 
@@ -420,7 +420,7 @@ def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
     stage (str) : "train", "val", or "test"
     """
     ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"  
-    ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+    ydf_fpath = Path(params["output_dir"]) / ydf_fname
     ydf.to_csv(ydf_fpath, index=False)
     return None
 

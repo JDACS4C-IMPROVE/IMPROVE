@@ -1,0 +1,7 @@
+tables
+torch
+tensorflow
+pyarrow
+h5py
+pandas
+numpy
