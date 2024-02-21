@@ -267,6 +267,8 @@ class Config:
         # Update input and output directories    
         self.output_dir = self.config[section]['output_dir']
         self.input_dir = self.config[section]['input_dir']
+        self.log_level = self.config[section]['log_level']
+        self.logger.setLevel(self.log_level)
 
         # Create output directory if not exists
         if not os.path.isdir(self.output_dir):
