@@ -162,7 +162,6 @@ class Preprocess(Config):
         return super().set_param(Preprocess.section, key, value)
     
     def set_param(self, key=None, value=None):
-        print( "set_param" + type(self) )
         return super().set_param(Preprocess.section, key, value)
 
     def dict(self):
@@ -218,8 +217,7 @@ class Preprocess(Config):
             # Load data
             logger.debug("Loading from DRP class")
             DRP.load_data(verbose=True)
-            self.set_param("Preprocess", "x_data_path", DRP.x_data_path)
-            self.set_params("x_data_path", DRP.x_data_path)
+            self.set_param("x_data_path", DRP.x_data_path)
             self.set_param("y_data_path", DRP.y_data_path)  
             self.set_param("splits_path", DRP.splits_path)
             # print(DRP.__dict__)
