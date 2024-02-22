@@ -12,10 +12,17 @@ import pandas as pd
 from .metrics import compute_metrics
 
 # Check that environment variable "IMPROVE_DATA_DIR" has been specified
-if os.getenv("IMPROVE_DATA_DIR") is None:
+if os.getenv("IMPROVE_DATA_DIR", os.getenv("CANDLE_DATA_DIR") ) is None:
     raise Exception("ERROR ! Required system variable not specified.  \
                     You must define IMPROVE_DATA_DIR ... Exiting.\n")
-os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
+
+if os.getenv("IMPROVE_DATA_DIR")    :
+    os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
+elif os.getenv("CANDLE_DATA_DIR")    :
+    os.environ["IMPROVE_DATA_DIR"] = os.environ["CANDLE_DATA_DIR"]
+else:
+    raise Exception("ERROR ! Required system variable not specified.  \
+                    You must define IMPROVE_DATA_DIR or CANDLE_DATA_DIR ... Exiting.\n")
 
 SUPPRESS = argparse.SUPPRESS
 
