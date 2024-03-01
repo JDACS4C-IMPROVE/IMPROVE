@@ -24,9 +24,9 @@ class Config:
         self.params = {}
         self.file = None
         self.logger = logging.getLogger('Config')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.DEBUG))
-
+        self.log_level = os.getenv("IMPROVE_LOG_LEVEL" , logging.DEBUG)
+        self.logger.setLevel(self.log_level)
+       
         self.required = required
         self.config = configparser.ConfigParser()
         self.cli = CLI()
@@ -105,9 +105,26 @@ class Config:
 
         return (value, error)
     
+    def get_param(self, section="DEFAULT" , key=None) -> str:
+        """
+        Get value for given option. Gets or sets value in DEFAULT section if section is not provided. 
+        Allowed section names are: Preprocess, Train and Infer
+        """
+        
+        error=None
+
+        if self.config.has_option(section, key):
+            value=self.config[section][key]
+        else:
+            error="Can't find option " + str(key)
+            self.logger.error(error)
+            value=None
+
+        return value  
+
     def set_param(self, section="DEFAULT" , key=None , value=None) -> (str,str):
         """
-        Get or set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
+        Set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
         
@@ -165,6 +182,12 @@ class Config:
                               required=None,):
         """Initialize parameters from command line and config file."""
         
+        # preserve the type of the object
+        current_class = self.__class__
+        self.__class__ = Config
+
+        print( "initialize_parameters" + str(type(self)) )
+
         # Set and get command line args
         #
         # additonal_definitions in argparse format plus name:
@@ -173,6 +196,9 @@ class Config:
 
         # Find duplicate dicts in additon_definitions for the key 'name'
         # if in dict then remove and log warning
+
+        self.logger.debug("Initializing parameters for %s", section)
+
         if additional_definitions:
             duplicates = []
             names = []
@@ -191,7 +217,12 @@ class Config:
         cli = self.cli
         cli.set_command_line_options(options=additional_definitions)
         cli.get_command_line_options()
-        
+
+        # Set log level
+        if cli.args.log_level:
+            self.logger.setLevel(cli.args.log_level)
+            self.log_level = cli.args.log_level
+
         # Load Config
         if os.path.isdir(cli.args.input_dir) :
 
@@ -230,11 +261,14 @@ class Config:
         self.logger.debug("Updating config")
         for k in cli.params :
             self.logger.debug("Setting %s to %s", k, cli.params[k])
-            self.set_param(section=section, key=k, value= cli.params[k])
+            self.set_param(section, k, cli.params[k])
+            # self.config[section][k] = cli.params[k]
         
         # Update input and output directories    
         self.output_dir = self.config[section]['output_dir']
         self.input_dir = self.config[section]['input_dir']
+        self.log_level = self.config[section]['log_level']
+        self.logger.setLevel(self.log_level)
         
         # Set environment variables 
     
@@ -250,7 +284,8 @@ class Config:
             self.logger.debug("Creating output directory: %s", self.output_dir)
             os.makedirs(self.output_dir)
     
-        return self.params
+        self.__class__ = current_class
+        return self.dict()
     
     
 

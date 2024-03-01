@@ -36,7 +36,7 @@ class CLI:
                                   help='Base directory for output data. Default is IMPROVE_OUTPUT_DIR or if not specified current working directory. All additional relative output pathes will be placed into the base output directory.')
         self.parser.add_argument('--log_level', metavar='LEVEL', type=str, dest="log_level", 
                                   choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "NOTSET"],
-                                  default="WARNING", help="Set log levels. Default is WARNING. Levels are:\
+                                  default=os.getenv("IMPROVE_LOG_LEVEL", "WARNING"), help="Set log levels. Default is WARNING. Levels are:\
                                       DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET") 
         self.parser.add_argument('-cfg', '--config_file', metavar='INI_FILE', dest="config_file", 
                                   type=str,

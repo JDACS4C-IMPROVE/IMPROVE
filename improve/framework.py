@@ -419,8 +419,17 @@ def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
     params : parameter dict
     stage (str) : "train", "val", or "test"
     """
-    ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"  
-    ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+    ydf_fname = f"{stage}_{params['y_data_suffix']}.csv" 
+
+    # check for ml_data_outdir and output_dir in params and use the one that is available
+    # this ensures backward compatibility with previous versions of framework.py
+    if "ml_data_outdir" in params:
+        ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+    elif "output_dir" in params:
+        ydf_fpath = Path(params["output_dir"]) / ydf_fname
+    else:
+        raise Exception("ERROR ! Neither 'ml_data_outdir' not 'output_dir' found in params.\n")
+
     ydf.to_csv(ydf_fpath, index=False)
     return None
 

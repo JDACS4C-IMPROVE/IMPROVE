@@ -2,8 +2,22 @@
 
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
+import logging
+import os
+import sys
+
+from ast import literal_eval
 
 import pandas as pd
+
+
+# Set logger for this module
+
+FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.ERROR))
+
 
 # from improve import framework as frm
 from . import framework as frm
@@ -197,7 +211,16 @@ class OmicsLoader():
 
         self.params = params
         self.sep = sep
-        self.inp = params["x_data_canc_files"]
+
+        if isinstance(params["x_data_canc_files"], str):
+            # instanciate array from string
+            logger.debug("x_data_canc_files is a string. Converting to list.")
+            self.inp = literal_eval(params["x_data_canc_files"])
+        else:
+            self.inp = params["x_data_canc_files"]
+        
+        logger.debug(f"self.inp: {self.inp}")
+
         self.x_data_path = params["x_data_path"]
         self.canc_col_name = params["canc_col_name"]
         self.dfs = {}
@@ -206,7 +229,7 @@ class OmicsLoader():
         if self.verbose:
             print(f"canc_col_name: {params['canc_col_name']}")
             print(f"x_data_canc_files:")
-            for i, o in enumerate(params['x_data_canc_files']):
+            for i, o in enumerate(self.inp):
                 print(f"{i+1}. {o}")
 
         self.inp_fnames = []
@@ -230,6 +253,7 @@ class OmicsLoader():
 
     def load_all_omics_data(self):
         """ Load all omics data appear in self.inp """
+        logger.info("Loading omics data.")
         for i in self.inp:
             fname = i[0]
             if len(i) > 1:
@@ -290,7 +314,8 @@ class OmicsLoader():
         # print(self.dfs[self.copy_number_fname].iloc[:4, :4])
         # print(self.dfs[self.gene_expression_fname].iloc[:4, :4])
         # print(self.dfs[self.dna_methylation_fname].iloc[:4, :4])
-        print("Finished loading omics data.")
+        # print("Finished loading omics data.")
+        logger.info("Finished loading omics data.")
 
 
 
@@ -322,7 +347,15 @@ class DrugsLoader():
 
         self.params = params
         self.sep = sep
-        self.inp = params["x_data_drug_files"]
+
+        if isinstance(params["x_data_drug_files"], str):
+            # instanciate array from string
+            self.inp = literal_eval(params["x_data_drug_files"])
+        else:
+            self.inp = params["x_data_drug_files"]
+        
+        logger.debug(f"self.inp: {self.inp}")
+
         self.drug_col_name = params["drug_col_name"]
         self.x_data_path = params["x_data_path"]
         self.dfs = {}
@@ -332,7 +365,7 @@ class DrugsLoader():
             # print(f"x_data_drug_files: {params['x_data_drug_files']}")
             print(f"drug_col_name: {params['drug_col_name']}")
             print("x_data_drug_files:")
-            for i, d in enumerate(params['x_data_drug_files']):
+            for i, d in enumerate(self.inp):
                 print(f"{i+1}. {d}")
 
         self.inp_fnames = []
@@ -419,7 +452,12 @@ class DrugResponseLoader():
 
         self.params = params
         self.sep = sep
-        self.inp = params["y_data_files"]
+        if isinstance(params["y_data_files"], str):
+            # instanciate array from string
+            self.inp = literal_eval(params["y_data_files"])
+        else:
+            self.inp = params["y_data_files"]
+     
         self.y_col_name = params["y_col_name"]
         self.canc_col_name = params["canc_col_name"]
         self.drug_col_name = params["drug_col_name"]
@@ -434,11 +472,13 @@ class DrugResponseLoader():
             print(f"y_data_files: {params['y_data_files']}")
             print(f"y_col_name: {params['y_col_name']}")
 
-        self.inp_fnames = []
-        for i in self.inp:
-            assert len(i) == 1, f"Inner lists must contain only one item, but {i} is {len(i)}"
-            self.inp_fnames.append(i[0])
-        # print(self.inp_fnames)
+        # self.inp_fnames = []
+        # for i in self.inp:
+        #     logger.debug(f"i: {i}")
+        #     # was [['response.tsv']] but now ['response.tsv']
+        #     # assert len(i) == 1, f"Inner lists must contain only one item, but {i} is {len(i)}"
+        #     self.inp_fnames.append(i)
+        # logger.debug(self.inp_fnames)
 
         self.load_all_response_data()
 
@@ -459,6 +499,7 @@ class DrugResponseLoader():
 
     def load_response_data(self, fname):
         fpath = self.y_data_path / fname
+        logger.debug(f"Loading {fpath}")
         DrugResponseLoader.check_path(fpath)
         df = pd.read_csv(fpath, sep=self.sep)
         return df
@@ -466,7 +507,7 @@ class DrugResponseLoader():
     def load_all_response_data(self, verbose: str = True):
         """ ... """
         for i in self.inp:
-            fname = i[0]
+            fname = i
             df = self.load_response_data(fname)
             DrugResponseLoader.check_path(self.split_fpath)
             ids = pd.read_csv(self.split_fpath, header=None)[0].tolist()
