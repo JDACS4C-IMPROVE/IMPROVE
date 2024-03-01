@@ -235,6 +235,15 @@ class Config:
         # Update input and output directories    
         self.output_dir = self.config[section]['output_dir']
         self.input_dir = self.config[section]['input_dir']
+        
+        # Set environment variables 
+    
+        os.environ["IMPROVE_DATA_DIR"] = self.input_dir
+        os.environ["IMPROVE_OUTPUT_DIR"] = self.output_dir
+        os.environ["IMPROVE_LOG_LEVEL"] = self.config[section]['log_level']
+
+     
+
 
         # Create output directory if not exists
         if not os.path.isdir(self.output_dir):
