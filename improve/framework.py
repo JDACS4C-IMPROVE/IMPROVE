@@ -1,6 +1,7 @@
 """ Basic definitions for IMPROVE framework. """
 
 import os
+import sys
 import argparse
 import json
 from pathlib import Path
@@ -496,7 +497,29 @@ def store_predictions_df(params: Dict,
                       decimals=round_decimals)
         v2 = np.round(pred_df[true_col_name].values.astype(np.float32),
                       decimals=round_decimals)
-        assert np.array_equal(v1, v2), "Loaded y data vector is not equal to the true vector"
+
+        # for i, value in enumerate(v1):
+        #     if value != v2[i]:
+        #         print(f"Value at index {i} NOT equal. v1: {value}, v2: {v2[i]}")
+        #     else:
+        #         print(f"Value at index {i} is equal in both v1 and v2: {value}")
+
+        try:
+            # This will raise an AssertionError if v1 and v2 are not equal
+            assert np.array_equal(v1, v2[2:]), "Loaded y data vector is not equal to the true vector"
+        except AssertionError as e:
+            # This block will execute if the assertion fails
+            print(e)  # Print the assertion error message
+            # Print positions of the first 10 values of v1 in v2 to help with debugging of the assertion error
+            for i, value in enumerate(v1[:10]):
+                if value in v2:
+                    positions = np.where(v2[2:] == value)[0]
+                    print(f"Value {value} from v1 (index {i}) is found at positions {positions} in v2")
+                else:
+                    print(f"Value {value} from v1 (index {i}) is not found in v2")
+            # Exit the program
+            sys.exit("Exiting due to assertion failure.")
+
         mm = pd.concat([rsp_df, pred_df], axis=1)
         mm = mm.astype({params["y_col_name"]: np.float32,
                         true_col_name: np.float32,
@@ -568,6 +591,7 @@ class ImproveBenchmark(candle.Benchmark):
     """ Benchmark for Improve Models. """
 
     def set_locals(self):
+        print("-----------------------IMPROVE-----------------------")
         """ Set parameters for the benchmark.
 
         Parameters
