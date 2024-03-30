@@ -498,12 +498,7 @@ def store_predictions_df(params: Dict,
         v2 = np.round(pred_df[true_col_name].values.astype(np.float32),
                       decimals=round_decimals)
 
-        # for i, value in enumerate(v1):
-        #     if value != v2[i]:
-        #         print(f"Value at index {i} NOT equal. v1: {value}, v2: {v2[i]}")
-        #     else:
-        #         print(f"Value at index {i} is equal in both v1 and v2: {value}")
-
+        # Check if the loaded y data vector is equal to the true vector
         try:
             # This will raise an AssertionError if v1 and v2 are not equal
             assert np.array_equal(v1, v2[2:]), "Loaded y data vector is not equal to the true vector"
@@ -591,7 +586,6 @@ class ImproveBenchmark(candle.Benchmark):
     """ Benchmark for Improve Models. """
 
     def set_locals(self):
-        print("-----------------------IMPROVE-----------------------")
         """ Set parameters for the benchmark.
 
         Parameters
