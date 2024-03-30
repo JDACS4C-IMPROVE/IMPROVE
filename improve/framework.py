@@ -501,14 +501,14 @@ def store_predictions_df(params: Dict,
         # Check if the loaded y data vector is equal to the true vector
         try:
             # This will raise an AssertionError if v1 and v2 are not equal
-            assert np.array_equal(v1, v2[2:]), "Loaded y data vector is not equal to the true vector"
+            assert np.array_equal(v1, v2), "Loaded y data vector is not equal to the true vector"
         except AssertionError as e:
             # This block will execute if the assertion fails
             print(e)  # Print the assertion error message
             # Print positions of the first 10 values of v1 in v2 to help with debugging of the assertion error
             for i, value in enumerate(v1[:10]):
                 if value in v2:
-                    positions = np.where(v2[2:] == value)[0]
+                    positions = np.where(v2 == value)[0]
                     print(f"Value {value} from v1 (index {i}) is found at positions {positions} in v2")
                 else:
                     print(f"Value {value} from v1 (index {i}) is not found in v2")
