@@ -8,10 +8,17 @@ from parsl.executors import HighThroughputExecutor
 from parsl.launchers import MpiExecLauncher # USE the MPIExecLauncher
 # address_by_interface is needed for the HighThroughputExecutor:
 from parsl.addresses import address_by_interface
+# For checkpointing:
+from parsl.utils import get_all_checkpoints
+
+# Adjust your user-specific options here:
+run_dir="~/tmp"
+
+
 
 
 user_opts = {
-    "worker_init":      f"source ~/.venv/parsl/bin/activate; cd ~/tmp", # load the environment where parsl is installed
+    "worker_init":      f"source ~/.venv/parsl/bin/activate; cd {run_dir}", # load the environment where parsl is installed
     "scheduler_options":"#PBS -l filesystems=home:eagle:grand" , # specify any PBS options here, like filesystems
     "account":          "IMPROVE",
     "queue":            "debug-scaling",
