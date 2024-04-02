@@ -24,7 +24,7 @@ user_opts = {
     "worker_init":      f"source ~/.venv/parsl/bin/activate; cd {run_dir}", # load the environment where parsl is installed
     "scheduler_options":"#PBS -l filesystems=home:eagle:grand" , # specify any PBS options here, like filesystems
     "account":          "IMPROVE",
-    "queue":            "debug-scaling",
+    "queue":            "R1819593",
     "walltime":         "1:00:00",
     "nodes_per_block":  3, # think of a block as one job on polaris, so to run on the main queues, set this >= 10
 }
@@ -73,23 +73,26 @@ def hello_python (message):
 
 @bash_app
 def hello_bash(message, stdout='hello-stdout'):
-    return 'echo "Hello %s" ; echo CUDA: $CUDA_VISIBLE_DEVICES ; nvidia-smi' % message
+    return 'echo "Hello %s" ; echo CUDA: $CUDA_VISIBLE_DEVICES' % message
 
 
 futures = []
 with parsl.load(config):
     # invoke the Python app and print the result
     for i in range(40):
+        print(i)
         print(hello_python(f"World {i} (Python)").result())
 
         # invoke the Bash app and read the result from a file
-        futures.append(hello_bash(f"World {i} (Bash)"))
+        # futures.append(hello_bash(f"World {i} (Bash)", stdout="hello-stdout." + str(i) ))
+        f=hello_bash(f"World {i} (Bash)", stdout="hello-stdout." + str(i) )
 
 print('Bash app wrote to hello-stdout:')
-i=1
+i=0
+print(len(futures))
 for f in futures:
-    print('Result ' + str(i) + ': {}'.format(f.result()))
     print(f)
+    print('Result ' + str(i) + ': {}'.format(f.result()))
     i=i+1
 
 with open('/home/awilke/tmp/hello-stdout', 'r') as f:
