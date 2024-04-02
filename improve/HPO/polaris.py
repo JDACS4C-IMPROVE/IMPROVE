@@ -1,3 +1,6 @@
+import parsl
+from parsl import python_app , bash_app
+
 from parsl.config import Config
 
 # PBSPro is the right provider for Polaris:
@@ -15,7 +18,7 @@ from parsl.utils import get_all_checkpoints
 run_dir="~/tmp"
 
 
-
+print(parsl.__version__)
 
 user_opts = {
     "worker_init":      f"source ~/.venv/parsl/bin/activate; cd {run_dir}", # load the environment where parsl is installed
@@ -38,7 +41,8 @@ config = Config(
                 address=address_by_interface("bond0"),
                 cpu_affinity="block-reverse",
                 prefetch_capacity=0,
-                start_method="spawn",  # Needed to avoid interactions between MPI and os.fork
+                worker_debug=True,
+                # start_method="spawn",  # Needed to avoid interactions between MPI and os.fork
                 provider=PBSProProvider(
                     launcher=MpiExecLauncher(bind_cmd="--cpu-bind", overrides="--depth=64 --ppn 1"),
                     account=user_opts["account"],
@@ -53,7 +57,7 @@ config = Config(
                     init_blocks=1,
                     min_blocks=0,
                     max_blocks=1, # Can increase more to have more parallel jobs
-                    cpus_per_node=user_opts["cpus_per_node"],
+                    # cpus_per_node=user_opts["cpus_per_node"],
                     walltime=user_opts["walltime"]
                 ),
             ),
@@ -69,16 +73,24 @@ def hello_python (message):
 
 @bash_app
 def hello_bash(message, stdout='hello-stdout'):
-    return 'echo "Hello %s" ; env ' % message
+    return 'echo "Hello %s" ; echo CUDA: $CUDA_VISIBLE_DEVICES ; nvidia-smi' % message
 
 
-with parsl.load(local_htex):
+futures = []
+with parsl.load(config):
     # invoke the Python app and print the result
-    print(hello_python('World (Python)').result())
+    for i in range(40):
+        print(hello_python(f"World {i} (Python)").result())
 
-    # invoke the Bash app and read the result from a file
-    hello_bash('World (Bash)').result()
+        # invoke the Bash app and read the result from a file
+        futures.append(hello_bash(f"World {i} (Bash)"))
 
 print('Bash app wrote to hello-stdout:')
-with open('hello-stdout', 'r') as f:
+i=1
+for f in futures:
+    print('Result ' + str(i) + ': {}'.format(f.result()))
+    print(f)
+    i=i+1
+
+with open('/home/awilke/tmp/hello-stdout', 'r') as f:
     print(f.read())
