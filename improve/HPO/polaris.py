@@ -26,7 +26,7 @@ user_opts = {
     "account":          "IMPROVE",
     "queue":            "R1819593",
     "walltime":         "1:00:00",
-    "nodes_per_block":  3, # think of a block as one job on polaris, so to run on the main queues, set this >= 10
+    "nodes_per_block":  10, # think of a block as one job on polaris, so to run on the main queues, set this >= 10
 }
 
 checkpoints = get_all_checkpoints(run_dir)
@@ -73,8 +73,11 @@ def hello_python (message):
 
 @bash_app
 def hello_bash(message, stdout='hello-stdout'):
-    return 'echo "Hello %s" ; echo CUDA: $CUDA_VISIBLE_DEVICES' % message
+    return 'echo "Hello %s" ; echo CUDA: $CUDA_VISIBLE_DEVICES ; nvidia-smi ; sleep 10 ' % message
 
+@bash_app
+def cat(prefix="hello-stdout." , out="hello-stdout" , stdout="cat.log"):
+    return 'cat %s* > %s' % (prefix, out)
 
 futures = []
 with parsl.load(config):
@@ -85,7 +88,15 @@ with parsl.load(config):
 
         # invoke the Bash app and read the result from a file
         # futures.append(hello_bash(f"World {i} (Bash)", stdout="hello-stdout." + str(i) ))
-        f=hello_bash(f"World {i} (Bash)", stdout="hello-stdout." + str(i) )
+        futures.append(hello_bash(f"World {i} (Bash)", stdout="hello-stdout." + str(i) ))
+
+    cf=cat()
+    print("Cat: " + str(cf.result()))
+    i=0
+    for f in futures:
+            print(f)
+            print('Result ' + str(i) + ': {}'.format(f.result()))
+            i=i+1
 
 print('Bash app wrote to hello-stdout:')
 i=0
@@ -94,6 +105,7 @@ for f in futures:
     print(f)
     print('Result ' + str(i) + ': {}'.format(f.result()))
     i=i+1
+
 
 with open('/home/awilke/tmp/hello-stdout', 'r') as f:
     print(f.read())
