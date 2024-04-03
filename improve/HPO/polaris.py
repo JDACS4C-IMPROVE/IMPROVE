@@ -22,7 +22,7 @@ print(parsl.__version__)
 
 user_opts = {
     "worker_init":      f"source ~/.venv/parsl/bin/activate; cd {run_dir}", # load the environment where parsl is installed
-    "scheduler_options":"#PBS -l filesystems=home:eagle:grand" , # specify any PBS options here, like filesystems
+    "scheduler_options":"#PBS -l filesystems=home:eagle:grand -l singularity_fakeroot=true" , # specify any PBS options here, like filesystems
     "account":          "IMPROVE",
     "queue":            "R1819593",
     "walltime":         "1:00:00",
@@ -77,8 +77,14 @@ def hello_bash(message, stdout='hello-stdout'):
 
 @bash_app
 def cat(prefix="hello-stdout." , out="hello-stdout" , stdout="cat.log"):
-    return 'cat %s* > %s' % (prefix, out)
+    return 'cat %s* > %s ; rm %s* ' % (prefix, out, prefix)
 
+
+@bash_app
+def train(image=None , config=None , input_dir="./" , output_dir="./" , stderr="train.stderr" , stdout="train.stdout"):
+    return 'module load singularity ; echo CUDA: $CUDA_VISIBLE_DEVICES ; singularity run -B %s:/candle_data_dir %s train.sh ${CUDA_VISIBLE_DEVICES} /candle_data_dir --help ' % (input_dir , image ) 
+
+image="/home/awilke/IMPROVE/Singularity/build/LGBM_Polaris.sif"
 futures = []
 with parsl.load(config):
     # invoke the Python app and print the result
@@ -91,21 +97,23 @@ with parsl.load(config):
         futures.append(hello_bash(f"World {i} (Bash)", stdout="hello-stdout." + str(i) ))
 
     cf=cat()
+    t = train(image=image, config={ "--learning_rate" : 1 , "--help" : '' })
+    print("Singularity:" + str(t.result()))
     print("Cat: " + str(cf.result()))
     i=0
-    for f in futures:
-            print(f)
-            print('Result ' + str(i) + ': {}'.format(f.result()))
-            i=i+1
+#    for f in futures:
+#            print(f)
+#            print('Result ' + str(i) + ': {}'.format(f.result()))
+#            i=i+1
 
 print('Bash app wrote to hello-stdout:')
-i=0
-print(len(futures))
-for f in futures:
-    print(f)
-    print('Result ' + str(i) + ': {}'.format(f.result()))
-    i=i+1
+# i=0
+# print(len(futures))
+# for f in futures:
+#     print(f)
+#     print('Result ' + str(i) + ': {}'.format(f.result()))
+#     i=i+1
 
 
-with open('/home/awilke/tmp/hello-stdout', 'r') as f:
-    print(f.read())
+# with open('/home/awilke/tmp/hello-stdout', 'r') as f:
+#     print(f.read())
