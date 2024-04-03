@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Download the raw data for the single drug response benchmark
+# Usage: ./get-benchmarks <destination>
+# Example: ./get-benchmarks /path/to/destination
+# The destination is the directory where the data will be downloaded
+# Creates the splits, x_data and y_data directories in the destination
+
+DESTINATION=$1
+
+if [ -z "$DESTINATION" ]; then
+    echo "Usage: $0 <destination>"
+    exit 1
+fi
+
+mkdir -p $DESTINATION
+
+cd $DESTINATION
+
+wget --cut-dirs=10 -P ./ -nH -np -m https://web.cels.anl.gov/projects/IMPROVE_FTP/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/
+find . -name "index*" -exec rm -f {} \;
+
