@@ -509,7 +509,7 @@ def store_predictions_df(params: Dict,
     else:
         # Save only ground truth and predictions since did not load the corresponding dataframe
         df = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})  # This includes true and predicted values
-        df = mm.round({true_col_name: round_decimals,
+        df = df.round({true_col_name: round_decimals,
                        pred_col_name: round_decimals})
         df.to_csv(ydf_out_fpath, index=False)
         # y_true_return = y_true
