@@ -1,11 +1,13 @@
 """Functionality for Computing Metrics in IMPROVE."""
 
 import sys
+import sklearn
 
-import numpy as np
 from scipy.stats.mstats import pearsonr, spearmanr
-from sklearn.metrics import r2_score, mean_squared_error#, root_mean_squared_error
-
+if sklearn.__version__ <= "1.4.0":
+    from sklearn.metrics import r2_score, mean_squared_error
+else:
+    from sklearn.metrics import r2_score, mean_squared_error , root_mean_squared_error
 
 def str2Class(str):
     return getattr(sys.modules[__name__], str)
@@ -76,8 +78,11 @@ def rmse(y_true, y_pred):
     -------
         float value corresponding to RMSE. If several outputs, errors of all outputs are averaged with uniform weight.
     """
-    # rmse = root_mean_squared_error(y_true, y_pred)
-    rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+    #rmse = root_mean_squared_error(y_true, y_pred)
+    if sklearn.__version__ <= "1.4.0":
+        rmse = mean_squared_error(y_true, y_pred , squared=False)
+    else:
+        rmse = root_mean_squared_error(y_true, y_pred)
     return rmse
 
 
