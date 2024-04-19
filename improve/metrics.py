@@ -3,7 +3,7 @@
 import sys
 
 from scipy.stats.mstats import pearsonr, spearmanr
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.metrics import r2_score, mean_squared_error, root_mean_squared_error
 
 
 def str2Class(str):
@@ -75,7 +75,7 @@ def rmse(y_true, y_pred):
     -------
         float value corresponding to RMSE. If several outputs, errors of all outputs are averaged with uniform weight.
     """
-    rmse = mean_squared_error(y_true, y_pred, squared=False)
+    rmse = root_mean_squared_error(y_true, y_pred)
     return rmse
 
 
