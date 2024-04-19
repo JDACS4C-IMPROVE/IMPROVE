@@ -496,7 +496,13 @@ def store_predictions_df(params: Dict,
                       decimals=round_decimals)
         v2 = np.round(pred_df[true_col_name].values.astype(np.float32),
                       decimals=round_decimals)
-        assert np.array_equal(v1, v2), "Loaded y data vector is not equal to the true vector"
+        
+        # Check that loaded metadata is aligned with the vector of true values
+        np.random.shuffle(v2)
+        assert np.array_equal(v1, v2), ""\
+            f"Y data vector from the loaded metadata is not equal to the true vector:\n"\
+            f"Y data vector from loaded metadata:  {v1[:10]}\n"\
+            f"Y data vector of true target values: {v2[:10]}\n"
         mm = pd.concat([rsp_df, pred_df], axis=1)
         mm = mm.astype({params["y_col_name"]: np.float32,
                         true_col_name: np.float32,
