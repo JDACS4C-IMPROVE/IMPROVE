@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+import datetime
+
 import parsl
 from parsl import python_app, bash_app
 from parsl.providers import LocalProvider
@@ -94,7 +96,7 @@ local_config = Config(
                 init_blocks=1,
                 max_blocks=1,
             ),
-            # max_workers_per_node=10,
+            max_workers_per_node=10,
         )
     ],
     strategy=None,
@@ -106,27 +108,57 @@ local_config = Config(
 
 
 @python_app
-def hello_python (message):
+def hello_python(message, stdout='hello-python.stdout'):
     import time
-    time.sleep(1)
+    import random
+    import datetime
+
+    print('Inside function: ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    # Sleep between 1 and 5 seconds
+    time_to_sleep = random.randint(1, 5)
+    time.sleep(time_to_sleep)
+
     return 'Hello %s' % message
 
 @bash_app
 def hello_bash(message, stdout='hello-stdout'):
-    return 'echo "Hello %s" ; env ; sleep 5' % message
+    return 'echo "Hello (bash) %s" ; env ; sleep 5' % message
 
 
 with parsl.load():
-    # invoke the Python app and print the result
+    # invoke the Python app and print the result - serial
     print(hello_python('World (Python)').result())
     hello_bash("World (Bash)").result()
-    # invoke the Bash app and read the result from a file
-    out = []
-    for i in range(5):
-        print(i)
-        # hello_bash("World " + str(i) + " (Bash)").result()
-        print(hello_python('World (Python)').result())
+ 
 
-print('Bash app wrote to hello-stdout:')
-with open('hello-stdout', 'r') as f:
-    print(f.read())
+    # Submit the function in parallel
+    print('Submitting 20 tasks:\t' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    futures = [hello_python(f"World {i}") for i in range(20)]
+    print('Submitted 20 tasks:\t' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    # Gather the results
+    results = [future.result() for future in futures]
+
+
+    for i in range(5):
+        print(hello_python('Loop - not parallel').result())
+
+    future_results = []
+    for i in range(5):
+        future_results.append(hello_python('Loop - parallel'))
+
+
+    # Gather the results
+    for future in future_results:
+        print(future.result())
+
+
+    # Print the results
+    for result in results:
+        print(result)
+
+    # Clear Parsl
+    parsl.clear()
+
+# print('Bash app wrote to hello-stdout:')
+# with open('hello-stdout', 'r') as f:
+#     print(f.read())
