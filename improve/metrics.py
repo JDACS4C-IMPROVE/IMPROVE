@@ -138,3 +138,5 @@ def r_square(y_true, y_pred):
     """
 
     return r2_score(y_true, y_pred)
+
+# F1, recall, precision, accuracy, AUC, AUPR
