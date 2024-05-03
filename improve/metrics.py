@@ -5,9 +5,9 @@ import sklearn
 
 from scipy.stats.mstats import pearsonr, spearmanr
 if sklearn.__version__ <= "1.4.0":
-    from sklearn.metrics import r2_score, mean_squared_error
+    from sklearn.metrics import r2_score, mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score
 else:
-    from sklearn.metrics import r2_score, mean_squared_error , root_mean_squared_error
+    from sklearn.metrics import r2_score, mean_squared_error , root_mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score
 
 def str2Class(str):
     return getattr(sys.modules[__name__], str)
@@ -140,3 +140,90 @@ def r_square(y_true, y_pred):
     return r2_score(y_true, y_pred)
 
 # F1, recall, precision, accuracy, AUC, AUPR
+#, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score
+
+def acc(y_true, y_pred):
+    """Compute accuracy.
+
+    Parameters
+    ----------
+    y_true : numpy array
+        True values to predict.
+    y_pred : numpy array
+        Prediction made by the model.
+
+    Returns
+    -------
+        float value corresponding to accuracy.
+    """
+
+    return accuracy_score(y_true, y_pred)
+
+def bacc(y_true, y_pred):
+    """Compute balanced accuracy.
+
+    Parameters
+    ----------
+    y_true : numpy array
+        True values to predict.
+    y_pred : numpy array
+        Prediction made by the model.
+
+    Returns
+    -------
+        float value corresponding to balanced accuracy.
+    """
+
+    return balanced_accuracy_score(y_true, y_pred)
+
+def f1(y_true, y_pred):
+    """Compute the F1 score.
+
+    Parameters
+    ----------
+    y_true : numpy array
+        True values to predict.
+    y_pred : numpy array
+        Prediction made by the model.
+
+    Returns
+    -------
+        float value corresponding to the F1 score.
+    """
+
+    return f1_score(y_true, y_pred)
+
+def precision(y_true, y_pred):
+    """Compute precision.
+
+    Parameters
+    ----------
+    y_true : numpy array
+        True values to predict.
+    y_pred : numpy array
+        Prediction made by the model.
+
+    Returns
+    -------
+        float value corresponding to precision.
+    """
+
+    return precision_score(y_true, y_pred)
+
+def recall(y_true, y_pred):
+    """Compute recall.
+
+    Parameters
+    ----------
+    y_true : numpy array
+        True values to predict.
+    y_pred : numpy array
+        Prediction made by the model.
+
+    Returns
+    -------
+        float value corresponding to recall.
+    """
+
+    return recall_score(y_true, y_pred)
+
