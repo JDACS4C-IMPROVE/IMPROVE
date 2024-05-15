@@ -91,6 +91,104 @@ def common_elements(list1: List, list2: List, verbose: bool=False) -> List:
         print("Elements in common count: ", len(in_common))
     return in_common
 
+# ==============================================================
+# coder data functions
+# ==============================================================
+
+# requires datasets in params, like:
+# datasets = ["broad_sanger", "hcmi"]
+# need to implement a default
+# probably put in a class after testing - esp so we only have to download once
+# need to get drug features from smiles
+# fix y_data so it only returns whatever is in params e.g. auc
+
+def cd_get_omics(params):
+    coderdata.download_data_by_prefix(*params["datasets"])
+    dataset = coderdata.join_datasets(*params["datasets"])
+    dfs = {}
+    canc = params["x_data_canc_files"]
+    for feat_list in canc:
+        feature = feat_list[0]
+        df = pd.DataFrame()
+        if feature == "cancer_gene_expression.tsv":
+            dataset.reformat_dataset('transcriptomics', 'wide')
+            df = dataset.transcriptomics
+        elif feature == "cancer_RPPA.tsv":
+            dataset.reformat_dataset('proteomics', 'wide')
+            df = dataset.proteomics
+        elif feature == "cancer_DNA_methylation.tsv":
+            print("Methylation feature is MIA.")
+        elif feature == "cancer_miRNA_expression.tsv":
+            print("miRNA feature is MIA.")
+        elif feature == "cancer_mutation_long_format.tsv":
+            df = dataset.mutations
+        elif feature == "cancer_mutation_count.tsv":
+            df_all = dataset.mutations
+            df_all["count"] = 1.0
+            df_agg = df_all.groupby(["improve_sample_id", "entrez_id"])["count"].sum().reset_index()
+            df_wide = df_agg.pivot(index="improve_sample_id", columns="entrez_id", values="count").fillna(0)
+            df = df_wide.reset_index()
+        elif feature == "cancer_mutation.parquet":
+            df_all = dataset.mutations
+            df_all["count"] = 1.0
+            df_agg = df_all.groupby(["improve_sample_id", "entrez_id"])["count"].min().reset_index()
+            df_wide = df_agg.pivot(index="improve_sample_id", columns="entrez_id", values="count").fillna(0)
+            df = df_wide.reset_index()
+        elif feature == "cancer_copy_number.tsv":
+            df_long = dataset.copy_number
+            if df_long.index.name == "entrez_id":
+                df_long = df_long.reset_index()
+            df_agg = df_long.groupby(["improve_sample_id", "entrez_id"])["copy_number"].mean().reset_index()
+            df_wide = df_agg.pivot(index="improve_sample_id", columns="entrez_id", values="copy_number")
+            df = df_wide.reset_index()
+        elif feature == "cancer_discretized_copy_number.tsv":
+            df_long = dataset.copy_number
+            def call_to_value(call):
+                if (call == "amp" or call == "Amplification"):
+                    value = 2.0
+                elif (call == "gain" or call == "Gain"):
+                    value = 1.0
+                elif (call == "diploid" or call == "Neutral"):
+                    value = 0.0
+                elif (call == "het loss" or call == "Loss"):
+                    value = -1.0
+                elif (call == "deep del" or call == "Deletion"):
+                    value = -2.0
+                else:
+                    value = float("nan")
+                return value
+            df_long["copy_call"] = df_long["copy_call"].map(call_to_value)
+            if df_long.index.name == "entrez_id":
+                df_long = df_long.reset_index()
+            df_agg = df_long.groupby(["improve_sample_id", "entrez_id"])["copy_call"].mean().round().reset_index()
+            df_wide = df_agg.pivot(index="improve_sample_id", columns="entrez_id", values="copy_call")
+            df = df_wide.reset_index()
+        else:
+            print("Feature invalid!")
+        print(df)
+        dfs[feature] = df
+    return dfs
+
+def cd_get_y(params):
+    coderdata.download_data_by_prefix(*params["datasets"])
+    dataset = coderdata.join_datasets(*params["datasets"])
+    response = dataset.experiments
+    response = response.drop_duplicates(keep=False)
+    y_data = response.pivot(index=["source", "improve_sample_id", "improve_drug_id", "study", "time", "time_unit"], columns=["dose_response_metric"], values="dose_response_value")
+    y_data = y_data.reset_index()
+    return y_data
+
+def cd_get_smiles(params):
+    coderdata.download_data_by_prefix(*params["datasets"])
+    dataset = coderdata.join_datasets(*params["datasets"])
+    drugs = dataset.drugs
+    smiles = drugs[["improve_drug_id", "canSMILES"]]
+    smiles = smiles.drop_duplicates().reset_index(drop=True)
+    return smiles
+
+
+
+
 
 # ==============================================================
 # Omic feature loaders
