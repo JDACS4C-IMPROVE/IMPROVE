@@ -20,13 +20,15 @@ run_dir="~/tmp"
 
 print(parsl.__version__)
 
+# source ~/.venv/parsl/bin/activate
+
 user_opts = {
-    "worker_init":      f"source ~/.venv/parsl/bin/activate; cd {run_dir}", # load the environment where parsl is installed
+    "worker_init":      f". ~/.bashrc ; conda activate parsl; cd {run_dir}", # load the environment where parsl is installed
     "scheduler_options":"#PBS -l filesystems=home:eagle:grand -l singularity_fakeroot=true" , # specify any PBS options here, like filesystems
     "account":          "IMPROVE",
-    "queue":            "R1819593",
+    "queue":            "debug-scaling",
     "walltime":         "1:00:00",
-    "nodes_per_block":  10, # think of a block as one job on polaris, so to run on the main queues, set this >= 10
+    "nodes_per_block":  3,# think of a block as one job on polaris, so to run on the main queues, set this >= 10
 }
 
 checkpoints = get_all_checkpoints(run_dir)
