@@ -24,6 +24,11 @@ from parsl.executors import HighThroughputExecutor
 
 
 from Workflows import Demo
+from CLI import CLI
+
+from Config.Parsl import Config as Parsl
+from Config.CSA import Config as CSA
+
 
 
 # Adjust your user-specific options here:
@@ -101,15 +106,45 @@ def get_config():
     )
 
 
-futures = []
 
-config = get_config()
+additional_definitions = {
+    "model" : {
+        "type" : str,
+        "default" : None,
+        "help" : "Singulritiy image for the model",
+        "choices" : None,
+        "nargs" : None
+    },
+    "data_set" : {  
+        "type" : str,
+        "default" : None,
+        "help" : "Data set",
+        "choices" : None,
+        "nargs" : None
+    },
+}
+
+cli = CLI()
+cli.set_command_line_options(options=additional_definitions)
+cli.get_command_line_options()
+
+pcfg = Parsl()
+pcfg = parsl_config.load_config(cli.params['parsl_config_file'])
+
+csa = CSA()
+csa = csa.load_config(cli.params['csa_config_file'])
+
+
+futures = {}
 parsl.clear()
 # checkpoints = get_all_checkpoints(run_dir)
 # print("Found the following checkpoints: ", checkpoints)
-with parsl.load(config):
+with parsl.load(pcfg.config):
 
     results = Demo.run(config={},debug=True)
-    print(results)
+
+    for key in results.keys():
+        print(f"{key} : {results[key]}")
+
 
     parsl.clear()

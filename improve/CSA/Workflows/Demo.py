@@ -39,7 +39,7 @@ def get_local_environment(std_out="env.stdout", std_err="env.stderr"):
     }
 
 # Define your run function
-def run(config):
+def run(config=None , debug=False):
     # Workflow logic here
     futures = {}
 
@@ -61,19 +61,19 @@ def main():
     }
 
     # Execute the workflow
-    output = run(config)
+    output = run(config=config, debug=True)
 
     # Print the final output
     for key in output:
 
         if isinstance(output[key] , dict):
             for i in output[key]:
-                print(f"{i}: {output[key][i].result()}")
+                print(f"{i}: {output[key][i].result()}\n")
         elif isinstance(output[key], object):
-            print(f"{key}: {output[key].result()}")
+            print(f"{key}: {output[key].result()}\n")
 
 
-    # print(output)
+    # print(f"Output:\n{output}")
 
 # Check if the script is being run as a main program
 if __name__ == "__main__":
