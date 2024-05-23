@@ -20,6 +20,5 @@ class Config(BaseConfig):
 
 if __name__ == "__main__":
     cfg=Config()
-    defaults=[{ 'action' : 'store' , 'choices' : [ 'A' , 'B' , 'C' ] , 'type' : str , 'name' : "dest" }]
-    cli.set_command_line_options(options=defaults)
-    cli.get_command_line_options()
+    cfg.load_config('parsl.config.ini')
+    print(cfg.option)

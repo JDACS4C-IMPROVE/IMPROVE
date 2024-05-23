@@ -49,15 +49,30 @@ class CLI:
         self.logger.debug("Setting Command Line Options")
         for o in ['input_dir', 'output_dir', 'log_level', 'config_file']:
             # check if o is the value of name in one of the dicts in options
-            for d in options:
-                if o == d['name']:
-                    self.logger.warning("Found %s in options. This option is predifined and can not be overwritten." , o)
-                    self.logger.debug("Removing %s from options" , o)
-                    options.remove(d)
 
+            if o in options:
+                self.logger.warning("Found %s in options. This option is predifined and can not be overwritten." , o)
+                self.logger.debug("Removing %s from options" , o)
+                del options[o]
+
+            # for d in options:
+            #     if isinstance(d, str) :
+            #         print(f"Found {d} in options")
+            #         if d == o:
+            #             self.logger.warning("Found %s in options. This option is predifined and can not be overwritten." , o)
+            #             self.logger.debug("Removing %s from options" , o)
+            #             options.remove(d)
+
+            #     elif isinstance(d, dict):
+            #         if o == d['name']:
+            #             self.logger.warning("Found %s in options. This option is predifined and can not be overwritten." , o)
+            #             self.logger.debug("Removing %s from options" , o)
+            #             options.remove(d)
+
+        print(options)
         # From Candle, can't handle bool
         for k in options:
-            self.logger.debug("Adding %s to Command Line Options" , k['name'])
+            self.logger.debug("Adding %s to Command Line Options" , options[k]['name'])
             self.parser.add_argument('--'+k, metavar='VALUE', type=options[k]['type'], dest=options[k]['name'], 
                                      default=options[k]['default'], help=options[k]['help'], choices=options[k]['choices'], nargs=options[k]['nargs'])
        
