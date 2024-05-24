@@ -27,7 +27,7 @@ from Workflows import Demo
 from CLI import CLI
 
 from Config.Parsl import Config as Parsl
-from Config.CSA import Config as CSA
+import Config.CSA as CSA
 
 import os
 from pathlib import Path
@@ -135,8 +135,8 @@ cli.get_command_line_options()
 pcfg = Parsl()
 pcfg = parsl_config.load_config(cli.params['parsl_config_file'])
 
-csa = CSA()
-csa = csa.load_config(cli.params['csa_config_file'])
+#csa = CSA()
+#csa = csa.load_config(cli.params['csa_config_file'])
 
 ###
 
@@ -159,7 +159,7 @@ params = CSA.initialize_parameters(
     filepath=fdir, # CHANGE PATH IF NEEDED TO THE DIRECTORY CONTAINING THE CONFIG FILE
     default_model="Paccmann_MCA_default_model_csa.txt"  ### HARD CODING CONFIG FILE ********** CHECK THIS - Add Argparse for config file
 )
-logger = logging.getLogger(f'{params['model_name']}')
+logger = logging.getLogger(f"{params['model_name']}")
 
 raw_datadir = maindir /'csa_data'/ params["raw_data_dir"] #### HARD CODING. Add a candle parameter for csa_data ??
 x_datadir = raw_datadir / params["x_data_dir"]
