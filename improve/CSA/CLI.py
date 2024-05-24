@@ -69,7 +69,7 @@ class CLI:
             #             self.logger.debug("Removing %s from options" , o)
             #             options.remove(d)
 
-        print(options)
+        #print(options)
         # From Candle, can't handle bool
         for k in range(len(options)):
             self.logger.debug("Adding %s to Command Line Options" , options[k]['name'])
