@@ -28,6 +28,7 @@ from CLI import CLI
 
 from Config.Parsl import Config as Parsl
 import Config.CSA as CSA
+from Config.Common import Config as Common_config
 
 import os
 from pathlib import Path
@@ -152,14 +153,18 @@ cli = CLI()
 cli.set_command_line_options(options=additional_definitions)
 cli.get_command_line_options()
 
+print(cli.params)
 pcfg = Parsl()
-pcfg = parsl_config.load_config(cli.params['parsl_config_file'])
+#pcfg = parsl_config.load_config(cli.params['parsl_config_file']) ## parsl_config was throwing an error
+common_cfg  = Common_config()
+common_cfg.load_config(cli.params['parsl_config_file'])
+print(common_cfg.option)
 
 #csa = CSA()
 #csa = csa.load_config(cli.params['csa_config_file'])
 
 ###
-
+#CHECK HOW TO LOAD ALL THE PARAMS AND ELIMINATE THE USE OF candle initialize parameters for csa config
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 fdir = Path(__file__).resolve().parent
