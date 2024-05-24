@@ -128,9 +128,10 @@ def get_config():
         strategy=None,
     )
 
+additional_definitions = CSA.additional_definitions
 
 
-additional_definitions = {
+""" additional_definitions = {
     "model" : {
         "type" : str,
         "default" : None,
@@ -145,7 +146,7 @@ additional_definitions = {
         "choices" : None,
         "nargs" : None
     },
-}
+} """
 
 cli = CLI()
 cli.set_command_line_options(options=additional_definitions)
