@@ -71,10 +71,12 @@ class CLI:
 
         print(options)
         # From Candle, can't handle bool
-        for k in options:
+        for k in range(len(options)):
             self.logger.debug("Adding %s to Command Line Options" , options[k]['name'])
-            self.parser.add_argument('--'+k, metavar='VALUE', type=options[k]['type'], dest=options[k]['name'], 
-                                     default=options[k]['default'], help=options[k]['help'], choices=options[k]['choices'], nargs=options[k]['nargs'])
+            self.parser.add_argument('--'+options[k]['name'], metavar='VALUE', type=options[k]['type'], dest=options[k]['name'], 
+                                     default=options[k]['default'], help=options[k]['help']
+                                     #, choices=options[k]['choices'], nargs=options[k]['nargs']
+                                     )
        
 
         
