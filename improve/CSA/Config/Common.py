@@ -17,18 +17,22 @@ class Config():
         if file.endswith('.ini'):
             config = configparser.ConfigParser()
             config.read(file)
-            self.option = dict(config.items('DEFAULT'))
+            #self.option = dict(config.items('DEFAULT'))
+            self.option={}
+            combined_options = {section: dict(config.items(section)) for section in config.sections()}
+            self.option.update(combined_options)
         elif file.endswith('.json'):
             with open(file, 'r') as f:
                 self.option = json.load(f)
         else:
             raise ValueError("Unsupported file format")
         
-        for key in self.option:
+        for key in self.option.keys():
             # create attribute for each key
-            setattr(self, key, self.option[key])
+            for k in self.option[key].keys():
+                setattr(self, k, self.option[key][k])
             if self.logger.level == logging.DEBUG:
-                print(key, self.option[key])
+                print(k, self.option[key][k])
 
         # if ini file load ini file else load json file
         
