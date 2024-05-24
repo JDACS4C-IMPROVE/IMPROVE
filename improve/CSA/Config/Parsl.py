@@ -1,5 +1,5 @@
 from parsl.config import Config
-from Common import Config as BaseConfig
+from .Common import Config as BaseConfig
 
 
 class Config(BaseConfig):
