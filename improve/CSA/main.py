@@ -23,21 +23,16 @@ from parsl.channels import LocalChannel
 from parsl.executors import HighThroughputExecutor
 
 
-import importlib
-import importlib.machinery
-import importlib.util
-
-import os
-import sys
-sys.path.append(os.path.abspath('./'))
-sys.path.append(os.path.abspath('./Config'))
-
 from Workflows import Demo
 from CLI import CLI
 
 from Config.Parsl import Config as Parsl
-# from Config.CSA import Config as CSA
+from Config.CSA import Config as CSA
 
+import os
+from pathlib import Path
+import logging
+import sys
 
 
 # Adjust your user-specific options here:
@@ -115,27 +110,9 @@ def get_config():
     )
 
 
-def import_module(filepath):
-
-    # get the parent directory of the package
-    pkg_parent = os.path.dirname(filepath)
-    # get the package name removing the .py extension
-    pkg = os.path.basename(filepath).replace(".py", "")
-
-    spec = importlib.machinery.PathFinder().find_spec(pkg, [pkg_parent])
-    print(spec, pkg, pkg_parent)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[pkg] = mod  # needed for exec_module to work
-    spec.loader.exec_module(mod)
-    sys.modules[pkg] = importlib.import_module(pkg)
-    return mod
-
-
-
 
 additional_definitions = {
     "model" : {
-        "name" : "model",
         "type" : str,
         "default" : None,
         "help" : "Singulritiy image for the model",
@@ -143,15 +120,12 @@ additional_definitions = {
         "nargs" : None
     },
     "data_set" : {  
-        "name" : "data_set",
         "type" : str,
         "default" : None,
         "help" : "Data set",
         "choices" : None,
         "nargs" : None
     },
-    "input_dir" : {
-    }
 }
 
 cli = CLI()
@@ -164,19 +138,41 @@ pcfg = parsl_config.load_config(cli.params['parsl_config_file'])
 csa = CSA()
 csa = csa.load_config(cli.params['csa_config_file'])
 
+###
 
-if cli.params['modul'] is not None:
-    mod = import_module(cli.params['modul'])
-    print(mod)
-    print(mod.__dict__)
-    print(mod.__dict__.keys())
-    print(mod.__dict__['Config'])
-    print(mod.__dict__['Config'].__dict__)
-    print(mod.__dict__['Config'].__dict__.keys())
-    print(mod.__dict__['Config'].__dict__['config'])
-    print(mod.__dict__['Config'].__dict__['config'].__dict__)
-    print(mod.__dict__['Config'].__dict__['config'].__dict__.keys())
-    pcfg = mod.__dict__['Config'].__dict__['config']
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+fdir = Path(__file__).resolve().parent
+y_col_name = "auc"
+
+# Check that environment variable "IMPROVE_DATA_DIR" has been specified
+if os.getenv("IMPROVE_DATA_DIR") is None:
+    raise Exception("ERROR ! Required system variable not specified.  \
+                    You must define IMPROVE_DATA_DIR ... Exiting.\n")
+os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
+
+maindir = Path(os.environ['IMPROVE_DATA_DIR'])
+INPUT_DIR = Path(f"./{maindir}/input")
+OUTPUT_DIR = Path(f"./{maindir}/output")
+
+params = CSA.initialize_parameters(
+    filepath=fdir, # CHANGE PATH IF NEEDED TO THE DIRECTORY CONTAINING THE CONFIG FILE
+    default_model="Paccmann_MCA_default_model_csa.txt"  ### HARD CODING CONFIG FILE ********** CHECK THIS - Add Argparse for config file
+)
+logger = logging.getLogger(f'{params['model_name']}')
+
+raw_datadir = maindir /'csa_data'/ params["raw_data_dir"] #### HARD CODING. Add a candle parameter for csa_data ??
+x_datadir = raw_datadir / params["x_data_dir"]
+y_datadir = raw_datadir / params["y_data_dir"]
+splits_dir = raw_datadir / params["splits_dir"]
+
+
+def build_split_fname(source_data_name, split, phase):
+    """ Build split file name. If file does not exist continue """
+    if split=='all':
+        return f"{source_data_name}_{split}.txt"
+    return f"{source_data_name}_split_{split}_{phase}.txt"
+
 
 
 futures = {}
