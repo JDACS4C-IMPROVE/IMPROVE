@@ -5,9 +5,9 @@ import sklearn
 
 from scipy.stats.mstats import pearsonr, spearmanr
 if sklearn.__version__ <= "1.4.0":
-    from sklearn.metrics import r2_score, mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score
+    from sklearn.metrics import r2_score, mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
 else:
-    from sklearn.metrics import r2_score, mean_squared_error , root_mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score
+    from sklearn.metrics import r2_score, mean_squared_error , root_mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
 
 def str2Class(str):
     return getattr(sys.modules[__name__], str)
@@ -139,9 +139,6 @@ def r_square(y_true, y_pred):
 
     return r2_score(y_true, y_pred)
 
-# F1, recall, precision, accuracy, AUC, AUPR
-#, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score
-
 def acc(y_true, y_pred):
     """Compute accuracy.
 
@@ -227,3 +224,36 @@ def recall(y_true, y_pred):
 
     return recall_score(y_true, y_pred)
 
+def auc(y_true, y_pred):
+    """Compute Receiver Operating Characteristic AUC.
+
+    Parameters
+    ----------
+    y_true : numpy array
+        True values to predict.
+    y_pred : numpy array
+        Prediction made by the model.
+
+    Returns
+    -------
+        float value corresponding to ROC AUC.
+    """
+
+    return roc_auc_score(y_true, y_pred)
+
+def aupr(y_true, y_pred):
+    """Compute Precision-Recall curve AUC.
+
+    Parameters
+    ----------
+    y_true : numpy array
+        True values to predict.
+    y_pred : numpy array
+        Prediction made by the model.
+
+    Returns
+    -------
+        float value corresponding to Precision-Recall curve AUC.
+    """
+
+    return average_precision_score(y_true, y_pred)
