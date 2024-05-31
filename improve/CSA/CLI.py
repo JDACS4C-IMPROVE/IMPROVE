@@ -36,10 +36,10 @@ class CLI:
                                       DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET") 
         self.parser.add_argument('-parsl', '--parsl_config_file', metavar='INI_FILE', dest="parsl_config_file", 
                                   type=str,
-                                  default=None, help="Config file for Parsl in INI format.") 
+                                  default='parsl_config.ini', help="Config file for Parsl in INI format.") 
         self.parser.add_argument('-csa', '--csa_config_file', metavar='INI_FILE', dest="csa_config_file", 
                                   type=str,
-                                  default=None, help="Config file for Parsl in INI format.") 
+                                  default='csa_config.ini', help="Config file for Parsl in INI format.") 
                                   
 
 
