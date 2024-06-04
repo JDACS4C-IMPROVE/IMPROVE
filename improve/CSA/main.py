@@ -231,12 +231,12 @@ futures = {}
 parsl.clear()
 # checkpoints = get_all_checkpoints(run_dir)
 # print("Found the following checkpoints: ", checkpoints)
-with parsl.load(config):
+parsl.load(config)
 
-    results = Demo.run(config={},debug=True)
+results = Demo.run(config={},debug=True)
 
-    for key in results.keys():
-        print(f"{key} : {results[key]}")
+for key in results.keys():
+    print(f"{key} : {results[key]}")
 
 
-    parsl.clear()
+parsl.clear()
