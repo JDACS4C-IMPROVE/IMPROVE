@@ -218,13 +218,13 @@ config = Config(
                 cores_per_worker=int(parsl_config['cores_per_worker']),
                 provider=LocalProvider(
                     channel=LocalChannel(),
-                    init_blocks=parsl_config['init_blocks'],
-                    max_blocks=parsl_config['max_blocks']
+                    init_blocks=int(parsl_config['init_blocks']),
+                    max_blocks=int(parsl_config['max_blocks'])
                 )
                 #,max_workers_per_node=parsl_config['max_workers_per_node'],
             )
         ],
-        strategy=parsl_config['strategy'],
+        strategy=None,
     )
 
 futures = {}
