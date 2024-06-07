@@ -4,6 +4,23 @@ import os
 
 
 
+class UserSpecified(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super().__init__(option_strings, dest, **kwargs)
+    def __call__(self, parser, namespace, values, option_string=None):
+        # print('%r %r %r' % (namespace, values, option_string))
+        if not hasattr(namespace, 'user_specified'):
+            namespace.user_specified = []
+        
+        namespace.user_specified.append( (self.dest , values) )
+        setattr(namespace, self.dest, values)
+        # setattr(namespace, self.dest + "_default", False)
+        
+
+
+
 class CLI:
     """Command Line Options for CSA"""
 
@@ -25,21 +42,30 @@ class CLI:
 
         # Set default options
         self.parser.add_argument('-i', '--input_dir', metavar='DIR', type=str, dest="input_dir",
-                                  default=os.getenv("IMPROVE_INPUT_DIR" , "./"), 
+                                  default=os.getenv("IMPROVE_INPUT_DIR" , "./"),
+                                  action=UserSpecified, 
                                   help='Base directory for input data. Default is IMPROVE_DATA_DIR or if not specified current working directory. All additional input pathes will be relative to the base input directory.')
         self.parser.add_argument('-o', '--output_dir', metavar='DIR', type=str, dest="output_dir",
-                                  default=os.getenv("IMPROVE_OUTPUT_DIR" , "./"), 
+                                  default=os.getenv("IMPROVE_OUTPUT_DIR" , "./"),
+                                  action=UserSpecified, 
                                   help='Base directory for output data. Default is IMPROVE_OUTPUT_DIR or if not specified current working directory. All additional relative output pathes will be placed into the base output directory.')
         self.parser.add_argument('--log_level', metavar='LEVEL', type=str, dest="log_level", 
                                   choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "NOTSET"],
-                                  default=os.getenv("IMPROVE_LOG_LEVEL", "WARNING"), help="Set log levels. Default is WARNING. Levels are:\
-                                      DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET") 
+                                  default=os.getenv("IMPROVE_LOG_LEVEL", "WARNING"), 
+                                  action=UserSpecified,
+                                  help="Set log levels. Default is WARNING. Levels are:\
+                                      DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET")
+     
         self.parser.add_argument('-parsl', '--parsl_config_file', metavar='INI_FILE', dest="parsl_config_file", 
                                   type=str,
-                                  default='parsl_config.ini', help="Config file for Parsl in INI format.") 
+                                  default='parsl_config.ini', 
+                                  action=UserSpecified,
+                                  help="Config file for Parsl in INI format.") 
         self.parser.add_argument('-csa', '--csa_config_file', metavar='INI_FILE', dest="csa_config_file", 
                                   type=str,
-                                  default='csa_config.ini', help="Config file for Parsl in INI format.") 
+                                  default='csa_config.ini', 
+                                  action=UserSpecified, 
+                                  help="Config file for Parsl in INI format.") 
                                   
 
 
@@ -73,9 +99,25 @@ class CLI:
         # From Candle, can't handle bool
         for k in range(len(options)):
             self.logger.debug("Adding %s to Command Line Options" , options[k]['name'])
+
+            if not 'default' in options[k]:
+                options[k]['default'] = None
+            if not 'type' in options[k]:
+                options[k]['type'] = str
+            if not 'help' in options[k]:
+                options[k]['help'] = "No help available"
+            if not 'choices' in options[k]:
+                options[k]['choices'] = None
+            if not 'nargs' in options[k]:
+                options[k]['nargs'] = None
+            if not 'action' in options[k]:
+                options[k]['action'] = UserSpecified
+            else:
+                self.logger.warning("Overriding action for %s. If provided in config file and on the command line, the value provided in the config file takes precedence over the command line option" , options[k]['name'])
+
             self.parser.add_argument('--'+options[k]['name'], metavar='VALUE', type=options[k]['type'], dest=options[k]['name'], 
-                                     default=options[k]['default'], help=options[k]['help']
-                                     #, choices=options[k]['choices'], nargs=options[k]['nargs']
+                                     default=options[k]['default'], action=options[k]['action'] , help=options[k]['help']
+                                     , choices=options[k]['choices'], nargs=options[k]['nargs']
                                      )
        
 
@@ -89,6 +131,10 @@ class CLI:
         self.params = vars(self.args)
         self.logger.setLevel(self.params['log_level'])
         self.logger.debug("Command Line Options: %s", self.params)
+        if not hasattr(self.args, 'user_specified'):
+            self.args.user_specified = []
+        else:
+            self.user_specified = self.args.user_specified
 
 
     def _check_option(self,option) -> bool:
@@ -127,7 +173,9 @@ if __name__ == "__main__":
     defaults=[{ 'action' : 'store' , 'choices' : [ 'A' , 'B' , 'C' ] , 'type' : str , 'name' : "dest" }]
     cli.set_command_line_options(options=defaults)
     cli.get_command_line_options()
-    # cfg=cli.config("Preprocess")
+    print(cli.args)
+    print(cli.params)
+    cfg=cli.config("Preprocess")
    
    
     # for k in cli.params :
