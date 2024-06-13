@@ -19,7 +19,7 @@ from parsl.channels import LocalChannel
 from parsl.executors import HighThroughputExecutor
 
 
-from Workflows import Demo
+from Workflows import Demo, workflow_csa
 from CLI import CLI
 
 from Config.Parsl import Config as Parsl
@@ -233,7 +233,10 @@ parsl.clear()
 # print("Found the following checkpoints: ", checkpoints)
 parsl.load(config)
 
-results = Demo.run(config={},debug=True)
+preprocess_futures = [workflow_csa.preprocess(source_data_name, split, params_csa) for source_data_name in params_csa['source_data_name'] for split in params_csa['split']]
+
+results=workflow_csa.preprocess(params_csa)
+#results = Demo.run(config={},debug=True)
 
 for key in results.keys():
     print(f"{key} : {results[key]}")
