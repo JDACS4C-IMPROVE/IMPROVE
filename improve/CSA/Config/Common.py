@@ -90,7 +90,6 @@ class Config():
                               cli=None, # Command Line Interface of type CLI
                               section='DEFAULT',
                               config_file=None,
-                              default_model=None,
                               additional_definitions=None,
                               required=None,):
         """Merge parameters from command line and config file."""
@@ -99,6 +98,7 @@ class Config():
 
 
         if cli and cli.args.log_level:
+            self.logger.debug("Setting log level to %s", cli.args.log_level)
             self.args = cli.args
             self.logger.setLevel(cli.args.log_level)
             self.log_level = cli.args.log_level
@@ -112,6 +112,7 @@ class Config():
 
         # Check if config_file is set and file exists
         if config_file:
+            self.logger.debug("Config file: %s", config_file)
             if os.path.isfile(config_file):
                 self.config_file = config_file
             else:
