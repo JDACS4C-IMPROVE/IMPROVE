@@ -1,6 +1,7 @@
 import configparser
 import json
 import logging
+import os
 
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
 
@@ -23,8 +24,8 @@ class Config():
 
     def load_config(self, file):
         if file.endswith('.ini'):
-            config = configparser.ConfigParser()
-            config.read(file)
+            self.config = configparser.ConfigParser()
+            self.config.read(file)
             #self.option = dict(config.items('DEFAULT'))
             self.option={}
             combined_options = {section: dict(config.items(section)) for section in config.sections()}
