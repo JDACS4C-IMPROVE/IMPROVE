@@ -19,7 +19,7 @@ from parsl.channels import LocalChannel
 from parsl.executors import HighThroughputExecutor
 
 
-from Workflows import Demo, workflow_csa
+from Workflows import workflow_csa
 from CLI import CLI
 
 from Config.Parsl import Config as Parsl
@@ -185,6 +185,7 @@ if os.getenv("IMPROVE_DATA_DIR") is None:
 os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
 
 maindir = Path(os.environ['IMPROVE_DATA_DIR'])
+CSA_DATA_DIR = Path(f"./{maindir}/csa_data")
 INPUT_DIR = Path(f"./{maindir}/input")
 OUTPUT_DIR = Path(f"./{maindir}/output")
 
@@ -197,7 +198,7 @@ OUTPUT_DIR = Path(f"./{maindir}/output")
 
 logger = logging.getLogger(f"{params_csa['model_name']}")
 
-raw_datadir = maindir /'csa_data'/ params_cli["raw_data_dir"] #### HARD CODING. Add a candle parameter for csa_data ??
+raw_datadir = CSA_DATA_DIR/ params_cli["raw_data_dir"] #### HARD CODING. Add a candle parameter for csa_data ??
 x_datadir = raw_datadir / params_cli["x_data_dir"]
 y_datadir = raw_datadir / params_cli["y_data_dir"]
 splits_dir = raw_datadir / params_cli["splits_dir"]
@@ -227,13 +228,19 @@ config = Config(
         strategy=None,
     )
 
+#Run preprocess first
+workflow_csa.preprocess(params)
+
 futures = {}
 parsl.clear()
 # checkpoints = get_all_checkpoints(run_dir)
 # print("Found the following checkpoints: ", checkpoints)
 parsl.load(config)
 
-preprocess_futures = [workflow_csa.preprocess(source_data_name, split, params_csa) for source_data_name in params_csa['source_data_name'] for split in params_csa['split']]
+
+
+preprocess_futures = [workflow_csa.preprocess(splits_dir/build_split_fname(source_data_name, split), output_data_dir, params_csa) 
+                      for source_data_name in params_csa['source_data_name'] for split in params_csa['split']]
 
 results=workflow_csa.preprocess(params_csa)
 #results = Demo.run(config={},debug=True)
