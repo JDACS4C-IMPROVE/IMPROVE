@@ -28,7 +28,7 @@ class Config():
             self.config.read(file)
             #self.option = dict(config.items('DEFAULT'))
             self.option={}
-            combined_options = {section: dict(config.items(section)) for section in config.sections()}
+            combined_options = {section: dict(self.config.items(section)) for section in self.config.sections()}
             self.option.update(combined_options)
         elif file.endswith('.json'):
             with open(file, 'r') as f:
