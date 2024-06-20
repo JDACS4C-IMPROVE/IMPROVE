@@ -3,7 +3,6 @@ import sys
 import logging
 from improve.config import Config
 from improve.Benchmarks.DrugResponsePrediction import DRP as BenchmanrkDRP
-import argparse
 
 
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
@@ -98,11 +97,11 @@ class Preprocess(Config):
         drp.add_argument("--pred_col_name_suffix", 
                         type=str, default="_pred" , 
                         help="Suffix to add to a column name in the y data file to identify predictions made by the model (e.g., if y_col_name is 'auc', then a new column that stores model predictions will be added to the y data file and will be called 'auc_pred').")
-        drp.add_argument("--train_split_file", default=argparse.SUPPRESS, 
+        drp.add_argument("--train_split_file", default="train_split.txt" , 
                          help="File name for the file that contains training split ids. Default is train_split.txt.")
-        drp.add_argument("--val_split_file", default=argparse.SUPPRESS, 
+        drp.add_argument("--val_split_file", default="val_split.txt" , 
                          help="File name for the file that contains validation split ids. Default is val_split.txt.")
-        drp.add_argument("--test_split_file", default=argparse.SUPPRESS, 
+        drp.add_argument("--test_split_file", default="test_split.txt" , 
                          help="File name for the file that contains test split ids. Default is test_split.txt.")    
         # drp.add_argument("--ml_data_outdir" , dest="output_dir", type=str, 
                         #  help="Output dir name for the preprocessed data. Same as output_dir. Default is ${input_dir}.")

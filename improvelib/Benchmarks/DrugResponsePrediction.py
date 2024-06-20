@@ -117,6 +117,16 @@ class DRP(Base.Base):
         super().__init__()
         self.logger = DRP.logger
         self.options = DRP.drp_options
+<<<<<<< HEAD
+        self.config = {}
+        self.cli.parser.add_argument('--supplemental', nargs=2, action='append', metavar=('TYPE', 'FILE'), 
+                              type=str, help='Supplemental data FILE and TYPE. FILE is in INPUT_DIR.')
+        benchmark_cli=self.cli.parser.add_argument_group('DRPBenchmark_v1.0', 'Options for drug response prediction benchmark v1.0')
+        benchmark_cli.add_argument('--benchmark', action='store_true', help='Use DRPBenchmark_v1.0')
+        benchmark_cli.add_argument('--benchmark_dir', metavar='DIR', type=str, dest="benchmark_dir",
+                                  default=os.getenv("IMPROVE_BENCHMARK_DIR" , "./"), 
+                                  help='Base directory for DRPBenchmark_v1.0 data. Default is IMPROVE_BENCHMARK_DIR or if not specified current working directory. All additional input pathes will be relative to the base input directory.')
+=======
         self.input_dir = None
         self.x_data_path = None
         self.y_data_path = None
@@ -257,6 +267,7 @@ class DRP(Base.Base):
 
         return drp.OmicsLoader(cfg)
         pass
+>>>>>>> 1ee93ded0be7be9f036d42ccf787add8f1817bfb
         
 if __name__ == "__main__":
     drp = DRP()

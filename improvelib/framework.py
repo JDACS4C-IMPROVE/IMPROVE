@@ -520,7 +520,7 @@ def store_predictions_df(params: Dict,
     return None
 
 
-def compute_performace_scores(params: Dict,
+def compute_performance_scores(params: Dict,
                               y_true: np.array,
                               y_pred: np.array,
                               stage: str,

@@ -1,0 +1,31 @@
+[build-system]
+requires = ['setuptools', 'setuptools-scm']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'improvelib'
+version = '0.1'
+authors = [
+  { name='Alex Partin', email='apartin@anl.gov' },
+]
+description = 'Within the IMPROVE project, we address some of the challenges around model comparisons, dataset standardization, and availability through the development and provision of a software framework. The goal is to make it routine practice for the broader community (cancer research and other areas) to compare new machine learning modeling approaches to previous models rigorously and comprehensively.'
+readme = 'README.md'
+requires-python = '>=3.6'
+classifiers = [
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Developers',
+    'Topic :: Software Development :: Libraries',
+]
+dependencies = [
+]
+
+[project.urls]
+Homepage = 'https://github.com/JDACS4C-IMPROVE/IMPROVE'
+Issues = 'https://github.com/JDACS4C-IMPROVE/IMPROVE/issues'
+Documentation = 'https://jdacs4c-improve.github.io/docs/'
