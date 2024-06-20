@@ -35,18 +35,19 @@ def test_data_staging(benchmark, output_dir):
     data_stager = drp.SingleDRPDataStager()
     data_stager.set_benchmark(benchmark)
     data_stager.set_output_dir(output_dir)
-    data_stager.stage_all_experiments([drp.SingleDRPDataset.CCLE],
-                                      [drp.SingleDRPDataFrame.CELL_LINE_GENE_EXPRESSION,
-                                       drp.SingleDRPDataFrame.DRUG_SMILES,
-                                       drp.SingleDRPDataFrame.RESPONSE],
-                                      drp.DRPMetric.AUC)
+    staged_files_dict = data_stager.stage_all_experiments([drp.SingleDRPDataset.CCLE],
+                                                          [drp.SingleDRPDataFrame.CELL_LINE_GENE_EXPRESSION,
+                                                           drp.SingleDRPDataFrame.DRUG_SMILES,
+                                                           drp.SingleDRPDataFrame.RESPONSE],
+                                                          drp.DRPMetric.AUC)
+    print(staged_files_dict)
 
 
 if __name__ == '__main__':
     from improvelib import framework as frm
     from improvelib import drug_resp_pred as drp
 
-    benchmark_dir = '/Users/onarykov/git/GraphDRP/data/raw_data'
+    benchmark_dir = os.path.join(os.environ['IMPROVE_DATA_DIR'], 'raw_data')
     staging_dir = './data_staging'
 
     benchmark = drp.SingleDRPBenchmark()

@@ -607,7 +607,17 @@ class SingleDRPBenchmark(Benchmark):
     def set_drp_metric(self, metric: DRPMetric) -> None:
         self._drp_metric = metric
 
-    # Ge
+    # Optional parameters
+
+    def set_splits_dir(self, splits_dir: str) -> None:
+        """
+        Setting splits dir is required only if new splits directory is provided.
+        New splits directory should be located in the same parent directory as
+        the default directory of SingleDRPBenchmark.
+        """
+        self._splits_dir = splits_dir
+
+    # Getting output from
     def get_splits_num(self) -> int:
         return self._SPLITS_NUM
 
@@ -629,6 +639,7 @@ class SingleDRPBenchmark(Benchmark):
         self._split_type = None
         self._drp_metric = None
         self._loaded_dfs = {}
+        self._splits_dir = 'splits'
         self._dataset2file_map = {
             SingleDRPDataFrame.CELL_LINE_CNV: "cancer_copy_number.tsv",
             SingleDRPDataFrame.CELL_LINE_DISCRETIZED_CNV: "cancer_discretized_copy_number.tsv",
@@ -697,7 +708,7 @@ class SingleDRPBenchmark(Benchmark):
         loader_params["y_data_path"] = os.path.join(
             self._benchmark_dir, 'y_data')
         loader_params["splits_path"] = os.path.join(
-            self._benchmark_dir, 'splits')
+            self._benchmark_dir, self._splits_dir)
         split_file = self._construct_splits_file_name()
         response_loader = DrugResponseLoader(
             loader_params, split_file=split_file)
@@ -758,13 +769,16 @@ class SingleDRPDataStager():
     def set_output_dir(self, output_dir: str) -> None:
         self._out_dir = output_dir
 
-    def stage_all_experiments(self, single_drp_datasets: list[SingleDRPDataset], data_frame_list: list[SingleDRPDataFrame], drp_metric: DRPMetric) -> None:
+    def stage_all_experiments(self, single_drp_datasets: list[SingleDRPDataset], data_frame_list: list[SingleDRPDataFrame], drp_metric: DRPMetric) -> dict[dict[dict[str]]]:
         self._check_initialization()
+        path_dict = {}
         self._benchmark.set_drp_metric(drp_metric)
         splits_num = self._benchmark.get_splits_num()
         for dataset in single_drp_datasets:
+            path_dict[dataset] = {}
             self._benchmark.set_dataset(dataset)
             for split_id in range(splits_num):
+                path_dict[dataset][split_id] = {}
                 self._benchmark.set_split_id(split_id)
                 for split_type in [SplitType.TRAIN, SplitType.VALIDATION, SplitType.TEST]:
                     self._benchmark.set_split_type(split_type)
@@ -774,11 +788,13 @@ class SingleDRPDataStager():
 
                     # Stub for saving data in fixed format
                     out_file_path = os.path.join(sub_dir, self._out_file_name)
+                    path_dict[dataset][split_id][split_type] = out_file_path
                     for dataframe_name in data_frame_list:
                         dataframe = self._benchmark.get_dataframe(
                             dataframe_name)
                         # dataframe.to_hdf(str(dataframe_name),
                         #                 out_file_path, mode='a')
+        return path_dict
 
     def _check_initialization(self) -> None:
         template_message = "is not initialized!"
