@@ -1,6 +1,6 @@
 import os
 import sys
-from improve.data_loader import DataInputOutput
+from improvelib.data_loader import DataInputOutput
 
 class Params:
     pass

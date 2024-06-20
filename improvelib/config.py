@@ -3,7 +3,7 @@ import logging
 import configparser
 
 from pathlib import Path
-from improve.cli import CLI
+from improvelib.cli import CLI
 
 
 
