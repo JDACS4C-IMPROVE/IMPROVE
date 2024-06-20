@@ -3,10 +3,12 @@
 import sys
 
 from scipy.stats.mstats import pearsonr, spearmanr
+import sklearn
 if sklearn.__version__ <= "1.4.0":
     from sklearn.metrics import r2_score, mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
 else:
-    from sklearn.metrics import r2_score, mean_squared_error , root_mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
+    from sklearn.metrics import r2_score, mean_squared_error, root_mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
+
 
 def str2Class(str):
     return getattr(sys.modules[__name__], str)
@@ -134,6 +136,7 @@ def r_square(y_true, y_pred):
 
     return r2_score(y_true, y_pred)
 
+
 def acc(y_true, y_pred):
     """Compute accuracy.
 
@@ -150,6 +153,7 @@ def acc(y_true, y_pred):
     """
 
     return accuracy_score(y_true, y_pred)
+
 
 def bacc(y_true, y_pred):
     """Compute balanced accuracy.
@@ -168,6 +172,7 @@ def bacc(y_true, y_pred):
 
     return balanced_accuracy_score(y_true, y_pred)
 
+
 def f1(y_true, y_pred):
     """Compute the F1 score.
 
@@ -184,6 +189,7 @@ def f1(y_true, y_pred):
     """
 
     return f1_score(y_true, y_pred)
+
 
 def precision(y_true, y_pred):
     """Compute precision.
@@ -202,6 +208,7 @@ def precision(y_true, y_pred):
 
     return precision_score(y_true, y_pred)
 
+
 def recall(y_true, y_pred):
     """Compute recall.
 
@@ -219,6 +226,7 @@ def recall(y_true, y_pred):
 
     return recall_score(y_true, y_pred)
 
+
 def auc(y_true, y_pred):
     """Compute Receiver Operating Characteristic AUC.
 
@@ -235,6 +243,7 @@ def auc(y_true, y_pred):
     """
 
     return roc_auc_score(y_true, y_pred)
+
 
 def aupr(y_true, y_pred):
     """Compute Precision-Recall curve AUC.
