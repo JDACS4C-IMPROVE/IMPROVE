@@ -134,9 +134,6 @@ class Preprocess(Config):
         default.add_argument('--output_type', type=str,  default="parquet", help="Sets the output type. Default is parquet. Other options are parquet, csv, hdf5, npy")
 
 
-    def load_data(self, file):
-        """Load data from a file."""
-        pass
 
     def load_measurements(self, file):
         """Load measurements from a file."""
