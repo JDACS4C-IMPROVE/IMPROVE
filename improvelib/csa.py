@@ -7,7 +7,7 @@ from collections import deque
 from pathlib import Path
 from typing import Callable, Deque, Dict, Tuple, Union
 
-import improve.framework as frm
+import improvelib.framework as frm
 
 filepath = Path(__file__).resolve().parent
 

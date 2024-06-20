@@ -1,8 +1,8 @@
 import os
 import sys
 import logging
-from improve.config import Config
-from improve.Benchmarks.DrugResponsePrediction import DRP as BenchmanrkDRP
+from improvelib.config import Config
+from improvelib.Benchmarks.DrugResponsePrediction import DRP as BenchmanrkDRP
 
 
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
