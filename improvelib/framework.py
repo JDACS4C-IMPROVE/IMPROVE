@@ -18,10 +18,8 @@ from .metrics import compute_metrics
 # os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
 
 SUPPRESS = argparse.SUPPRESS
+from .helper_utils import str2bool
 
-import candle
-str2bool = candle.str2bool
-finalize_parameters = candle.finalize_parameters
 
 
 # DataPathDict: TypeAlias = dict[str, Path]

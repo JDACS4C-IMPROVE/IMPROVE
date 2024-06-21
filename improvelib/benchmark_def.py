@@ -4,8 +4,8 @@ import inspect
 import os
 from typing import Any, List, Optional, Set
 
-from candle.helper_utils import eval_string_as_list_of_lists
-from candle.parsing_utils import (
+from improvelib.helper_utils import eval_string_as_list_of_lists
+from improvelib.parsing_utils import (
     ConfigDict,
     ParseDict,
     finalize_parameters,

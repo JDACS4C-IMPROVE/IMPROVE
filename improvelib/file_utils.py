@@ -6,8 +6,8 @@ from typing import Dict, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.request import urlretrieve
 
-from candle.generic_utils import Progbar
-from candle.modac_utils import get_file_from_modac
+from .generic_utils import Progbar
+from .modac_utils import get_file_from_modac
 
 
 def get_file(
