@@ -61,37 +61,30 @@ class Preprocess(Config):
         self.logger = logging.getLogger("Preprocess")
         self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.INFO))
       
-       
+        # check usage of self.options
         self.options = Preprocess.preprocess_options
-        # self.cli.parser.add_argument('--supplemental', nargs=2, action='append', metavar=('TYPE', 'FILE'), 
-        #                       type=str, help='Supplemental data FILE and TYPE. FILE is in INPUT_DIR.')
-        # benchmark_cli=self.cli.parser.add_argument_group('DRPBenchmark_v1.0', 'Options for drug response prediction benchmark v1.0')
-        # benchmark_cli.add_argument('--benchmark', action='store_true', help='Use DRPBenchmark_v1.0')
-        # benchmark_cli.add_argument('--benchmark_dir', metavar='DIR', type=str, dest="benchmark_dir",
-        #                             default=os.getenv("IMPROVE_BENCHMARK_DIR" , "./"), 
-        #                             help='Base directory for DRPBenchmark_v1.0 data. Default is IMPROVE_BENCHMARK_DIR or if not specified current working directory. All additional input pathes will be relative to the base input directory.')
-        
+
+
+        self.cli.parser.add_argument('--supplemental', nargs=2, action='append', metavar=('TYPE', 'FILE'), 
+                              type=str, help='Supplemental data FILE and TYPE. FILE is in INPUT_DIR.')
+       
         # Set subparser for benchmark and file
-        subparsers=self.cli.parser.add_subparsers(dest='subparser_name')
+        # subparsers=self.cli.parser.add_subparsers(dest='subparser_name')
         
-        # Benchmark subparser
-        benchmark=subparsers.add_parser('benchmark', help='Use DRPBenchmark_v1.0')
-        # benchmark.add_argument('--benchmark', action='store_true', help='Use DRPBenchmark_v1.0')
-        benchmark.add_argument('--benchmark_type', choices=['DRP', 'Default'], help='Specify benchmark format, e.g. DRP for DRPBenchmark_v1.0')
-        benchmark.add_argument('--benchmark_dir', metavar='DIR', type=str, dest="benchmark_dir",
-                                    default=os.getenv("IMPROVE_BENCHMARK_DIR" , "./"), 
-                                    help='Base directory for DRPBenchmark_v1.0 data. Default is IMPROVE_BENCHMARK_DIR or if not specified current working directory. All additional input pathes will be relative to the base input directory.')
-        
-        drp=benchmark.add_argument_group('DRPBenchmark_v1.0', 'Options for drug response prediction benchmark v1.0')
-        drp.add_argument('--drp', action='store_true', help='Use DRPBenchmark_v1.0')
-        drp.add_argument('--drp_dir', metavar='DIR', type=str, dest="benchmark_dir",
-                                    default=os.getenv("IMPROVE_BENCHMARK_DIR" , "./"), 
-                                    help='Base directory for DRPBenchmark_v1.0 data. Default is IMPROVE_BENCHMARK_DIR or if not specified current working directory. All additional input pathes will be relative to the base input directory.')
-        
+        # Add options for Benchmark Data Format 
+        p = self.cli.parser
+        benchmark = p.add_argument_group('Benchmark Data Format', 'Options for benchmark data format')       
+
+        #     
+        benchmark.add_argument("--x_data_dir", type=str, default="x_data" , help="Dir name that contains the files with features data (x data). Default is ${input_dir}/x_data.")
+        benchmark.add_argument("--y_data_dir", type=str, default="y_data" , help="Dir name that contains the files with target data (y data). Default is ${input_dir}/y_data.")
+        benchmark.add_argument("--splits_dir", type=str, default="splits" , help="Dir name that contains files that store split ids of the y data file.")
+        benchmark.add_argument("--supplement_dir", type=str, default=None , help="Dir name that contains supplemental data.")
+
+        drp=benchmark.add_argument_group('Drug Response Prediction', 'Options for drug response prediction benchmark data')
+       
         # drp.add_argument("--raw_data_dir", type=str, dest="input_dir" , help="Data dir name that stores the raw data, same as input_dir. The directory includes x data, y data, and splits.")
-        drp.add_argument("--x_data_dir", type=str, default="x_data" , help="Dir name that contains the files with features data (x data). Default is ${input_dir}/x_data.")
-        drp.add_argument("--y_data_dir", type=str, default="y_data" , help="Dir name that contains the files with target data (y data). Default is ${input_dir}/y_data.")
-        drp.add_argument("--splits_dir", type=str, default="splits" , help="Dir name that contains files that store split ids of the y data file.")
+  
         # drp.add_argument("--x_data_file", type=str, default="x.parquet" , help="File name for features. Default is x.parquet.")
         # drp.add_argument("--y_data_file", type=str, default="y.parquet" , help="File name for target. Default is y.parquet.")
         drp.add_argument("--pred_col_name_suffix", 
@@ -123,14 +116,6 @@ class Preprocess(Config):
         drp.add_argument("--drug_col_name", type=str, default="improve_chem_id" , help="Column name in the y data file (reponse) that represents the drug identifier. Default is improve_chem_id.")
 
 
-        # File subparser
-        default=subparsers.add_parser('file', help='Use generic file import')
-        default.add_argument('--measurments', type=str,  help='File with measurements')
-        default.add_argument('--supplemental', nargs=2, action='append', metavar=('TYPE', 'FILE'), 
-                              type=str, help='Supplemental data FILE and TYPE. FILE is in INPUT_DIR.')
-        default.add_argument('--features', type=str,  help='File name for features. Default is features.parquet')
-        default.add_argument('--input_type', type=str,  default="CSV", help='Sets the input type. Default is CSV. Other options are parquet, csv, hdf5, npy')
-        default.add_argument('--output_type', type=str,  default="parquet", help="Sets the output type. Default is parquet. Other options are parquet, csv, hdf5, npy")
 
 
 
