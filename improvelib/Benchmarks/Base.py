@@ -8,9 +8,9 @@ import improvelib.framework as frm
 from improvelib.data_loader import DataInputOutput
 from improvelib.Benchmarks.benchmark_utils import StringEnum
 
+
 class Params:
     pass
-
 
 
 class Base():
@@ -25,6 +25,7 @@ class Stage(StringEnum):
     VALIDATION = 'val'
     TEST = 'test'
 
+
 class Benchmark(Base, metaclass=ABCMeta):
     """
     Abstract base class for benchmarks. This class provides the structure for setting up
@@ -35,7 +36,7 @@ class Benchmark(Base, metaclass=ABCMeta):
         set_dataset(dataset: Enum): Abstract method to set the dataset for the benchmark.
         get_dataframe(dataframe: Enum) -> pd.DataFrame: Abstract method to retrieve a dataframe based on the specified Enum.
     """
-    
+
     def _initialize(self):
         """
         This method contains initialization of the required attributes
@@ -52,17 +53,33 @@ class Benchmark(Base, metaclass=ABCMeta):
     # Interface required for implementation in the subclass
 
     @ abstractmethod
-    def get_dataframe(self, dataframe: StringEnum) -> pd.DataFrame:
+    def get_dataframe(self, dataframe: StringEnum):
         pass
 
     @abstractmethod
-    def get_splits_num(self) -> int:
+    def get_datasets(self):
+        pass
+
+    @abstractmethod
+    def get_dataframes(self):
+        pass
+
+    @abstractmethod
+    def get_splits_ids(self):
         """
         Returns the number of data splits.
 
         Returns:
             int: The number of data splits.
         """
+        pass
+
+    @abstractmethod
+    def get_stages(self):
+        return Stage
+
+    @abstractmethod
+    def get_metrics(self):
         pass
 
     # Default methods implementation. Can be overloaded in the subclass.
@@ -97,23 +114,23 @@ class Benchmark(Base, metaclass=ABCMeta):
         """
         self._stage = stage
 
-    def set_drp_metric(self, metric: StringEnum) -> None:
+    def set_metric(self, metric: StringEnum) -> None:
         """
         Sets the drug response prediction metric.
 
         Args:
             metric (DRPMetric): The metric to be used for evaluating drug response.
         """
-        self._drp_metric = metric
+        self._metric = metric
 
     # Getting data from benchmark
 
     def get_metric(self) -> StringEnum:
-        return self._drp_metric
+        return self._metric
 
     def get_state_string(self) -> str:
         state = '_'.join((str(self._dataset), 'split',
-                             str(self._split_id), str(self._stage)))
+                          str(self._split_id), str(self._stage)))
         return state
 
     # Checking if all necessary attributes for the benchmark are initialized
@@ -135,18 +152,36 @@ class Benchmark(Base, metaclass=ABCMeta):
             raise Exception(f"Stage {template_message}")
         if self._metric is None:
             raise Exception(f"Metric {template_message}")
-    
+
      # Optional parameters
     def set_splits_dir(self, splits_dir: str) -> None:
         """
         Setting splits dir is required only if new splits directory is provided.
         New splits directory should be located in the same parent directory as
         the default directory of SingleDRPBenchmark.
-        
+
         Args:
             splits_dir (str): The path to the directory containing data splits.
         """
         self._splits_dir = splits_dir
+
+
+class ParameterConverter(Base):
+
+    def __init__(self, string_enum_list: list[StringEnum]):
+        self._convertion_dict = {}
+        for enumeration in string_enum_list:
+            enum_dict = {e.value: e for e in enumeration}
+            self._convertion_dict.update(enum_dict)
+
+    def str_to_type(self, parameter: str):
+        return self._convertion_dict[parameter]
+
+    def update_params(self, params: dict):
+        for key, value in params.items():
+            if value in self._convertion_dict:
+                params[key] = self._convertion_dict[value]
+        return params
 
 
 class DataStager():
@@ -191,11 +226,11 @@ class DataStager():
         self._check_initialization()
         path_dict = {}
         self._benchmark.set_metric(metric)
-        splits_num = self._benchmark.get_splits_num()
+        splits_ids = self._benchmark.get_splits_ids()
         for dataset in single_drp_datasets:
             path_dict[dataset] = {}
             self._benchmark.set_dataset(dataset)
-            for split_id in range(splits_num):
+            for split_id in splits_ids:
                 path_dict[dataset][split_id] = {}
                 self._benchmark.set_split_id(split_id)
                 for stage in Stage:
@@ -205,15 +240,17 @@ class DataStager():
                         dataset, split_id, stage)
 
                     # Stub for saving data in fixed format
-                    
+
                     path_dict[dataset][split_id][stage] = []
                     for dataframe_name in data_frame_list:
-                        out_file_name = f'{self._benchmark.get_state_string()}_{str(dataframe_name)}.parquet'
+                        out_file_name = f'{self._benchmark.get_state_string()}_{
+                            str(dataframe_name)}.parquet'
                         out_file_path = os.path.join(sub_dir, out_file_name)
                         dataframe = self._benchmark.get_dataframe(
                             dataframe_name)
                         dataframe.to_parquet(out_file_path)
-                        path_dict[dataset][split_id][stage].append(out_file_path)
+                        path_dict[dataset][split_id][stage].append(
+                            out_file_path)
         return path_dict
 
     def _check_initialization(self) -> None:

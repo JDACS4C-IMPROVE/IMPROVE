@@ -1,5 +1,5 @@
 from improvelib.Benchmarks import Base as Base
-from improvelib.Benchmarks.Base import Benchmark, Stage
+from improvelib.Benchmarks.Base import Benchmark, Stage, ParameterConverter
 from improvelib.Benchmarks.benchmark_utils import StringEnum
 
 from pathlib import Path
@@ -10,6 +10,7 @@ import os
 import pandas as pd
 import improvelib.drug_resp_pred as drp
 
+
 class DRP(Base.Base):
     """Class to handle configuration files for Drug Response Prediction."""
     # Set section for config file
@@ -18,52 +19,52 @@ class DRP(Base.Base):
     # Default format for logging
     FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
     logging.basicConfig(format=FORMAT)
-    logger=logging.getLogger('DRP')
+    logger = logging.getLogger('DRP')
     # logger=logging.getLogger(__name__)
-    logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.ERROR))
+    logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.ERROR))
 
     # Set options for command line
     drp_options = [
         {
-            'name':'benchmark_dir',
-            'default' : './' ,
+            'name': 'benchmark_dir',
+            'default': './',
             'type': str,
-            'help':'Base directory for DRPBenchmark_v1.0 data. Default is IMPROVE_BENCHMARK_DIR or if not specified current working directory. All additional input pathes will be relative to the base input directory.'
+            'help': 'Base directory for DRPBenchmark_v1.0 data. Default is IMPROVE_BENCHMARK_DIR or if not specified current working directory. All additional input pathes will be relative to the base input directory.'
         },
         {
-            'name':'training_index_file',
-            'default' : 'training.idx',
+            'name': 'training_index_file',
+            'default': 'training.idx',
             'type': str,
-            'help':'index file for training set [numpy array]'
+            'help': 'index file for training set [numpy array]'
         },
         {
-            'name':'validation_index_file',
-            'default' : 'validation.idx' ,
+            'name': 'validation_index_file',
+            'default': 'validation.idx',
             'type': str,
-            'help':'index file for validation set [numpy array]',
+            'help': 'index file for validation set [numpy array]',
         },
         {
-            'name':'testing_index_file',
-            'default' : 'testing.idx' ,
+            'name': 'testing_index_file',
+            'default': 'testing.idx',
             'type': str,
-            'help':'index file for testiing set [numpy array]',
+            'help': 'index file for testiing set [numpy array]',
         },
         {
-            'name':'data',
-            'default' : 'data.parquet' ,
+            'name': 'data',
+            'default': 'data.parquet',
             'type': str,
-            'help':'data file',
+            'help': 'data file',
         },
         {
-            'name':'input_type',
-            'default' : 'BenchmarkV1' ,
-            'choices' : ['parquet', 'csv', 'hdf5', 'npy', 'BenchmarkV1'],
-            'metavar' : 'TYPE',
-            'help' : 'Sets the input type. Default is BenchmarkV1. Other options are parquet, csv, hdf5, npy'
+            'name': 'input_type',
+            'default': 'BenchmarkV1',
+            'choices': ['parquet', 'csv', 'hdf5', 'npy', 'BenchmarkV1'],
+            'metavar': 'TYPE',
+            'help': 'Sets the input type. Default is BenchmarkV1. Other options are parquet, csv, hdf5, npy'
         }
     ]
 
-    def build_paths(self, config: None , params: Dict):
+    def build_paths(self, config: None, params: Dict):
         """ Build paths for raw_data, x_data, y_data, splits.
         These paths determine directories for a benchmark dataset.
         TODO: consider renaming to build_benchmark_data_paths()
@@ -81,7 +82,7 @@ class DRP(Base.Base):
         raw_data_path = mainpath / params["raw_data_dir"]
         config.set_param("raw_data_path", raw_data_path)
 
-        #params["raw_data_path"] = raw_data_path
+        # params["raw_data_path"] = raw_data_path
         check_path(raw_data_path)
 
         x_data_path = raw_data_path / params["x_data_dir"]
@@ -114,7 +115,6 @@ class DRP(Base.Base):
 
         return params
 
-
     def __init__(self) -> None:
         super().__init__()
         self.logger = DRP.logger
@@ -124,14 +124,15 @@ class DRP(Base.Base):
         self.y_data_path = None
         self.splits_path = None
 
-    def init(self, cfg , verbose=False):
+    def init(self, cfg, verbose=False):
         """Initialize Drug Response Prediction Benchmark. Takes Config object as input."""
-        
+
         if cfg.log_level:
             self.logger.setLevel(cfg.log_level)
             self.logger.debug(f"Log level set to {cfg.log_level}.")
         else:
-             self.logger.warning("No log level set in Config object. Using default log level.")
+            self.logger.warning(
+                "No log level set in Config object. Using default log level.")
 
         self.logger.debug("Initializing Drug Response Prediction Benchmark.")
         self.set_input_dir(cfg.get_param('input_dir'))
@@ -176,20 +177,21 @@ class DRP(Base.Base):
         self.logger.debug("Loading Drug Data.")
         self.drugs = drp.DrugsLoader(params)
         self.logger.info(self.drugs)
-        
+
         self.logger.debug("Loading Response Data.")
-        self.train = drp.DrugResponseLoader(params, 
-                                        split_file=params["train_split_file"],
-                                        verbose=False).dfs["response.tsv"]
-        self.validate = drp.DrugResponseLoader(params, 
-                                        split_file=params["val_split_file"],
-                                        verbose=False).dfs["response.tsv"]
+        self.train = drp.DrugResponseLoader(params,
+                                            split_file=params["train_split_file"],
+                                            verbose=False).dfs["response.tsv"]
+        self.validate = drp.DrugResponseLoader(params,
+                                               split_file=params["val_split_file"],
+                                               verbose=False).dfs["response.tsv"]
         if params["test_split_file"] and os.path.exists(Path(self.splits_path) / params["test_split_file"]):
-            self.test = drp.DrugResponseLoader(params, 
-                                        split_file=params["test_split_file"],
-                                        verbose=False).dfs["response.tsv"]
+            self.test = drp.DrugResponseLoader(params,
+                                               split_file=params["test_split_file"],
+                                               verbose=False).dfs["response.tsv"]
         else:
-            self.logger.warning(f"Test split file {params['test_split_file']} does not exist.")
+            self.logger.warning(f"Test split file {
+                                params['test_split_file']} does not exist.")
 
     def set_input_dir(self, input_dir: str) -> None:
         """Set input directory for Drug Response Prediction Benchmark."""
@@ -218,8 +220,8 @@ class DRP(Base.Base):
         if not Path(self.y_data_path).exists():
             raise FileNotFoundError(f"Path {self.y_data_path} does not exist.")
         if not Path(self.splits_path).exists():
-            raise FileNotFoundError(f"Path {self.splits_path} does not exist.") 
-        
+            raise FileNotFoundError(f"Path {self.splits_path} does not exist.")
+
     def mkdir_input_dirs(self) -> None:
         self.x_data_path.mkdir(parents=True, exist_ok=True)
         self.y_data_path.mkdir(parents=True, exist_ok=True)
@@ -232,9 +234,9 @@ class DRP(Base.Base):
     def get_benchmark_data(self) -> None:
         """Get Drug Response Prediction Benchmark data from ftp site or URL and save to input directory."""
         pass
-        
+
     # Load Omics Data from input directory using drp module
-    def load_omics_data(self,cfg) -> None:
+    def load_omics_data(self, cfg) -> None:
         """Load omics data from input directory using drp module."""
 
         # Check if cfg is dict or BaseConfig object
@@ -245,6 +247,7 @@ class DRP(Base.Base):
 
         return drp.OmicsLoader(cfg)
         pass
+
 
 class SingleDRPDataFrame(StringEnum):
     """
@@ -277,8 +280,7 @@ class SingleDRPDataset(StringEnum):
     gCSI = 'gCSI'
 
 
-
-class DRPMetric(StringEnum):
+class SingleDRPMetric(StringEnum):
     """
     Enum for specifying the drug response prediction metrics.
     """
@@ -294,21 +296,11 @@ class DRPMetric(StringEnum):
     DSS1 = 'dss1'
 
 
-class SingleDRPParameterConverter():
+class SingleDRPParameterConverter(ParameterConverter):
     def __init__(self):
-        self._convertion_dict = {} 
-        for enumeration in [SingleDRPDataFrame, SingleDRPDataset, Stage, DRPMetric]:
-            enum_dict = {e.value: e for e in enumeration}
-            self._convertion_dict.update(enum_dict)
-        
-    def str_to_type(self, parameter: str) -> StringEnum:
-        return self._convertion_dict[parameter]
+        self.super().__init__(
+            [SingleDRPDataFrame, SingleDRPDataset, Stage, SingleDRPMetric])
 
-    def update_params(self, params: Dict) -> None:
-        for key, value in params.items():
-            if value in self._convertion_dict:
-                params[key] = self._convertion_dict[value]
-        return params
 
 class SingleDRPBenchmark(Benchmark):
     """
@@ -324,7 +316,7 @@ class SingleDRPBenchmark(Benchmark):
         set_stage(stage: Stage): Sets the type of data split.
         set_metric(metric: DRPMetric): Sets the drug response prediction metric.
         set_splits_dir(splits_dir: str): Sets the directory for data splits.
-        get_splits_num() -> int: Returns the number of splits.
+        get_splits_ids() -> list[int]: Returns splits IDs.
         get_dataframe(dataframe: SingleDRPDataFrame) -> pd.DataFrame: Retrieves a dataframe based on the specified parameters.
         get_full_dataframe(dataframe: SingleDRPDataFrame) -> pd.DataFrame: Retrieves a full dataframe without considering splits.
     """
@@ -337,6 +329,7 @@ class SingleDRPBenchmark(Benchmark):
         """
         self._initialize()
         self._SPLITS_NUM = 10
+        self._splits_ids = list(range(self._SPLITS_NUM))
         self._loaded_dfs = {}
         self._splits_dir = 'splits'
         self._dataset2file_map = {
@@ -355,8 +348,20 @@ class SingleDRPBenchmark(Benchmark):
             SingleDRPDataFrame.RESPONSE: "response.tsv"
         }
 
+    def get_datasets(self):
+        return SingleDRPDataset
+
+    def get_dataframes(self):
+        return SingleDRPDataFrame
+
+    def get_stages(self):
+        return Stage
+
+    def get_metrics(self):
+        return SingleDRPMetric
+
     # Setting required specifications for generating output data frames
-    def set_dataset(self, dataset: SingleDRPDataset) -> None:
+    def set_dataset(self, dataset: SingleDRPDataset):
         """
         Sets the dataset for the benchmark.
 
@@ -365,7 +370,7 @@ class SingleDRPBenchmark(Benchmark):
         """
         self._dataset = dataset
 
-    def set_metric(self, metric: DRPMetric) -> None:
+    def set_metric(self, metric: SingleDRPMetric):
         """
         Sets the drug response prediction metric.
 
@@ -375,16 +380,16 @@ class SingleDRPBenchmark(Benchmark):
         self._metric = metric
 
     # Getting data from benchmark
-    def get_splits_num(self) -> int:
+    def get_splits_ids(self):
         """
         Returns the number of data splits.
 
         Returns:
             int: The number of data splits.
         """
-        return self._SPLITS_NUM
+        return self._splits_ids
 
-    def get_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+    def get_dataframe(self, dataframe: SingleDRPDataFrame):
         """
         Retrieves a dataframe based on the specified parameters.
 
@@ -396,7 +401,7 @@ class SingleDRPBenchmark(Benchmark):
         """
         return self._load_dataframe(dataframe)
 
-    def get_full_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+    def get_full_dataframe(self, dataframe: SingleDRPDataFrame):
         """
         Retrieves a full dataframe without considering splits.
 
@@ -415,10 +420,10 @@ class SingleDRPBenchmark(Benchmark):
         self._stage = prev_stage
         return df
 
-    def get_metric(self) -> DRPMetric:
+    def get_metric(self):
         return self._metric
 
-    def _construct_splits_file_name(self) -> str:
+    def _construct_splits_file_name(self):
         """
         Constructs the file name for the data splits based on the current dataset and split settings.
 
@@ -433,7 +438,7 @@ class SingleDRPBenchmark(Benchmark):
         filename = f'{filename}.txt'
         return filename
 
-    def _load_cancer_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+    def _load_cancer_dataframe(self, dataframe: SingleDRPDataFrame):
         """
         Loads a cancer-related dataframe based on the specified dataframe type.
 
@@ -452,7 +457,7 @@ class SingleDRPBenchmark(Benchmark):
         omics_loader = drp.OmicsLoader(loader_params)
         return omics_loader.dfs[dataframe_file]
 
-    def _load_drug_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+    def _load_drug_dataframe(self, dataframe: SingleDRPDataFrame):
         """
         Loads a drug-related dataframe based on the specified dataframe type.
 
@@ -471,7 +476,7 @@ class SingleDRPBenchmark(Benchmark):
         drug_loader = drp.DrugsLoader(loader_params)
         return drug_loader.dfs[dataframe_file]
 
-    def _load_response_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+    def _load_response_dataframe(self, dataframe: SingleDRPDataFrame):
         """
         Loads a response dataframe based on the specified dataframe type.
 
@@ -494,9 +499,13 @@ class SingleDRPBenchmark(Benchmark):
         split_file = self._construct_splits_file_name()
         response_loader = drp.DrugResponseLoader(
             loader_params, split_file=split_file)
-        return response_loader.dfs[dataframe_file]
+        df = response_loader.dfs[dataframe_file]
+        cols_to_drop = [col for col in df.columns if col not in [
+            self.CANCER_COL_NAME, self.DRUG_COL_NAME, str(self._metric)]]
+        df.drop(columns=cols_to_drop, inplace=True)
+        return df
 
-    def _load_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+    def _load_dataframe(self, dataframe: SingleDRPDataFrame):
         """
         Loads a dataframe based on the specified dataframe type, ensuring it is initialized and filtered by relevant IDs.
 
@@ -535,7 +544,8 @@ class SingleDRPBenchmark(Benchmark):
 
         response_df = self._load_response_dataframe(
             SingleDRPDataFrame.RESPONSE)
-        ids = response_df[key_col_name].unique() #np.unique(response_df[key_col_name])
+        # np.unique(response_df[key_col_name])
+        ids = response_df[key_col_name].unique()
 
         index_name = df.index.name
         index_name = 'index' if index_name is None else index_name
@@ -547,14 +557,7 @@ class SingleDRPBenchmark(Benchmark):
         return df_split
 
 
-
-
-
-
 if __name__ == "__main__":
     drp = DRP()
     drp.set_input_dir("input_dir")
     print(drp.__dict__)
-
-
-
