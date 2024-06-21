@@ -1,6 +1,7 @@
 import logging
 import argparse
 import os
+import sys
 
 from candle import parse_from_dictlist
 # from improve import config as BaseConfig
@@ -16,29 +17,34 @@ class CLI:
         FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
         logging.basicConfig(format=FORMAT)
 
-        # attributes
+        # Class attributes and defautl values
+        # Initialize parser
         self.parser=argparse.ArgumentParser(description='IMPROVE Command Line Parser')
+
+        # Initialize logger
         self.logger=logging.getLogger('CLI')
-        self.args = None # Placeholder for args from argparse
+
+        # Command line options after parsing, results of self.parser.parse_args()
+        self.args = None # placeholder for args from argparse
         self.params = None # dict of args
         
-        # set logger level
-        self.logger.setLevel(logging.INFO)
+        # Set logger level
         self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.DEBUG))
       
 
-        # Set default options
-        self.parser.add_argument('-i', '--input_dir', metavar='DIR', type=str, dest="input_dir",
+        # Set common options for all model scripts
+        common_options = self.parser.add_argument_group('Standard Options')
+        common_options.add_argument('-i', '--input_dir', metavar='DIR', type=str, dest="input_dir",
                                   default=os.getenv("IMPROVE_INPUT_DIR" , "./"), 
                                   help='Base directory for input data. Default is IMPROVE_DATA_DIR or if not specified current working directory. All additional input pathes will be relative to the base input directory.')
-        self.parser.add_argument('-o', '--output_dir', metavar='DIR', type=str, dest="output_dir",
+        common_options.add_argument('-o', '--output_dir', metavar='DIR', type=str, dest="output_dir",
                                   default=os.getenv("IMPROVE_OUTPUT_DIR" , "./"), 
                                   help='Base directory for output data. Default is IMPROVE_OUTPUT_DIR or if not specified current working directory. All additional relative output pathes will be placed into the base output directory.')
-        self.parser.add_argument('--log_level', metavar='LEVEL', type=str, dest="log_level", 
+        common_options.add_argument('--log_level', metavar='LEVEL', type=str, dest="log_level", 
                                   choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "NOTSET"],
                                   default=os.getenv("IMPROVE_LOG_LEVEL", "WARNING"), help="Set log levels. Default is WARNING. Levels are:\
                                       DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET") 
-        self.parser.add_argument('-cfg', '--config_file', metavar='INI_FILE', dest="config_file", 
+        common_options.add_argument('-cfg', '--config_file', metavar='INI_FILE', dest="config_file", 
                                   type=str,
                                   default=None, help="Config file in INI format.") 
                                   
@@ -48,7 +54,9 @@ class CLI:
         """Set Command Line Options, saveguard standard options."""
 
         self.logger.debug("Setting Command Line Options")
-        for o in ['input_dir', 'output_dir', 'log_level', 'config_file']:
+        predefined_options = [ o.lstrip('-') for o in self.parser._option_string_actions ]
+        # ['input_dir', 'output_dir', 'log_level', 'config_file'] 
+        for o in predefined_options:
             # check if o is the value of name in one of the dicts in options
             for d in options:
                 if o == d['name']:
@@ -56,7 +64,19 @@ class CLI:
                     self.logger.debug("Removing %s from options" , o)
                     options.remove(d)
 
-        # From Candle, can't handle bool
+        # Find and remove duplicates
+        unique_options = {}
+        for d in options:
+            if d['name'] not in unique_options:
+                unique_options[d['name']] = d
+            else:
+                self.logger.warning("Found duplicate option %s in options. Removing duplicate" , d['name'])
+
+        # Create list of unique options
+        options = list(unique_options.values())
+        
+
+        # From Candle, can't handle bool, need to fork if we want to support argument groups
         parse_from_dictlist( options , self.parser)
        
 
