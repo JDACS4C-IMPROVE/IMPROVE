@@ -67,10 +67,10 @@ class Benchmark(Base, metaclass=ABCMeta):
     @abstractmethod
     def get_splits_ids(self):
         """
-        Returns the number of data splits.
+        Returns the indices of data splits.
 
         Returns:
-            int: The number of data splits.
+            list[Any]: Data splits indices.
         """
         pass
 
