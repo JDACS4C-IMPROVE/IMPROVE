@@ -499,7 +499,8 @@ class DrugResponseLoader():
             raise Exception(f"ERROR ! {fpath} not found.\n")
 
     def load_response_data(self, fname):
-        fpath = self.y_data_path / fname
+        fpath = self.y_data_path / fname[0]
+        print(fpath)
         logger.debug(f"Loading {fpath}")
         DrugResponseLoader.check_path(fpath)
         df = pd.read_csv(fpath, sep=self.sep)
@@ -513,4 +514,4 @@ class DrugResponseLoader():
             DrugResponseLoader.check_path(self.split_fpath)
             ids = pd.read_csv(self.split_fpath, header=None)[0].tolist()
             df = df.loc[ids]
-            self.dfs[fname] = df
+            self.dfs[fname[0]] = df

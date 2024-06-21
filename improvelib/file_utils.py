@@ -36,11 +36,12 @@ def get_file(
     """
     if datadir is None and "CANDLE_DATA_DIR" in os.environ:
         datadir = os.environ["CANDLE_DATA_DIR"]
+    """
     elif datadir is None and os.environ["CANDLE_DATA_DIR"] is None:
         raise ValueError(
             "Need data directory. Either pass datadir or set CANDLE_DATA_DIR environment variable"
         )
-
+    """
     if cache_subdir is not None:
         datadir = os.path.join(datadir, cache_subdir)
 
@@ -180,14 +181,17 @@ def directory_tree_from_parameters(
         # otherwise use the input data dir
         else:
             outdir = os.getenv("CANDLE_DATA_DIR")
+    """
     else:
         raise Exception(
             "ERROR ! Required system variable not specified.  You must define CANDLE_DATA_DIR ... Exiting"
         )
+    """
 
     # Data directory tree part
     # CANDLE_DATA_DIR/<model_name>/Data
-    datadir = os.path.abspath(os.path.join(datadir, params["model_name"], "Data"))
+    #datadir = os.path.abspath(os.path.join(datadir, params["model_name"], "Data"))
+    datadir = os.path.abspath(os.path.join(params["model_name"], "Data"))
 
     # Construct data directory trees recursively without
     # complaining if they exist
@@ -201,8 +205,11 @@ def directory_tree_from_parameters(
     # <model_name>/<output_dir>/ or <model_name>/Output
     # Final part:
     # experiment_id/run_id
+    #outdir = os.path.abspath(
+    #    os.path.join(outdir, params["model_name"], commonroot, params["experiment_id"])
+    #)
     outdir = os.path.abspath(
-        os.path.join(outdir, params["model_name"], commonroot, params["experiment_id"])
+        os.path.join(params["model_name"], commonroot)
     )
 
     # Construct output directory trees recursively without
@@ -211,7 +218,8 @@ def directory_tree_from_parameters(
         os.makedirs(outdir, exist_ok=True)
 
     # Warn if run_id subfolder exists
-    outdir = os.path.abspath(os.path.join(outdir, params["run_id"]))
+    #outdir = os.path.abspath(os.path.join(outdir, params["run_id"]))
+    outdir = os.path.abspath(os.path.join(outdir))
     if os.path.exists(outdir):
         message = "Path: " + outdir + " already exists... overwriting."
         warnings.warn(message, RuntimeWarning)

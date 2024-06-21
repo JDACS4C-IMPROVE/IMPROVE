@@ -1,6 +1,7 @@
 """Functionality for Computing Metrics in IMPROVE."""
 
 import sys
+import sklearn
 
 from scipy.stats.mstats import pearsonr, spearmanr
 if sklearn.__version__ <= "1.4.0":
@@ -12,23 +13,30 @@ def str2Class(str):
     return getattr(sys.modules[__name__], str)
 
 
-def compute_metrics(y_true, y_pred, metrics):
+def compute_metrics(y_true, y_pred, task, loss):
     """Compute the specified set of metrics.
-
+    
     Parameters
     ----------
     y_true : numpy array
         True values to predict.
     y_pred : numpy array
         Prediction made by the model.
-    metrics: python list
-        List of metrics to compute.
+    task: string
+        Prediction task (classification or regression).
+    loss: string
+        Loss.
 
     Returns
     -------
     eval: python dictionary
         A dictionary of evaluated metrics.
     """
+    if task == "regression":
+        metrics = ["rmse", "pcc", "scc", "r2"] 
+    else:
+        metrics = ["acc", "recall", "precision", "f1", "auc", "aupr"]
+    metrics.append(loss)
     scores = {}
     for mtstr in metrics:
         mapstr = mtstr

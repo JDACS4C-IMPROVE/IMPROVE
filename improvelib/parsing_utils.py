@@ -329,12 +329,15 @@ def finalize_parameters(bmk):
         elif conffile_txt.startswith(
             "./"
         ):  # user is trying to use a builtin alternate model file
+            print(bmk.file_path)
             conffile = os.path.join(bmk.file_path, conffile_txt)
         else:
-            if os.environ["CANDLE_DATA_DIR"] is not None:
-                conffile = os.path.join(os.environ["CANDLE_DATA_DIR"], conffile_txt)
-            else:
-                conffile = os.path.join(bmk.file_path, conffile_txt)
+            conffile = os.path.join(bmk.file_path, conffile_txt)
+            #if os.environ["IMPROVE_DATA_DIR"] is not None:
+            #    conffile = os.path.join(os.environ["IMPROVE_DATA_DIR"], conffile_txt)
+            #else:
+                #conffile = os.path.join(bmk.file_path, conffile_txt)
+    print(conffile)
     # check conffile exists
     if not os.path.isfile(conffile):
         raise Exception(

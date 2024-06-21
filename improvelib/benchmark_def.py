@@ -60,11 +60,12 @@ class Benchmark:
         """
 
         # Check that required system variable specifying path to data has been defined
+        """
         if os.getenv("CANDLE_DATA_DIR") is None:
             raise Exception(
                 "ERROR ! Required system variable not specified.  You must define CANDLE_DATA_DIR ... Exiting"
             )
-
+        """
         # Check that default model configuration exits
         fname = os.path.join(filepath, defmodel)
         if not os.path.isfile(fname):

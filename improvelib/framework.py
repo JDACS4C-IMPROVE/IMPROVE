@@ -8,6 +8,7 @@ from typing import List, Set, Union, NewType, Dict, Optional # use NewType becua
 
 import numpy as np
 import pandas as pd
+from improvelib.parsing_utils import finalize_parameters
 
 from .metrics import compute_metrics
 
@@ -25,7 +26,7 @@ from .helper_utils import str2bool
 # DataPathDict: TypeAlias = dict[str, Path]
 DataPathDict = NewType("DataPathDict", Dict[str, Path])
 
-
+"""
 # Parameters that are relevant to all IMPROVE models
 # Defaults for these args are expected to be used
 improve_basic_conf = [
@@ -258,6 +259,7 @@ frm_additional_definitions = improve_basic_conf + \
     improve_train_conf + \
     improve_infer_conf
 
+"""
 # Required
 frm_required = []
 
@@ -278,7 +280,10 @@ def build_paths(params: Dict):
     Returns:
         dict: updated dict of CANDLE/IMPROVE parameters and parsed values.
     """
-    mainpath = Path(os.environ["IMPROVE_DATA_DIR"])
+    if os.getenv("IMPROVE_DATA_DIR") is not None:
+        mainpath = Path(os.environ["IMPROVE_DATA_DIR"])
+    else:
+        mainpath = Path(params["benchmark_data_dir"])
     check_path(mainpath)
 
     # Raw data
@@ -523,7 +528,8 @@ def compute_performance_scores(params: Dict,
                               y_pred: np.array,
                               stage: str,
                               outdir: Union[Path, str],
-                              metrics: List):
+                              task: str,
+                              loss: str):
     """Evaluate predictions according to specified metrics.
 
     Metrics are evaluated. Scores are stored in specified path and returned.
@@ -539,12 +545,13 @@ def compute_performance_scores(params: Dict,
     :rtype: dict
     """
     # Compute multiple performance scores
-    scores = compute_metrics(y_true, y_pred, metrics)
+    scores = compute_metrics(y_true, y_pred, task, loss)
 
     # Add val_loss metric
     key = f"{stage}_loss"
-    # scores[key] = scores["mse"]
-    scores[key] = scores[params["loss"]]
+    #scores[key] = scores["mse"]
+    # rename loss key to new key
+    scores[key] = scores.pop(params["loss"])
 
     # fname = f"val_{params['json_scores_suffix']}.json"
     scores_fname = f"{stage}_{params['json_scores_suffix']}.json"
@@ -557,14 +564,14 @@ def compute_performance_scores(params: Dict,
     # Performance scores for Supervisor HPO
     # TODO. do we still need to print IMPROVE_RESULT?
     if stage == "val":
-        print("\nIMPROVE_RESULT val_loss:\t{}\n".format(scores["mse"]))
+        print("\nIMPROVE_RESULT val_loss:\t{}\n".format(scores[key]))
         print("Validation scores:\n\t{}".format(scores))
     elif stage == "test":
         print("Inference scores:\n\t{}".format(scores))
     return scores
 
-
-class ImproveBenchmark(candle.Benchmark):
+'''
+class ImproveBenchmark(Benchmark):
     """ Benchmark for Improve Models. """
 
     def set_locals(self):
@@ -580,8 +587,8 @@ class ImproveBenchmark(candle.Benchmark):
             self.required.update(set(frm_required)) # This considers global framework required arguments
         if frm_additional_definitions is not None:
             self.additional_definitions.extend(frm_additional_definitions) # This considers global framework definitions
-
-
+'''
+'''
 def initialize_parameters(filepath, default_model="frm_default_model.txt", additional_definitions=None, required=None):
     """ Parse execution parameters from file or command line.
 
@@ -611,10 +618,10 @@ def initialize_parameters(filepath, default_model="frm_default_model.txt", addit
         required=required,
     )
 
-    gParameters = candle.finalize_parameters(frm)
+    gParameters = finalize_parameters(frm)
 
     return gParameters
-
+'''
 
 def check_path_and_files(folder_name: str, file_list: List, inpath: Path) -> Path:
     """Checks if a folder and its files are available in path.
