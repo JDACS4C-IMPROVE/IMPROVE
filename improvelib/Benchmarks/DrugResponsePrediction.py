@@ -1,4 +1,6 @@
 from improvelib.Benchmarks import Base as Base
+from improvelib.Benchmarks.Base import Benchmark, Stage
+from improvelib.Benchmarks.benchmark_utils import StringEnum
 
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
@@ -117,7 +119,6 @@ class DRP(Base.Base):
         super().__init__()
         self.logger = DRP.logger
         self.options = DRP.drp_options
-        self.config = {}
         self.input_dir = None
         self.x_data_path = None
         self.y_data_path = None
@@ -153,11 +154,6 @@ class DRP(Base.Base):
         # self.split_fpath = self.splits_path/split_file
         self.dfs = {}
         self.verbose = verbose
-
-        
-
-
-
         if self.verbose:
             print(f"y_data_files: {params['y_data_files']}")
             print(f"y_col_name: {params['y_col_name']}")
@@ -194,15 +190,6 @@ class DRP(Base.Base):
                                         verbose=False).dfs["response.tsv"]
         else:
             self.logger.warning(f"Test split file {params['test_split_file']} does not exist.")
-
-
-
-        
-        
-        
-
-
-
 
     def set_input_dir(self, input_dir: str) -> None:
         """Set input directory for Drug Response Prediction Benchmark."""
@@ -258,8 +245,316 @@ class DRP(Base.Base):
 
         return drp.OmicsLoader(cfg)
         pass
+
+class SingleDRPDataFrame(StringEnum):
+    """
+    Enum for specifying single drug response prediction dataframes.
+    """
+
+    CELL_LINE_CNV = 'cnv'
+    CELL_LINE_DISCRETIZED_CNV = 'cnv_discretized'
+    CELL_LINE_METHYLATION = 'methylation'
+    CELL_LINE_GENE_EXPRESSION = 'gene_expression'
+    CELL_LINE_miRNA = 'miRNA'
+    CELL_LINE_MUTATION_COUNT = 'mutation_count'
+    CELL_LINE_MUTATION_LONG_FORMAT = 'mutation_long_format'
+    CELL_LINE_MUTATION = 'mutation'
+    CELL_LINE_RPPA = 'rppa'
+    DRUG_MORDRED = 'mordred'
+    DRUG_SMILES = 'smiles'
+    DRUG_ECFP4_NBITS512 = 'ecfp_nbits512'
+    RESPONSE = 'response'
+
+
+class SingleDRPDataset(StringEnum):
+    """
+    Enum for specifying datasets in single drug response prediction benchmarks.
+    """
+    CCLE = 'CCLE'
+    CTRP = 'CTRPv2'
+    GDSCv1 = 'GDSCv1'
+    GDSCv2 = 'GDSCv2'
+    gCSI = 'gCSI'
+
+
+
+class DRPMetric(StringEnum):
+    """
+    Enum for specifying the drug response prediction metrics.
+    """
+    AUC = 'auc'
+    AUC1 = 'auc1'
+    IC50 = 'ic50'
+    EC50 = 'ec50'
+    EC50se = 'ec50se'
+    R2FIT = 'r2fit'
+    EINF = 'einf'
+    HS = 'hs'
+    AAC1 = 'aac1'
+    DSS1 = 'dss1'
+
+
+class SingleDRPParameterConverter():
+    def __init__(self):
+        self._convertion_dict = {} 
+        for enumeration in [SingleDRPDataFrame, SingleDRPDataset, Stage, DRPMetric]:
+            enum_dict = {e.value: e for e in enumeration}
+            self._convertion_dict.update(enum_dict)
         
+    def str_to_type(self, parameter: str) -> StringEnum:
+        return self._convertion_dict[parameter]
+
+    def update_params(self, params: Dict) -> None:
+        for key, value in params.items():
+            if value in self._convertion_dict:
+                params[key] = self._convertion_dict[value]
+        return params
+
+class SingleDRPBenchmark(Benchmark):
+    """
+    Concrete implementation of the Benchmark class for single drug response prediction.
+
+    Attributes:
+        CANCER_COL_NAME (str): Default column name for cancer identifiers.
+        DRUG_COL_NAME (str): Default column name for drug identifiers.
+
+    Methods:
+        set_dataset(dataset: SingleDRPDataset): Sets the dataset for the benchmark.
+        set_split_id(split_number: int): Sets the split number for data partitioning.
+        set_stage(stage: Stage): Sets the type of data split.
+        set_metric(metric: DRPMetric): Sets the drug response prediction metric.
+        set_splits_dir(splits_dir: str): Sets the directory for data splits.
+        get_splits_num() -> int: Returns the number of splits.
+        get_dataframe(dataframe: SingleDRPDataFrame) -> pd.DataFrame: Retrieves a dataframe based on the specified parameters.
+        get_full_dataframe(dataframe: SingleDRPDataFrame) -> pd.DataFrame: Retrieves a full dataframe without considering splits.
+    """
+    CANCER_COL_NAME = "improve_sample_id"
+    DRUG_COL_NAME = "improve_chem_id"
+
+    def __init__(self):
+        """
+        Initializes the SingleDRPBenchmark instance with default values.
+        """
+        self._initialize()
+        self._SPLITS_NUM = 10
+        self._loaded_dfs = {}
+        self._splits_dir = 'splits'
+        self._dataset2file_map = {
+            SingleDRPDataFrame.CELL_LINE_CNV: "cancer_copy_number.tsv",
+            SingleDRPDataFrame.CELL_LINE_DISCRETIZED_CNV: "cancer_discretized_copy_number.tsv",
+            SingleDRPDataFrame.CELL_LINE_METHYLATION: "cancer_DNA_methylation.tsv",
+            SingleDRPDataFrame.CELL_LINE_GENE_EXPRESSION: "cancer_gene_expression.tsv",
+            SingleDRPDataFrame.CELL_LINE_miRNA: "cancer_miRNA_expression.tsv",
+            SingleDRPDataFrame.CELL_LINE_MUTATION_COUNT: "cancer_mutation_count.tsv",
+            SingleDRPDataFrame.CELL_LINE_MUTATION_LONG_FORMAT: "cancer_mutation_long_format.tsv",
+            SingleDRPDataFrame.CELL_LINE_MUTATION: "cancer_mutation.parquet",
+            SingleDRPDataFrame.CELL_LINE_RPPA: "cancer_RPPA.tsv",
+            SingleDRPDataFrame.DRUG_SMILES: "drug_SMILES.tsv",
+            SingleDRPDataFrame.DRUG_MORDRED: "drug_mordred.tsv",
+            SingleDRPDataFrame.DRUG_ECFP4_NBITS512: "drug_ecfp4_nbits512.tsv",
+            SingleDRPDataFrame.RESPONSE: "response.tsv"
+        }
+
+    # Setting required specifications for generating output data frames
+    def set_dataset(self, dataset: SingleDRPDataset) -> None:
+        """
+        Sets the dataset for the benchmark.
+
+        Args:
+            dataset (SingleDRPDataset): The dataset to be used in the benchmark.x
+        """
+        self._dataset = dataset
+
+    def set_metric(self, metric: DRPMetric) -> None:
+        """
+        Sets the drug response prediction metric.
+
+        Args:
+            metric (DRPMetric): The metric to be used for evaluating drug response.
+        """
+        self._metric = metric
+
+    # Getting data from benchmark
+    def get_splits_num(self) -> int:
+        """
+        Returns the number of data splits.
+
+        Returns:
+            int: The number of data splits.
+        """
+        return self._SPLITS_NUM
+
+    def get_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+        """
+        Retrieves a dataframe based on the specified parameters.
+
+        Args:
+            dataframe (SingleDRPDataFrame): The type of dataframe to retrieve.
+
+        Returns:
+            pd.DataFrame: The requested dataframe.
+        """
+        return self._load_dataframe(dataframe)
+
+    def get_full_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+        """
+        Retrieves a full dataframe without considering splits.
+
+        Args:
+            dataframe (SingleDRPDataFrame): The type of dataframe to retrieve.
+
+        Returns:
+            pd.DataFrame: The full dataframe.
+        """
+        prev_split_id = self._split_id
+        prev_stage = self._stage
+        self._split_id = 'all'
+        self._stage = ''
+        df = self.get_dataframe(dataframe)
+        self._split_id = prev_split_id
+        self._stage = prev_stage
+        return df
+
+    def get_metric(self) -> DRPMetric:
+        return self._metric
+
+    def _construct_splits_file_name(self) -> str:
+        """
+        Constructs the file name for the data splits based on the current dataset and split settings.
+
+        Returns:
+            str: The constructed file name for the splits.
+        """
+        if self._split_id == 'all':
+            fname = '_'.join((str(self._dataset), 'all'))
+            return f'{fname}.txt'
+        filename = '_'.join((str(self._dataset), 'split',
+                             str(self._split_id), str(self._stage)))
+        filename = f'{filename}.txt'
+        return filename
+
+    def _load_cancer_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+        """
+        Loads a cancer-related dataframe based on the specified dataframe type.
+
+        Args:
+            dataframe (SingleDRPDataFrame): The type of cancer-related dataframe to load.
+
+        Returns:
+            pd.DataFrame: The loaded dataframe.
+        """
+        dataframe_file = self._dataset2file_map[dataframe]
+        loader_params = {}
+        loader_params["x_data_canc_files"] = str([[dataframe_file]])
+        loader_params["canc_col_name"] = self.CANCER_COL_NAME
+        loader_params["x_data_path"] = os.path.join(
+            self._benchmark_dir, 'x_data')
+        omics_loader = drp.OmicsLoader(loader_params)
+        return omics_loader.dfs[dataframe_file]
+
+    def _load_drug_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+        """
+        Loads a drug-related dataframe based on the specified dataframe type.
+
+        Args:
+            dataframe (SingleDRPDataFrame): The type of drug-related dataframe to load.
+
+        Returns:
+            pd.DataFrame: The loaded dataframe.
+        """
+        dataframe_file = self._dataset2file_map[dataframe]
+        loader_params = {}
+        loader_params["x_data_drug_files"] = str([[dataframe_file]])
+        loader_params["drug_col_name"] = self.DRUG_COL_NAME
+        loader_params["x_data_path"] = os.path.join(
+            self._benchmark_dir, 'x_data')
+        drug_loader = drp.DrugsLoader(loader_params)
+        return drug_loader.dfs[dataframe_file]
+
+    def _load_response_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+        """
+        Loads a response dataframe based on the specified dataframe type.
+
+        Args:
+            dataframe (SingleDRPDataFrame): The type of response dataframe to load.
+
+        Returns:
+            pd.DataFrame: The loaded dataframe.
+        """
+        dataframe_file = self._dataset2file_map[dataframe]
+        loader_params = {}
+        loader_params["y_data_files"] = str([dataframe_file])
+        loader_params["canc_col_name"] = self.CANCER_COL_NAME
+        loader_params["drug_col_name"] = self.DRUG_COL_NAME
+        loader_params["y_col_name"] = str(self._metric)
+        loader_params["y_data_path"] = os.path.join(
+            self._benchmark_dir, 'y_data')
+        loader_params["splits_path"] = os.path.join(
+            self._benchmark_dir, self._splits_dir)
+        split_file = self._construct_splits_file_name()
+        response_loader = drp.DrugResponseLoader(
+            loader_params, split_file=split_file)
+        return response_loader.dfs[dataframe_file]
+
+    def _load_dataframe(self, dataframe: SingleDRPDataFrame) -> pd.DataFrame:
+        """
+        Loads a dataframe based on the specified dataframe type, ensuring it is initialized and filtered by relevant IDs.
+
+        Args:
+            dataframe (SingleDRPDataFrame): The type of dataframe to load.
+
+        Returns:
+            pd.DataFrame: The loaded and filtered dataframe.
+        """
+        self._check_initialization()
+        df = None
+        if dataframe in self._loaded_dfs:
+            df = self._loaded_dfs[dataframe]
+        else:
+            if dataframe not in self._dataset2file_map:
+                raise Exception(
+                    f'Dataframe name {dataframe} is not mapped to the file!')
+
+            ids = None
+            if 'cancer' in self._dataset2file_map[dataframe]:
+                df = self._load_cancer_dataframe(dataframe)
+            elif 'drug' in self._dataset2file_map[dataframe]:
+                df = self._load_drug_dataframe(dataframe)
+            elif 'response' in self._dataset2file_map[dataframe]:
+                return self._load_response_dataframe(dataframe)
+            else:
+                raise Exception(
+                    f'Dataframe name {dataframe} is mapped to the unknown file name')
+            self._loaded_dfs[dataframe] = df
+
+        key_col_name = None
+        if 'cancer' in self._dataset2file_map[dataframe]:
+            key_col_name = self.CANCER_COL_NAME
+        elif 'drug' in self._dataset2file_map[dataframe]:
+            key_col_name = self.DRUG_COL_NAME
+
+        response_df = self._load_response_dataframe(
+            SingleDRPDataFrame.RESPONSE)
+        ids = response_df[key_col_name].unique() #np.unique(response_df[key_col_name])
+
+        index_name = df.index.name
+        index_name = 'index' if index_name is None else index_name
+        df_split = df.reset_index(drop=False)
+        df_split.set_index(key_col_name, drop=False, inplace=True)
+        df_split = df_split.loc[ids]
+        df_split.set_index(index_name, inplace=True, drop=True)
+
+        return df_split
+
+
+
+
+
+
 if __name__ == "__main__":
     drp = DRP()
     drp.set_input_dir("input_dir")
     print(drp.__dict__)
+
+
+
