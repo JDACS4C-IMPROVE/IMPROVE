@@ -244,44 +244,53 @@ improve_infer_params = [
     },
 ]
 
-
 def initialize_benchmark(filepath, defmodel, additional_definitions):
-    bmk = Benchmark(
+     bmk = Benchmark(
             filepath=filepath,
             defmodel=defmodel,
             framework="pytorch",
             prog="frm",
             desc="Framework functionality in IMPROVE",
             additional_definitions=additional_definitions
-        )
+        ) 
+     return bmk 
+
+def initialize_params(bmk):
     params = finalize_parameters(bmk)
     return params
-    
+ 
+ 
+def get_required_params(req, defs):
+    if req is None or len(req) == 0:
+        return defs
+    else:
+        r = set(req)
+        defs = [d for d in defs if d['name'] in r]
+        return defs
 
 def determine_stage_specific_params(filename, filepath, application, defmodel, model_preprocess_params, model_train_params, model_infer_params, required):
 
     #model_param_def_fname = filepath + "/" + application + "_param_def"
     # get app specific params
     app_param_def_fname = "." + application + "_param_def"
-    app_param_def = importlib.import_module(app_param_def_fname, 'improvelib') 
+    if application == "drp":
+        data_params = importlib.import_module(".drug_resp_pred", 'improvelib').drp_data_params 
     #to do -- error handing
     if "preprocess" in filename:
-        additional_definitions = improve_preprocess_params + app_preprocess_params + model_preprocess_params + improve_basic_params
-        params = initialize_benchmark(filepath, defmodel, additional_definitions)
+        data_params = get_required_params(required, data_params)
+        additional_definitions = improve_preprocess_params + app_preprocess_params + model_preprocess_params + improve_basic_params + data_params
+        benchmark = initialize_benchmark(filepath, defmodel, additional_definitions)
+        params = initialize_params(benchmark)
     elif "train" in filename:
-        if required is None or len(required) == 0:
-            additional_definitions = improve_train_params + app_train_params + model_train_params + improve_basic_params
-            params = initialize_benchmark(filepath, defmodel, additional_definitions)
-        else:
-            #new_improve_train_params = {key: improve_train_params[key] for key in required}
-            req = set(required) 
-            # update dictionary of only required parameters for training
-            new_improve_train_params = [d for d in improve_train_params if d['name'] in req]
-            additional_definitions = new_improve_train_params + app_train_params + model_train_params + improve_basic_params
-            params = initialize_benchmark(filepath, defmodel, additional_definitions)
+        global improve_train_params
+        improve_train_params = get_required_params(required, improve_train_params)
+        additional_definitions = improve_train_params + app_train_params + model_train_params + improve_basic_params
+        benchmark = initialize_benchmark(filepath, defmodel, additional_definitions)
+        params = initialize_params(benchmark)
     elif "infer" in filename:
         additional_definitions = improve_infer_params + app_infer_params + model_infer_params + improve_basic_params
-        params = initialize_benchmark(filepath, defmodel, additional_definitions)
+        benchmark = initialize_benchmark(filepath, defmodel, additional_definitions)
+        params = initialize_params(benchmark)
     else:
         print("File name does not contain 'preprocess', 'train', or 'infer'!")
-    return params
+    return benchmark, params
