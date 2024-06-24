@@ -6,6 +6,7 @@
 from improvelib.preprocess import Preprocess
 import logging
 import os
+import sys
 
 
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
@@ -13,6 +14,13 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
 class DrugResponsePrediction(Preprocess):
+
+    name="DrugResponsePrediction"
+    # set path relative to the module
+    path = os.path.dirname(os.path.abspath(__file__))
+    application_path = path.split("Preprocess")[0] + "Apps/DrugResponsePrediction"
+    common_params_file = application_path + "/common_parameters.yml"
+
 
     def __init__(self):
         super().__init__()
@@ -71,7 +79,12 @@ class DrugResponsePrediction(Preprocess):
         if additional_definitions :
             self.options = self.options + additional_definitions
 
-       
+        # get path to this module directory
+        path = os.path.dirname(os.path.abspath(__file__))
+        # load default configuration file
+        if os.path.isfile(DrugResponsePrediction.common_params_file):
+            params = self.load_parameters(DrugResponsePrediction.common_params_file)
+            self.cli.set_command_line_options(params , "DrugResponsePrediction")
         p = super().initialize_parameters(pathToModelDir, section, default_config, default_model, self.options , required)
         print(self.get_param("log_level"))
         self.logger.setLevel(self.get_param("log_level"))
