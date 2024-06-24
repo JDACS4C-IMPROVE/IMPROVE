@@ -270,6 +270,10 @@ class Config:
 
         if additional_definitions:
 
+            # Convert Path to string
+            if additional_definitions and isinstance(additional_definitions, Path):
+                additional_definitions = str(additional_definitions)
+                
             # check if additional_definitions is a string 
             if isinstance(additional_definitions, str) and os.path.isfile(additional_definitions):
                 self.logger.debug("Loading additional definitions from file %s", additional_definitions)
