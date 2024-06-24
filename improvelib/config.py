@@ -236,18 +236,28 @@ class Config:
                 if isinstance(default_config, Path):
                     default_config = str(default_config)
 
-                self.file = pathToModelDir + "/" + default_config
+                if pathToModelDir is not None :
+                    if pathToModelDir.endswith("/"):
+                        pathToModelDir += "/"
+                else:
+                    pathToModelDir = "./"
+                
+                if default_config is not None:
+                    self.file = pathToModelDir + default_config
+                else:
+                    self.logger.warning("No default config file provided")
+
                 self.logger.debug("No config file provided. Using default: %s", self.file)
 
             
             # Set full path for config
-            if not os.path.abspath(self.file):
+            if self.file and not os.path.abspath(self.file):
                 self.logger.debug("Not absolute path for config file. Should be relative to input_dir")
                 self.file = self.input_dir + "/" + self.file
                 self.logger.debug("New file path: %s", self.file)
 
             # Load config if file exists
-            if os.path.isfile(self.file):
+            if self.file and os.path.isfile(self.file):
                 self.load_config()
             else:
                 self.logger.warning("Can't find config file: %s", self.file)
