@@ -7,6 +7,7 @@ from improvelib.preprocess import Preprocess
 import logging
 import os
 
+
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -76,19 +77,16 @@ class DrugResponsePrediction(Preprocess):
         self.logger.setLevel(self.get_param("log_level"))
         return p
 
-    def preprocess(self):
-        pass
 
-    def postprocess(self):
-        pass
-
-    def run(self):
-        pass
 
 
 if __name__ == "__main__":
     drp = DrugResponsePrediction()
+
+    # Model specific parameters
     model_params = [ { 'name' : "model_name"} , { 'name' : 'model_version'} ]
+
+    # Initialize parameters for preprocessing (application + model specific)
     drp.initialize_parameters( 
         pathToModelDir=None, 
         default_config=None,
