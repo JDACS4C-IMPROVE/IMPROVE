@@ -50,7 +50,7 @@ class CLI:
                                   
 
 
-    def set_command_line_options(self,options=[]):
+    def set_command_line_options(self,options=[] , group=None):
         """Set Command Line Options, saveguard standard options."""
 
         self.logger.debug("Setting Command Line Options")
@@ -77,7 +77,13 @@ class CLI:
         
 
         # From Candle, can't handle bool, need to fork if we want to support argument groups
-        parse_from_dictlist( options , self.parser)
+        if group:
+            group = self.parser.add_argument_group(group)
+            print(options)
+            print(group)
+            parse_from_dictlist( options , group)
+        else:
+            parse_from_dictlist( options , self.parser)
        
 
         
