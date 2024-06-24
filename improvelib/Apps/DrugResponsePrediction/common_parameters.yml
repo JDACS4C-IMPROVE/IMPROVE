@@ -1,0 +1,7 @@
+- name: whoami
+  type: str
+  default: 'DrugResponsePrediction'
+  description: 'Name of the application'
+- name: benchmark_data_url
+  type: str
+  default: https://some/url/here
