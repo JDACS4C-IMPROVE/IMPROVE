@@ -185,22 +185,47 @@ class Config:
         """Check if all required parameters are set."""
         pass
 
+    def _validate_parameters(self, params, required=None):
+        """Validate parameters. Set types and check for required parameters."""
+
+        for p in params:
+            # check if type is set and convert to python type
+            if 'type' in p:
+                if p['type'] == 'str':
+                    p['type'] = str
+                elif p['type'] == 'int':
+                    p['type'] = int
+                elif p['type'] == 'float':
+                    p['type'] = float
+                elif p['type'] == 'bool':
+                    p['type'] = bool
+                elif p['type'] == 'str2bool':
+                    p['type'] = str2bool
+                else:
+                    self.logger.error("Unsupported type %s", p['type'])
+                    p['type'] = str
+
+
+        pass
+
     def load_parameters(self, file , section=None):
         """Load parameters from a file."""
         self.logger.debug("Loading parameters from %s", file)
         
         if isinstance(file, str) and os.path.isfile(file):   
             # check if yaml or json file and load
+            params = None
 
             if file.endswith('.json'):
                 with open(file, 'r') as f:
-                    return json.load(f)
+                    params = json.load(f)
             elif file.endswith('.yaml') or file.endswith('.yml'):
                 with open(file, 'r') as f:
-                    return yaml.safe_load(f)
+                    params = yaml.safe_load(f)
             else:
                 self.logger.error("Unsupported file format")
-                return None
+            self._validate_parameters(params)
+            return params
         else:
             self.logger.error("Can't find file %s", file)
             return None
