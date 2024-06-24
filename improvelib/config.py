@@ -1,9 +1,12 @@
 import os
 import logging
 import configparser
+import yaml
+import json
 
 from pathlib import Path
 from improvelib.cli import CLI
+
 
 
 
@@ -65,14 +68,18 @@ class Config:
             self.config.read(self.file)
         else:
             self.logger.error("Can't load config from %s", str(self.file))
+            self.config['DEFAULT'] = {}
 
         
 
     def save_config(self, file , config=None):
         if os.path.isabs(file):
-            self.config.read(file)
+            self.config.write(file)
         else:
-            path = Path(config['output_dir'] , file)
+            if config and 'output_dir' in config:
+                path = Path(config['output_dir'] , file)
+            else: 
+                path = Path(file)
 
             if not Path(path.parent).exists() :
                 self.logger.debug("Creating directory %s for saving config file." , path.parent)
@@ -159,8 +166,13 @@ class Config:
             sections=self.config.sections()
         
         if section:
-            for i in self.config.items(section):
-                params[i[0]]=i[1]
+            # check if section exists
+            if self.config.has_section(section):
+                for i in self.config.items(section):
+                    params[i[0]]=i[1]
+            else:
+                self.logger.error("Can't find section %s", section)
+
         else:
             for s in self.config.sections():
                 params[s]={}
@@ -171,6 +183,30 @@ class Config:
     
     def check_required(self):
         """Check if all required parameters are set."""
+        pass
+
+    def load_parameters(self, file , section=None):
+        """Load parameters from a file."""
+        self.logger.debug("Loading parameters from %s", file)
+        
+        if isinstance(file, str) and os.path.isfile(file):   
+            # check if yaml or json file and load
+
+            if file.endswith('.json'):
+                with open(file, 'r') as f:
+                    return json.load(f)
+            elif file.endswith('.yaml') or file.endswith('.yml'):
+                with open(file, 'r') as f:
+                    return yaml.safe_load(f)
+            else:
+                self.logger.error("Unsupported file format")
+                return None
+        else:
+            self.logger.error("Can't find file %s", file)
+            return None
+
+    def validate_parameters(self, params, required=None):
+        """Validate parameters."""
         pass
 
     def initialize_parameters(self,
@@ -200,6 +236,12 @@ class Config:
         self.logger.debug("Initializing parameters for %s", section)
 
         if additional_definitions:
+
+            # check if additional_definitions is a string 
+            if isinstance(additional_definitions, str) and os.path.isfile(additional_definitions):
+                self.logger.debug("Loading additional definitions from file %s", additional_definitions)
+                additional_definitions = self.load_parameters(additional_definitions)
+
             duplicates = []
             names = []
             for i,v in enumerate(additional_definitions):
@@ -304,24 +346,35 @@ class Config:
 
 if __name__ == "__main__":
     cfg=Config()
-    cfg.file="default.config"
+    cfg.file="./Tests/Data/default.cfg"
     cfg.load_config()
     print(cfg.params)
     print(cfg.dict())
-    print(cfg.param( None , 'weihgts' , None))
-    cfg.param('Infer' , 'weihgts' ,'default.weights')
+    print(cfg.param( None , 'weights' , None))
+    cfg.param('Infer' , 'weights' ,'default.weights')
     for section in cfg.config.items():
         print(section)
         for item in cfg.config.items(section[0], raw=False):
             print(item)
-    print(cfg.param( "Infer" , 'weihgts' , None))
+    print(cfg.param( "Infer" , 'weights' , None))
     print(cfg.dict('Infer'))
     cfg.save_config("./tmp/saved.config" , config=cfg.config['DEFAULT'])
-    cfg.initialize_parameters("./", additional_definitions=[ 
-        { "name" : "chkpt", 
-         "dest" : "checkpointing",
-        #  "action" : "store_true",
-        "type" : "str2bool" ,
-         "default" : False,
-         "help" : "Flag to enable checkpointing" } ])
+
+    common_parameters=[ 
+        { 
+            "name" : "chkpt", 
+            "dest" : "checkpointing",
+            # "type" : "str2bool" ,
+            "default" : False,
+            "help" : "Flag to enable checkpointing",
+            "section" : "DEFAULT"
+            } 
+        ]
+
+    params = cfg.load_parameters("./Tests/Data/common_parameters.yml")
+    cfg.cli.set_command_line_options(options=params)
+    print(params)
+
+
+    cfg.initialize_parameters("./", additional_definitions=common_parameters + params )
     print(cfg.config.items('DEFAULT', raw=False))
