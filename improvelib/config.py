@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import configparser
 import yaml
@@ -13,6 +14,7 @@ from improvelib.cli import CLI
 class Config:
     """Class to handle configuration files."""
     # ConfigError = str
+    config_sections = ['DEFAULT', 'Preprocess', 'Train', 'Infer']
 
     def __init__(self) -> None:
 
@@ -211,8 +213,12 @@ class Config:
     def load_parameters(self, file , section=None):
         """Load parameters from a file."""
         self.logger.debug("Loading parameters from %s", file)
+
+        # Convert Path to string
+        if file and isinstance(file, Path):
+            file = str(file)
         
-        if isinstance(file, str) and os.path.isfile(file):   
+        if os.path.isfile(file):   
             # check if yaml or json file and load
             params = None
 
@@ -227,7 +233,9 @@ class Config:
             self._validate_parameters(params)
             return params
         else:
-            self.logger.error("Can't find file %s", file)
+            print(isinstance(file, str))
+            self.logger.critical("Can't find file %s", file)
+            sys.exit(1)
             return None
 
     def validate_parameters(self, params, required=None):
