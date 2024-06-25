@@ -190,6 +190,9 @@ class Config:
     def _validate_parameters(self, params, required=None):
         """Validate parameters. Set types and check for required parameters."""
 
+        if params is None:
+            return
+        
         for p in params:
             # check if type is set and convert to python type
             if 'type' in p:
@@ -208,7 +211,7 @@ class Config:
                     p['type'] = str
 
 
-        pass
+        
 
     def load_parameters(self, file , section=None):
         """Load parameters from a file."""
@@ -273,7 +276,7 @@ class Config:
             # Convert Path to string
             if additional_definitions and isinstance(additional_definitions, Path):
                 additional_definitions = str(additional_definitions)
-                
+
             # check if additional_definitions is a string 
             if isinstance(additional_definitions, str) and os.path.isfile(additional_definitions):
                 self.logger.debug("Loading additional definitions from file %s", additional_definitions)
@@ -316,7 +319,7 @@ class Config:
                     default_config = str(default_config)
 
                 if pathToModelDir is not None :
-                    if pathToModelDir.endswith("/"):
+                    if not pathToModelDir.endswith("/"):
                         pathToModelDir += "/"
                 else:
                     pathToModelDir = "./"
