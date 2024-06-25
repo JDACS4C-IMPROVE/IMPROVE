@@ -30,7 +30,10 @@ my_params_example    = [                                                    # se
     {
         "name": "supplement",                                               # name of the argument
         "type": str,                                                        # type of the argument
-        "help": "Supplemental data FILE and TYPE. FILE is in INPUT_DIR.",   # help message
+        "nargs": 2,                                                         # number of arguments that should be consumed
+        "metavar": ("FILE", "TYPE"),                                        # name of the argument in usage messages
+        "action": "append",                                                 # action to be taken when this argument is encountered
+        "help": "Supplemental data tuple FILE and TYPE. FILE is in INPUT_DIR.",   # help message
     }
 ]
 
