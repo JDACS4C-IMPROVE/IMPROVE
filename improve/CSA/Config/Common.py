@@ -164,7 +164,8 @@ class Config():
             os.makedirs(self.output_dir)
     
         self.__class__ = current_class
-        return self.dict()
+        #return self.dict()
+        return self.option
 
 if __name__ == "__main__":
     cfg = Config()
