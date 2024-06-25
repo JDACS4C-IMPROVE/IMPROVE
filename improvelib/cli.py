@@ -52,8 +52,12 @@ class CLI:
 
     def set_command_line_options(self,options=[] , group=None):
         """Set Command Line Options, saveguard standard options."""
-
         self.logger.debug("Setting Command Line Options")
+
+        if not options:
+            self.logger.warning("No options provided. Ignoring.")
+            return
+
         predefined_options = [ o.lstrip('-') for o in self.parser._option_string_actions ]
         # ['input_dir', 'output_dir', 'log_level', 'config_file'] 
         for o in predefined_options:
