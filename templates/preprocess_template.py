@@ -10,12 +10,6 @@ from improvelib.preprocess.drug_response_prediction import Preprocess as DrugRes
 import pandas as pd
 
 
-# [Req] IMPROVE/CANDLE imports
-# from improvelib import framework as frm
-# from improvelib import drug_resp_pred as drp
-
-
-
 
 # Global variables
 filepath = Path(__file__).resolve().parent # [Req]
