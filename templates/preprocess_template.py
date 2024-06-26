@@ -11,8 +11,8 @@ import pandas as pd
 
 
 # [Req] IMPROVE/CANDLE imports
-from improvelib import framework as frm
-from improvelib import drug_resp_pred as drp
+# from improvelib import framework as frm
+# from improvelib import drug_resp_pred as drp
 
 
 
@@ -107,6 +107,8 @@ def main(args):
     # additional_definitions = Path("custom_params.json")
     my_params_file_example = filepath/"common_params.yml"
 
+    # Exampple 1: Initialize parameters using the Preprocess class
+
     # Initialize parameters using the Preprocess class
     cfg = Preprocess()
     params = cfg.initialize_parameters(filepath, 
@@ -119,6 +121,9 @@ def main(args):
     # in addition to the parameters, the cfg object provides access to the logger, the config object and data loaders
     # default is run(params)
     run(cfg)
+
+
+    # Example 2: Initialize parameters using the DrugResponsePrediction class
 
     # Initialize parameters using the DrugResponsePrediction class
     # the DrugResponsePrediction class is a subclass of Preprocess
