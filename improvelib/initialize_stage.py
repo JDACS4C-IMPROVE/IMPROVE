@@ -1,8 +1,11 @@
-from improvelib.drp_param_def import *
+#from improvelib.drp_param_def import *
 from improvelib.benchmark_def import Benchmark
 from improvelib.parsing_utils import finalize_parameters
 import importlib
 import argparse
+
+from .helper_utils import str2bool
+
 
 improve_basic_params = [
     {"name": "benchmark_data_dir",
@@ -57,6 +60,14 @@ improve_basic_params = [
       "default": "y_data",
       "help": "Suffix to compose file name for storing true y dataframe."
     },
+    {
+        "name": "verbose",
+        "abv": "v",
+        "type": str2bool,
+        "default": False,
+        "help": "increase output verbosity.",
+    },
+    {"name": "logfile", "abv": "l", "type": str, "default": None, "help": "log file"},
    {
         "name": "task",
         "type": str,
@@ -273,22 +284,23 @@ def determine_stage_specific_params(filename, filepath, application, defmodel, m
     #model_param_def_fname = filepath + "/" + application + "_param_def"
     # get app specific params
     app_param_def_fname = "." + application + "_param_def"
+    app_params = importlib.import_module(app_param_def_fname, 'improvelib')
     if application == "drp":
-        data_params = importlib.import_module(".drug_resp_pred", 'improvelib').drp_data_params 
+        data_params = importlib.import_module(".drug_resp_pred", 'improvelib').drp_data_params
     #to do -- error handing
     if "preprocess" in filename:
         data_params = get_required_params(required, data_params)
-        additional_definitions = improve_preprocess_params + app_preprocess_params + model_preprocess_params + improve_basic_params + data_params
+        additional_definitions = improve_preprocess_params + app_params.app_preprocess_params + model_preprocess_params + improve_basic_params + data_params
         benchmark = initialize_benchmark(filepath, defmodel, additional_definitions)
         params = initialize_params(benchmark)
     elif "train" in filename:
         global improve_train_params
         improve_train_params = get_required_params(required, improve_train_params)
-        additional_definitions = improve_train_params + app_train_params + model_train_params + improve_basic_params
+        additional_definitions = improve_train_params + app_params.app_train_params + model_train_params + improve_basic_params
         benchmark = initialize_benchmark(filepath, defmodel, additional_definitions)
         params = initialize_params(benchmark)
     elif "infer" in filename:
-        additional_definitions = improve_infer_params + app_infer_params + model_infer_params + improve_basic_params
+        additional_definitions = improve_infer_params + app_params.app_infer_params + model_infer_params + improve_basic_params
         benchmark = initialize_benchmark(filepath, defmodel, additional_definitions)
         params = initialize_params(benchmark)
     else:
