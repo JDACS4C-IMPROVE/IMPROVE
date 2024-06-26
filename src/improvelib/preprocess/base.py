@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+from pathlib import Path
 from improvelib.config import Config
 from improvelib.Benchmarks.DrugResponsePrediction import DRP as BenchmanrkDRP
 
@@ -8,10 +9,6 @@ from improvelib.Benchmarks.DrugResponsePrediction import DRP as BenchmanrkDRP
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-
-
-class Params:
-    pass
 
 
 
@@ -115,10 +112,13 @@ class Preprocess(Config):
     def initialize_parameters(self, pathToModelDir, section='Preprocess', default_config='default.cfg', default_model=None, additional_definitions=None, required=None):
         """Initialize Command line Interfcace and config for Preprocessing."""
         self.logger.debug("Initializing parameters for Preprocessing.")
-        print( "initialize_parameters" + str(type(self)) )
+        # print( "initialize_parameters" + str(type(self)) )
 
         if additional_definitions :
-            self.options = self.options + additional_definitions
+            if isinstance(additional_definitions, str) or isinstance(additional_definitions, Path):
+                additional_definitions = self.load_parameters(additional_definitions)
+            else:
+                self.options = self.options + additional_definitions
 
        
         p = super().initialize_parameters(pathToModelDir, section, default_config, default_model, self.options , required)
