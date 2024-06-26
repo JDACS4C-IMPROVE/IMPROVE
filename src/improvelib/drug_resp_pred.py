@@ -769,7 +769,14 @@ class SingleDRPDataStager():
     def set_output_dir(self, output_dir: str) -> None:
         self._out_dir = output_dir
 
-    def stage_all_experiments(self, single_drp_datasets: list[SingleDRPDataset], data_frame_list: list[SingleDRPDataFrame], drp_metric: DRPMetric) -> dict[dict[dict[str]]]:
+    # def stage_all_experiments(self,
+    #                           single_drp_datasets: list[SingleDRPDataset],
+    #                           data_frame_list: list[SingleDRPDataFrame],
+    #                           drp_metric: DRPMetric) -> dict[dict[dict[str]]]: # python >3.9
+    def stage_all_experiments(self,
+                              single_drp_datasets: List[SingleDRPDataset],
+                              data_frame_list: List[SingleDRPDataFrame],
+                              drp_metric: DRPMetric) -> Dict[str, Dict[str, Dict[str, str]]]:
         self._check_initialization()
         path_dict = {}
         self._benchmark.set_drp_metric(drp_metric)
