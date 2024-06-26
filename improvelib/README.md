@@ -18,10 +18,7 @@ The top level directory contains utility functions and parent classes providing 
 ├── config.py
 ├── csa.py
 ├── data_loader.py
-├── drug_resp_pred.py
-├── framework.py
 ├── infer.py
-├── __init__.py
 ├── metrics.py
 └── Tests
     └── Data
