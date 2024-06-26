@@ -3,7 +3,7 @@ import sys
 import logging
 from pathlib import Path
 from improvelib.config import Config
-from improvelib.Benchmarks.DrugResponsePrediction import DRP as BenchmanrkDRP
+# from improvelib.Benchmarks.DrugResponsePrediction import DRP as BenchmanrkDRP
 
 
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
@@ -126,56 +126,56 @@ class Preprocess(Config):
         self.logger.setLevel(self.get_param("log_level"))
         return p
 
-    def load_data(self, loader=None):
-        """Get data from files or benchmarks."""
+    # def load_data(self, loader=None):
+        # """Get data from files or benchmarks."""
 
-        self.logger.debug("Loading data from preprocess.")
+        # self.logger.debug("Loading data from preprocess.")
 
-        # Defined here but set after loading data. Value is an object with a dfs attribute.
-        self.omics = None
-        self.drugs = None
+        # # Defined here but set after loading data. Value is an object with a dfs attribute.
+        # self.omics = None
+        # self.drugs = None
 
-        try:
-            if self.get_param("subparser_name") is None or self.get_param("subparser_name") == "":
-                logger.error("Subparser name is not set.")
-                # throw error
-                raise ValueError("Missing mandatory positional parameter: subparser_name.")
-            else:
-                logger.info(f"Subparser name: {self.get_param('subparser_name')}")
-        except Exception as e:
-            self.logger.error(f"Error: {e}")
-            sys.exit(1)
+        # try:
+        #     if self.get_param("subparser_name") is None or self.get_param("subparser_name") == "":
+        #         logger.error("Subparser name is not set.")
+        #         # throw error
+        #         raise ValueError("Missing mandatory positional parameter: subparser_name.")
+        #     else:
+        #         logger.info(f"Subparser name: {self.get_param('subparser_name')}")
+        # except Exception as e:
+        #     self.logger.error(f"Error: {e}")
+        #     sys.exit(1)
         
-        # if subparser_name is benchmark, then use the BenchmarkDRP class
-        # to load the data
-        if self.get_param("subparser_name") == "benchmark":
-            DRP = BenchmanrkDRP()
-            self.drp = DRP
-            DRP.init(self)
-            DRP.set_input_dir(self.get_param("input_dir"))
-            DRP.set_output_dir(self.get_param("output_dir"))
-            # Check all paths and directories are valid and exist
-            DRP.check_input_paths()
-            # Create output dir for model input data (to save preprocessed ML data)
-            DRP.check_output_dir()
-            # Load data
-            logger.debug("Loading from DRP class")
-            DRP.load_data(verbose=True)
-            self.set_param("x_data_path", DRP.x_data_path)
-            self.set_param("y_data_path", DRP.y_data_path)  
-            self.set_param("splits_path", DRP.splits_path)
-            # print(DRP.__dict__)
-        else:
-            raise ValueError("Not implemented.")
+        # # if subparser_name is benchmark, then use the BenchmarkDRP class
+        # # to load the data
+        # if self.get_param("subparser_name") == "benchmark":
+        #     DRP = BenchmanrkDRP()
+        #     self.drp = DRP
+        #     DRP.init(self)
+        #     DRP.set_input_dir(self.get_param("input_dir"))
+        #     DRP.set_output_dir(self.get_param("output_dir"))
+        #     # Check all paths and directories are valid and exist
+        #     DRP.check_input_paths()
+        #     # Create output dir for model input data (to save preprocessed ML data)
+        #     DRP.check_output_dir()
+        #     # Load data
+        #     logger.debug("Loading from DRP class")
+        #     DRP.load_data(verbose=True)
+        #     self.set_param("x_data_path", DRP.x_data_path)
+        #     self.set_param("y_data_path", DRP.y_data_path)  
+        #     self.set_param("splits_path", DRP.splits_path)
+        #     # print(DRP.__dict__)
+        # else:
+        #     raise ValueError("Not implemented.")
 
-        self.omics = None
-        self.drugs = None
+        # self.omics = None
+        # self.drugs = None
 
-        self.omics = self.drp.omics
-        self.drugs = self.drp.drugs
+        # self.omics = self.drp.omics
+        # self.drugs = self.drp.drugs
 
 
-        pass
+        # pass
     
 
 if __name__ == "__main__":
