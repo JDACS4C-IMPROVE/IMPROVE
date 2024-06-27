@@ -6,7 +6,7 @@ from abc import ABC, ABCMeta, abstractmethod
 
 import improvelib.framework as frm
 from improvelib.data_loader import DataInputOutput
-from improvelib.Benchmarks.benchmark_utils import StringEnum
+from typing import Any
 
 
 class Params:
@@ -17,7 +17,44 @@ class Base():
     """Class to handle configuration files for Preprocessing."""
 
 
-class Stage(StringEnum):
+class DescriptionBase():
+    def _check_initialization(self):
+        if self.name is None:
+            raise Exception("Name in the description cannot be None!")
+        if self.description is None:
+            raise Exception("Dataframe description cannot be None!")
+
+    def __str__(self) -> str:
+        return str(self.name)
+
+    def __init__(self, name: str, description: str):
+        self.name = name
+        self.description = description
+
+
+class DatasetDescription(DescriptionBase):
+
+    def __init__(self, name: str, description: str):
+        super().__init__(name, description)
+        self._check_initialization()
+
+
+class DataFrameDescription(DescriptionBase):
+
+    def _check_initialization(self):
+        if self.file is None:
+            raise Exception("Dataframe associated file cannot be None!")
+
+    def __init__(self, name: str, file: str, description: str, key_column: str = None, group: str = None):
+        super().__init__(name, description)
+        self.file = file
+
+        self.key_column = key_column
+        self.group = group
+        self._check_initialization()
+
+
+class Stage(Enum):
     """
     Enum for specifying the type of data split.
     """
@@ -53,7 +90,7 @@ class Benchmark(Base, metaclass=ABCMeta):
     # Interface required for implementation in the subclass
 
     @ abstractmethod
-    def get_dataframe(self, dataframe: StringEnum):
+    def get_dataframe(self, dataframe: DataFrameDescription):
         pass
 
     @abstractmethod
@@ -87,7 +124,7 @@ class Benchmark(Base, metaclass=ABCMeta):
     def set_benchmark_dir(self, benchmark_dir: str):
         self._benchmark_dir = benchmark_dir
 
-    def set_dataset(self, dataset: StringEnum) -> None:
+    def set_dataset(self, dataset: DatasetDescription) -> None:
         """
         Sets the dataset for the benchmark.
 
@@ -96,14 +133,14 @@ class Benchmark(Base, metaclass=ABCMeta):
         """
         self._dataset = dataset
 
-    def set_split_id(self, split_number: int) -> None:
+    def set_split_id(self, split_id: Any) -> None:
         """
         Sets the split number for data partitioning.
 
         Args:
             split_number (int): The identifier for the data split.
         """
-        self._split_id = split_number
+        self._split_id = split_id
 
     def set_stage(self, stage: Stage) -> None:
         """
@@ -114,7 +151,7 @@ class Benchmark(Base, metaclass=ABCMeta):
         """
         self._stage = stage
 
-    def set_metric(self, metric: StringEnum) -> None:
+    def set_metric(self, metric: Enum) -> None:
         """
         Sets the drug response prediction metric.
 
@@ -125,7 +162,7 @@ class Benchmark(Base, metaclass=ABCMeta):
 
     # Getting data from benchmark
 
-    def get_metric(self) -> StringEnum:
+    def get_metric(self) -> Enum:
         return self._metric
 
     def get_state_string(self) -> str:
@@ -168,10 +205,10 @@ class Benchmark(Base, metaclass=ABCMeta):
 
 class ParameterConverter(Base):
 
-    def __init__(self, string_enum_list: list[StringEnum]):
+    def __init__(self, string_enum_list: list[DescriptionBase]):
         self._convertion_dict = {}
         for enumeration in string_enum_list:
-            enum_dict = {e.value: e for e in enumeration}
+            enum_dict = {e.name: e for e in enumeration}
             self._convertion_dict.update(enum_dict)
 
     def str_to_type(self, parameter: str):
@@ -211,13 +248,13 @@ class DataStager():
         """
         self._out_dir = output_dir
 
-    def stage_all_experiments(self, single_drp_datasets: list[StringEnum], data_frame_list: list[StringEnum], metric: StringEnum) -> dict[dict[dict[list[str]]]]:
+    def stage_experiments(self, datasets: list[DatasetDescription], data_frame_list: list[DataFrameDescription], metric: Enum) -> dict[dict[dict[list[str]]]]:
         """
         Stages all experiments by setting up the necessary directories and paths for each dataset, split, and split type.
 
         Args:
-            single_drp_datasets (list[SingleDRPDataset]): List of datasets to stage.
-            data_frame_list (list[SingleDRPDataFrame]): List of dataframes to include in each staged dataset.
+            datasets (list[DatasetDescription]): List of datasets to stage.
+            data_frame_list (list[DataFrameDescription]): List of dataframes to include in each staged dataset.
             metric (DRPMetric): The DRP metric to use for staging.
 
         Returns:
@@ -227,7 +264,7 @@ class DataStager():
         path_dict = {}
         self._benchmark.set_metric(metric)
         splits_ids = self._benchmark.get_splits_ids()
-        for dataset in single_drp_datasets:
+        for dataset in datasets:
             path_dict[dataset] = {}
             self._benchmark.set_dataset(dataset)
             for split_id in splits_ids:
@@ -266,7 +303,7 @@ class DataStager():
         if self._benchmark is None:
             raise Exception(f"Benchmark for data staging {template_message}")
 
-    def _construct_out_sub_dir(self, single_drp_dataset: StringEnum, split_id: int, stage: Stage) -> str:
+    def _construct_out_sub_dir(self, dataset: DatasetDescription, split_id: int, stage: Stage) -> str:
         """
         Constructs the output sub-directory path based on the dataset, split ID, and split type.
 
@@ -278,7 +315,7 @@ class DataStager():
         Returns:
             str: The constructed sub-directory path.
         """
-        path = os.path.join(self._out_dir, str(single_drp_dataset),
-                            f'split_{str(split_id)}', str(stage))
+        path = os.path.join(self._out_dir, dataset.name,
+                            f'split_{str(split_id)}', str(stage.value))
         frm.create_outdir(path)
         return path

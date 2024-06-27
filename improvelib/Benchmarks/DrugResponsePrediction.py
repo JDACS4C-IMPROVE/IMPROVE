@@ -1,6 +1,6 @@
 from improvelib.Benchmarks import Base as Base
-from improvelib.Benchmarks.Base import Benchmark, Stage, ParameterConverter
-from improvelib.Benchmarks.benchmark_utils import StringEnum
+from improvelib.Benchmarks.Base import Benchmark, Stage, ParameterConverter, DatasetDescription, DataFrameDescription
+from enum import Enum
 
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
@@ -64,57 +64,6 @@ class DRP(Base.Base):
         }
     ]
 
-    def build_paths(self, config: None, params: Dict):
-        """ Build paths for raw_data, x_data, y_data, splits.
-        These paths determine directories for a benchmark dataset.
-        TODO: consider renaming to build_benchmark_data_paths()
-
-        Args:
-            params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
-
-        Returns:
-            dict: updated dict of CANDLE/IMPROVE parameters and parsed values.
-        """
-        # mainpath = self.input_dir
-        check_path(self.input_dir)
-
-        # Raw data
-        raw_data_path = mainpath / params["raw_data_dir"]
-        config.set_param("raw_data_path", raw_data_path)
-
-        # params["raw_data_path"] = raw_data_path
-        check_path(raw_data_path)
-
-        x_data_path = raw_data_path / params["x_data_dir"]
-        params["x_data_path"] = x_data_path
-        check_path(x_data_path)
-
-        y_data_path = raw_data_path / params["y_data_dir"]
-        params["y_data_path"] = y_data_path
-        check_path(y_data_path)
-
-        splits_path = raw_data_path / params["splits_dir"]
-        params["splits_path"] = splits_path
-        check_path(splits_path)
-
-        # # ML data dir
-        # ml_data_path = mainpath / params["ml_data_outdir"]
-        # params["ml_data_path"] = ml_data_path
-        # os.makedirs(ml_data_path, exist_ok=True)
-        # check_path(ml_data_path)
-        # os.makedirs(params["ml_data_outdir"], exist_ok=True)
-        # check_path(params["ml_data_outdir"])
-
-        # Models dir
-        # os.makedirs(params["model_outdir"], exist_ok=True)
-        # check_path(params["model_outdir"])
-
-        # Infer dir
-        # os.makedirs(params["infer_outdir"], exist_ok=True)
-        # check_path(params["infer_outdir"])
-
-        return params
-
     def __init__(self) -> None:
         super().__init__()
         self.logger = DRP.logger
@@ -137,61 +86,16 @@ class DRP(Base.Base):
         self.logger.debug("Initializing Drug Response Prediction Benchmark.")
         self.set_input_dir(cfg.get_param('input_dir'))
         self.set_output_dir(cfg.get_param('output_dir'))
-        self.check_input_paths()
-        self.check_output_dir()
-
-        self.response_fname = "response.tsv"
-        self.known_file_names = [self.response_fname]
 
         self.params = cfg.dict()
-        self.sep = "\t"
-        self.inp = self.params["y_data_files"]
-        self.y_col_name = self.params["y_col_name"]
-        self.canc_col_name = self.params["canc_col_name"]
-        self.drug_col_name = self.params["drug_col_name"]
 
-        # self.y_data_path = params["y_data_path"]/params["y_data_files"][0][0]
-        # self.y_data_path = self.params["y_data_path"]
-        # self.split_fpath = self.splits_path/split_file
         self.dfs = {}
         self.verbose = verbose
         if self.verbose:
-            print(f"y_data_files: {params['y_data_files']}")
-            print(f"y_col_name: {params['y_col_name']}")
+            print(f"y_data_files: {self.params['y_data_files']}")
+            print(f"y_col_name: {self.params['y_col_name']}")
 
         self.inp_fnames = []
-
-    def load_data(self, verbose=False):
-        """Load data from input directory."""
-        self.verbose = verbose
-
-        params = self.params
-        params['x_data_path'] = self.x_data_path
-        params['y_data_path'] = self.y_data_path
-        params['splits_path'] = self.splits_path
-
-        self.logger.debug("Loading Omics Data.")
-        self.omics = drp.OmicsLoader(params)
-        self.logger.info(self.omics)
-
-        self.logger.debug("Loading Drug Data.")
-        self.drugs = drp.DrugsLoader(params)
-        self.logger.info(self.drugs)
-
-        self.logger.debug("Loading Response Data.")
-        self.train = drp.DrugResponseLoader(params,
-                                            split_file=params["train_split_file"],
-                                            verbose=False).dfs["response.tsv"]
-        self.validate = drp.DrugResponseLoader(params,
-                                               split_file=params["val_split_file"],
-                                               verbose=False).dfs["response.tsv"]
-        if params["test_split_file"] and os.path.exists(Path(self.splits_path) / params["test_split_file"]):
-            self.test = drp.DrugResponseLoader(params,
-                                               split_file=params["test_split_file"],
-                                               verbose=False).dfs["response.tsv"]
-        else:
-            self.logger.warning(f"Test split file {
-                                params['test_split_file']} does not exist.")
 
     def set_input_dir(self, input_dir: str) -> None:
         """Set input directory for Drug Response Prediction Benchmark."""
@@ -205,82 +109,100 @@ class DRP(Base.Base):
         self.y_data_path = Path(input_dir) / "y_data"
         self.splits_path = Path(input_dir) / "splits"
 
-    def set_output_dir(self, output_dir: str) -> None:
-        """Set output directory for Drug Response Prediction Benchmark."""
-        if not isinstance(output_dir, Path):
-            output_dir = Path(output_dir)
-        self.output_dir = output_dir
 
-    # Check all paths and directories are valid and exist, otherwise create them
-    def check_input_paths(self) -> None:
-        """Check input directory for Drug Response Prediction Benchmark. Return error if path does not exist.
-        """
-        if not Path(self.x_data_path).exists():
-            raise FileNotFoundError(f"Path {self.x_data_path} does not exist.")
-        if not Path(self.y_data_path).exists():
-            raise FileNotFoundError(f"Path {self.y_data_path} does not exist.")
-        if not Path(self.splits_path).exists():
-            raise FileNotFoundError(f"Path {self.splits_path} does not exist.")
-
-    def mkdir_input_dirs(self) -> None:
-        self.x_data_path.mkdir(parents=True, exist_ok=True)
-        self.y_data_path.mkdir(parents=True, exist_ok=True)
-        self.splits_path.mkdir(parents=True, exist_ok=True)
-
-    def check_output_dir(self) -> None:
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-
-    # Get Benchmark Data from ftp site or URL and save to input directory. Retrieve recursively if necessary
-    def get_benchmark_data(self) -> None:
-        """Get Drug Response Prediction Benchmark data from ftp site or URL and save to input directory."""
-        pass
-
-    # Load Omics Data from input directory using drp module
-    def load_omics_data(self, cfg) -> None:
-        """Load omics data from input directory using drp module."""
-
-        # Check if cfg is dict or BaseConfig object
-        if isinstance(cfg, dict):
-            raise TypeError("cfg Config object.")
-        elif not isinstance(cfg, Config):
-            raise TypeError("cfg must be a dict or Config object.")
-
-        return drp.OmicsLoader(cfg)
-        pass
+DRUG_KEY_COL = 'improve_chem_id'
+CANCER_KEY_COL = 'improve_sample_id'
 
 
-class SingleDRPDataFrame(StringEnum):
+class SingleDRPDataFrame(Enum):
     """
     Enum for specifying single drug response prediction dataframes.
     """
 
-    CELL_LINE_CNV = 'cnv'
-    CELL_LINE_DISCRETIZED_CNV = 'cnv_discretized'
-    CELL_LINE_METHYLATION = 'methylation'
-    CELL_LINE_GENE_EXPRESSION = 'gene_expression'
-    CELL_LINE_miRNA = 'miRNA'
-    CELL_LINE_MUTATION_COUNT = 'mutation_count'
-    CELL_LINE_MUTATION_LONG_FORMAT = 'mutation_long_format'
-    CELL_LINE_MUTATION = 'mutation'
-    CELL_LINE_RPPA = 'rppa'
-    DRUG_MORDRED = 'mordred'
-    DRUG_SMILES = 'smiles'
-    DRUG_ECFP4_NBITS512 = 'ecfp_nbits512'
-    RESPONSE = 'response'
+    CELL_LINE_CNV = DataFrameDescription(name='cnv',
+                                         file='cancer_copy_number.tsv',
+                                         key_column=CANCER_KEY_COL,
+                                         group='cancer',
+                                         description='Copy number variation')
+    CELL_LINE_DISCRETIZED_CNV = DataFrameDescription(name='cnv_discretized',
+                                                     file='cancer_discretized_copy_number.tsv',
+                                                     key_column=CANCER_KEY_COL,
+                                                     group='cancer',
+                                                     description='Discretized copy number variation')
+    CELL_LINE_METHYLATION = DataFrameDescription(name='methylation',
+                                                 file='cancer_DNA_methylation.tsv',
+                                                 key_column=CANCER_KEY_COL,
+                                                 group='cancer',
+                                                 description='DNA methylation data for the cell lines')
+    CELL_LINE_GENE_EXPRESSION = DataFrameDescription(name='gene_expression',
+                                                     file='cancer_gene_expression.tsv',
+                                                     key_column=CANCER_KEY_COL,
+                                                     group='cancer',
+                                                     description='Gene expression data for the cell lines')
+    CELL_LINE_miRNA = DataFrameDescription(name='miRNA',
+                                           file='cancer_miRNA_expression.tsv',
+                                           key_column=CANCER_KEY_COL,
+                                           group='cancer',
+                                           description='Micro RNA (miRNA) data for the cell lines')
+    CELL_LINE_MUTATION_COUNT = DataFrameDescription(name='mutation_count',
+                                                    file='cancer_mutation_count.tsv',
+                                                    key_column=CANCER_KEY_COL,
+                                                    group='cancer',
+                                                    description='Mutation count data for the cell lines')
+    CELL_LINE_MUTATION_LONG_FORMAT = DataFrameDescription(name='mutation_long_format',
+                                                          file='cancer_mutation_long_format.tsv',
+                                                          key_column=CANCER_KEY_COL,
+                                                          group='cancer',
+                                                          description='Full data on genetic mutations for the cell lines')
+    CELL_LINE_MUTATION = DataFrameDescription(name='mutation',
+                                              file='cancer_mutation.parquet',
+                                              key_column=CANCER_KEY_COL,
+                                              group='cancer',
+                                              description='Shortened data on mutation for the cell lines')
+    CELL_LINE_RPPA = DataFrameDescription(name='rppa',
+                                          file='cancer_RPPA.tsv',
+                                          key_column=CANCER_KEY_COL,
+                                          group='cancer',
+                                          description='Reverse-phase protein array data for the cell lines')
+    DRUG_MORDRED = DataFrameDescription(name='mordred',
+                                        file='drug_mordred.tsv',
+                                        key_column=DRUG_KEY_COL,
+                                        group='drug',
+                                        description='MORDRED computational descriptors for the drug data')
+    DRUG_SMILES = DataFrameDescription(name='smiles',
+                                       file='drug_SMILES.tsv',
+                                       key_column=DRUG_KEY_COL,
+                                       group='drug',
+                                       description='SMILES representation of the drug compound')
+    DRUG_ECFP4_NBITS512 = DataFrameDescription(name='ecfp4_nbits512',
+                                               file='drug_ecfp4_nbits512.tsv',
+                                               key_column=DRUG_KEY_COL,
+                                               group='drug',
+                                               description='Extended Connectivity Fingerprints V4')
+    RESPONSE = DataFrameDescription(name='response',
+                                    file='response.tsv',
+                                    key_column=None,
+                                    group='response',
+                                    description='Drug response data for the IMPROVE project. The entry is uniquely defined by improve_sample_id and improve_drug_id columns')
 
 
-class SingleDRPDataset(StringEnum):
+class SingleDRPDataset(Enum):
     """
     Enum for specifying datasets in single drug response prediction benchmarks.
     """
-    CCLE = 'CCLE'
-    CTRP = 'CTRPv2'
-    GDSCv1 = 'GDSCv1'
-    GDSCv2 = 'GDSCv2'
-    gCSI = 'gCSI'
+    CCLE = DatasetDescription(name='CCLE',
+                              description='Cancer Cell Line Encyclopedia')
+    CTRP = DatasetDescription(name='CTRP',
+                              description='Cancer Therapeutic Response Portal')
+    GDSCv1 = DatasetDescription(name='GDSCv1',
+                                description='Genomics of Drug Sensitivity in Cancer V1')
+    GDSCv2 = DatasetDescription(name='GDSCv2',
+                                description='Genomics of Drug Sensitivity in Cancer V2')
+    gCSI = DatasetDescription(name='gCSI',
+                              description='The Genentech Cell Line Screening')
 
 
-class SingleDRPMetric(StringEnum):
+class SingleDRPMetric(Enum):
     """
     Enum for specifying the drug response prediction metrics.
     """
@@ -298,7 +220,7 @@ class SingleDRPMetric(StringEnum):
 
 class SingleDRPParameterConverter(ParameterConverter):
     def __init__(self):
-        self.super().__init__(
+        super().__init__(
             [SingleDRPDataFrame, SingleDRPDataset, Stage, SingleDRPMetric])
 
 
@@ -320,8 +242,6 @@ class SingleDRPBenchmark(Benchmark):
         get_dataframe(dataframe: SingleDRPDataFrame) -> pd.DataFrame: Retrieves a dataframe based on the specified parameters.
         get_full_dataframe(dataframe: SingleDRPDataFrame) -> pd.DataFrame: Retrieves a full dataframe without considering splits.
     """
-    CANCER_COL_NAME = "improve_sample_id"
-    DRUG_COL_NAME = "improve_chem_id"
 
     def __init__(self):
         """
@@ -332,21 +252,6 @@ class SingleDRPBenchmark(Benchmark):
         self._splits_ids = list(range(self._SPLITS_NUM))
         self._loaded_dfs = {}
         self._splits_dir = 'splits'
-        self._dataset2file_map = {
-            SingleDRPDataFrame.CELL_LINE_CNV: "cancer_copy_number.tsv",
-            SingleDRPDataFrame.CELL_LINE_DISCRETIZED_CNV: "cancer_discretized_copy_number.tsv",
-            SingleDRPDataFrame.CELL_LINE_METHYLATION: "cancer_DNA_methylation.tsv",
-            SingleDRPDataFrame.CELL_LINE_GENE_EXPRESSION: "cancer_gene_expression.tsv",
-            SingleDRPDataFrame.CELL_LINE_miRNA: "cancer_miRNA_expression.tsv",
-            SingleDRPDataFrame.CELL_LINE_MUTATION_COUNT: "cancer_mutation_count.tsv",
-            SingleDRPDataFrame.CELL_LINE_MUTATION_LONG_FORMAT: "cancer_mutation_long_format.tsv",
-            SingleDRPDataFrame.CELL_LINE_MUTATION: "cancer_mutation.parquet",
-            SingleDRPDataFrame.CELL_LINE_RPPA: "cancer_RPPA.tsv",
-            SingleDRPDataFrame.DRUG_SMILES: "drug_SMILES.tsv",
-            SingleDRPDataFrame.DRUG_MORDRED: "drug_mordred.tsv",
-            SingleDRPDataFrame.DRUG_ECFP4_NBITS512: "drug_ecfp4_nbits512.tsv",
-            SingleDRPDataFrame.RESPONSE: "response.tsv"
-        }
 
     def get_datasets(self):
         return SingleDRPDataset
@@ -431,10 +336,10 @@ class SingleDRPBenchmark(Benchmark):
             str: The constructed file name for the splits.
         """
         if self._split_id == 'all':
-            fname = '_'.join((str(self._dataset), 'all'))
+            fname = '_'.join((str(self._dataset.value.name), 'all'))
             return f'{fname}.txt'
-        filename = '_'.join((str(self._dataset), 'split',
-                             str(self._split_id), str(self._stage)))
+        filename = '_'.join((str(self._dataset.value.name), 'split',
+                             str(self._split_id), str(self._stage.value)))
         filename = f'{filename}.txt'
         return filename
 
@@ -448,10 +353,10 @@ class SingleDRPBenchmark(Benchmark):
         Returns:
             pd.DataFrame: The loaded dataframe.
         """
-        dataframe_file = self._dataset2file_map[dataframe]
+        dataframe_file = dataframe.value.file
         loader_params = {}
         loader_params["x_data_canc_files"] = str([[dataframe_file]])
-        loader_params["canc_col_name"] = self.CANCER_COL_NAME
+        loader_params["canc_col_name"] = dataframe.value.key_column
         loader_params["x_data_path"] = os.path.join(
             self._benchmark_dir, 'x_data')
         omics_loader = drp.OmicsLoader(loader_params)
@@ -467,10 +372,10 @@ class SingleDRPBenchmark(Benchmark):
         Returns:
             pd.DataFrame: The loaded dataframe.
         """
-        dataframe_file = self._dataset2file_map[dataframe]
+        dataframe_file = dataframe.value.file
         loader_params = {}
         loader_params["x_data_drug_files"] = str([[dataframe_file]])
-        loader_params["drug_col_name"] = self.DRUG_COL_NAME
+        loader_params["drug_col_name"] = dataframe.value.key_column
         loader_params["x_data_path"] = os.path.join(
             self._benchmark_dir, 'x_data')
         drug_loader = drp.DrugsLoader(loader_params)
@@ -486,12 +391,12 @@ class SingleDRPBenchmark(Benchmark):
         Returns:
             pd.DataFrame: The loaded dataframe.
         """
-        dataframe_file = self._dataset2file_map[dataframe]
+        dataframe_file = dataframe.value.file
         loader_params = {}
         loader_params["y_data_files"] = str([dataframe_file])
-        loader_params["canc_col_name"] = self.CANCER_COL_NAME
-        loader_params["drug_col_name"] = self.DRUG_COL_NAME
-        loader_params["y_col_name"] = str(self._metric)
+        loader_params["canc_col_name"] = CANCER_KEY_COL
+        loader_params["drug_col_name"] = DRUG_KEY_COL
+        loader_params["y_col_name"] = str(self._metric.value)
         loader_params["y_data_path"] = os.path.join(
             self._benchmark_dir, 'y_data')
         loader_params["splits_path"] = os.path.join(
@@ -501,7 +406,7 @@ class SingleDRPBenchmark(Benchmark):
             loader_params, split_file=split_file)
         df = response_loader.dfs[dataframe_file]
         cols_to_drop = [col for col in df.columns if col not in [
-            self.CANCER_COL_NAME, self.DRUG_COL_NAME, str(self._metric)]]
+            CANCER_KEY_COL, DRUG_KEY_COL, str(self._metric.value)]]
         df.drop(columns=cols_to_drop, inplace=True)
         return df
 
@@ -520,31 +425,20 @@ class SingleDRPBenchmark(Benchmark):
         if dataframe in self._loaded_dfs:
             df = self._loaded_dfs[dataframe]
         else:
-            if dataframe not in self._dataset2file_map:
-                raise Exception(
-                    f'Dataframe name {dataframe} is not mapped to the file!')
-
-            ids = None
-            if 'cancer' in self._dataset2file_map[dataframe]:
+            if dataframe.value.group == 'cancer':
                 df = self._load_cancer_dataframe(dataframe)
-            elif 'drug' in self._dataset2file_map[dataframe]:
+            elif dataframe.value.group == 'drug':
                 df = self._load_drug_dataframe(dataframe)
-            elif 'response' in self._dataset2file_map[dataframe]:
+            elif dataframe.value.group == 'response':
                 return self._load_response_dataframe(dataframe)
             else:
                 raise Exception(
-                    f'Dataframe name {dataframe} is mapped to the unknown file name')
+                    f'Dataframe {dataframe.value.name} belongs to unknown group! Cannot proceed with data loading')
             self._loaded_dfs[dataframe] = df
 
-        key_col_name = None
-        if 'cancer' in self._dataset2file_map[dataframe]:
-            key_col_name = self.CANCER_COL_NAME
-        elif 'drug' in self._dataset2file_map[dataframe]:
-            key_col_name = self.DRUG_COL_NAME
-
+        key_col_name = dataframe.value.key_column
         response_df = self._load_response_dataframe(
             SingleDRPDataFrame.RESPONSE)
-        # np.unique(response_df[key_col_name])
         ids = response_df[key_col_name].unique()
 
         index_name = df.index.name

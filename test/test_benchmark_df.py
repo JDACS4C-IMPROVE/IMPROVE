@@ -41,11 +41,11 @@ def test_data_staging(benchmark, output_dir):
     data_stager = DataStager()
     data_stager.set_benchmark(benchmark)
     data_stager.set_output_dir(output_dir)
-    staged_files_dict = data_stager.stage_all_experiments([SingleDRPDataset.CCLE],
-                                                          [SingleDRPDataFrame.CELL_LINE_GENE_EXPRESSION,
-                                                           SingleDRPDataFrame.DRUG_SMILES,
-                                                           SingleDRPDataFrame.RESPONSE],
-                                                          SingleDRPMetric.AUC)
+    staged_files_dict = data_stager.stage_experiments([SingleDRPDataset.CCLE],
+                                                      [SingleDRPDataFrame.CELL_LINE_GENE_EXPRESSION,
+                                                       SingleDRPDataFrame.DRUG_SMILES,
+                                                       SingleDRPDataFrame.RESPONSE],
+                                                      SingleDRPMetric.AUC)
     print(staged_files_dict)
 
 
@@ -57,5 +57,5 @@ if __name__ == '__main__':
     benchmark = SingleDRPBenchmark()
     benchmark.set_benchmark_dir(benchmark_dir)
 
-    test_benchmark(benchmark)
-    # test_data_staging(benchmark, staging_dir)
+    # test_benchmark(benchmark)
+    test_data_staging(benchmark, staging_dir)
