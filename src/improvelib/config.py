@@ -1,15 +1,20 @@
 import os
+import sys
 import logging
 import configparser
+import yaml
+import json
 
 from pathlib import Path
 from improvelib.cli import CLI
 
 
 
+
 class Config:
     """Class to handle configuration files."""
     # ConfigError = str
+    config_sections = ['DEFAULT', 'Preprocess', 'Train', 'Infer']
 
     def __init__(self) -> None:
 
@@ -65,14 +70,18 @@ class Config:
             self.config.read(self.file)
         else:
             self.logger.error("Can't load config from %s", str(self.file))
+            self.config['DEFAULT'] = {}
 
         
 
     def save_config(self, file , config=None):
         if os.path.isabs(file):
-            self.config.read(file)
+            self.config.write(file)
         else:
-            path = Path(config['output_dir'] , file)
+            if config and 'output_dir' in config:
+                path = Path(config['output_dir'] , file)
+            else: 
+                path = Path(file)
 
             if not Path(path.parent).exists() :
                 self.logger.debug("Creating directory %s for saving config file." , path.parent)
@@ -159,8 +168,13 @@ class Config:
             sections=self.config.sections()
         
         if section:
-            for i in self.config.items(section):
-                params[i[0]]=i[1]
+            # check if section exists
+            if self.config.has_section(section):
+                for i in self.config.items(section):
+                    params[i[0]]=i[1]
+            else:
+                self.logger.error("Can't find section %s", section)
+
         else:
             for s in self.config.sections():
                 params[s]={}
@@ -171,6 +185,64 @@ class Config:
     
     def check_required(self):
         """Check if all required parameters are set."""
+        pass
+
+    def _validate_parameters(self, params, required=None):
+        """Validate parameters. Set types and check for required parameters."""
+
+        if params is None:
+            return
+        
+        for p in params:
+            # check if type is set and convert to python type
+            if 'type' in p:
+                if p['type'] == 'str':
+                    p['type'] = str
+                elif p['type'] == 'int':
+                    p['type'] = int
+                elif p['type'] == 'float':
+                    p['type'] = float
+                elif p['type'] == 'bool':
+                    p['type'] = bool
+                elif p['type'] == 'str2bool':
+                    p['type'] = str2bool
+                else:
+                    self.logger.error("Unsupported type %s", p['type'])
+                    p['type'] = str
+
+
+        
+
+    def load_parameters(self, file , section=None):
+        """Load parameters from a file."""
+        self.logger.debug("Loading parameters from %s", file)
+
+        # Convert Path to string
+        if file and isinstance(file, Path):
+            file = str(file)
+        
+        if os.path.isfile(file):   
+            # check if yaml or json file and load
+            params = None
+
+            if file.endswith('.json'):
+                with open(file, 'r') as f:
+                    params = json.load(f)
+            elif file.endswith('.yaml') or file.endswith('.yml'):
+                with open(file, 'r') as f:
+                    params = yaml.safe_load(f)
+            else:
+                self.logger.error("Unsupported file format")
+            self._validate_parameters(params)
+            return params
+        else:
+            print(isinstance(file, str))
+            self.logger.critical("Can't find file %s", file)
+            sys.exit(1)
+            return None
+
+    def validate_parameters(self, params, required=None):
+        """Validate parameters."""
         pass
 
     def initialize_parameters(self,
@@ -200,6 +272,16 @@ class Config:
         self.logger.debug("Initializing parameters for %s", section)
 
         if additional_definitions:
+
+            # Convert Path to string
+            if additional_definitions and isinstance(additional_definitions, Path):
+                additional_definitions = str(additional_definitions)
+
+            # check if additional_definitions is a string 
+            if isinstance(additional_definitions, str) and os.path.isfile(additional_definitions):
+                self.logger.debug("Loading additional definitions from file %s", additional_definitions)
+                additional_definitions = self.load_parameters(additional_definitions)
+
             duplicates = []
             names = []
             for i,v in enumerate(additional_definitions):
@@ -236,18 +318,28 @@ class Config:
                 if isinstance(default_config, Path):
                     default_config = str(default_config)
 
-                self.file = pathToModelDir + "/" + default_config
+                if pathToModelDir is not None :
+                    if not pathToModelDir.endswith("/"):
+                        pathToModelDir += "/"
+                else:
+                    pathToModelDir = "./"
+                
+                if default_config is not None:
+                    self.file = pathToModelDir + default_config
+                else:
+                    self.logger.warning("No default config file provided")
+
                 self.logger.debug("No config file provided. Using default: %s", self.file)
 
             
             # Set full path for config
-            if not os.path.abspath(self.file):
+            if self.file and not os.path.abspath(self.file):
                 self.logger.debug("Not absolute path for config file. Should be relative to input_dir")
                 self.file = self.input_dir + "/" + self.file
                 self.logger.debug("New file path: %s", self.file)
 
             # Load config if file exists
-            if os.path.isfile(self.file):
+            if self.file and os.path.isfile(self.file):
                 self.load_config()
             else:
                 self.logger.warning("Can't find config file: %s", self.file)
@@ -294,24 +386,35 @@ class Config:
 
 if __name__ == "__main__":
     cfg=Config()
-    cfg.file="default.config"
+    cfg.file="./Tests/Data/default.cfg"
     cfg.load_config()
     print(cfg.params)
     print(cfg.dict())
-    print(cfg.param( None , 'weihgts' , None))
-    cfg.param('Infer' , 'weihgts' ,'default.weights')
+    print(cfg.param( None , 'weights' , None))
+    cfg.param('Infer' , 'weights' ,'default.weights')
     for section in cfg.config.items():
         print(section)
         for item in cfg.config.items(section[0], raw=False):
             print(item)
-    print(cfg.param( "Infer" , 'weihgts' , None))
+    print(cfg.param( "Infer" , 'weights' , None))
     print(cfg.dict('Infer'))
     cfg.save_config("./tmp/saved.config" , config=cfg.config['DEFAULT'])
-    cfg.initialize_parameters("./", additional_definitions=[ 
-        { "name" : "chkpt", 
-         "dest" : "checkpointing",
-        #  "action" : "store_true",
-        "type" : "str2bool" ,
-         "default" : False,
-         "help" : "Flag to enable checkpointing" } ])
+
+    common_parameters=[ 
+        { 
+            "name" : "chkpt", 
+            "dest" : "checkpointing",
+            # "type" : "str2bool" ,
+            "default" : False,
+            "help" : "Flag to enable checkpointing",
+            "section" : "DEFAULT"
+            } 
+        ]
+
+    params = cfg.load_parameters("./Tests/Data/common_parameters.yml")
+    cfg.cli.set_command_line_options(options=params)
+    print(params)
+
+
+    cfg.initialize_parameters("./", additional_definitions=common_parameters + params )
     print(cfg.config.items('DEFAULT', raw=False))
