@@ -4,9 +4,9 @@ from typing import Dict
 
 # from improvelib import class for cli and config
 # General parent class for preprocessing
-from improvelib.preprocess.base import Preprocess
-from improvelib.preprocess.drug_response_prediction import Preprocess as DrugResponsePredictionPreprocess
-
+#from improvelib.preprocess.base import Preprocess
+#from improvelib.preprocess.drug_response_prediction import Preprocess as DrugResponsePredictionPreprocess
+from improvelib.initializer.config import Config as Preprocess
 import pandas as pd
 
 
@@ -105,9 +105,13 @@ def main(args):
 
     # Initialize parameters using the Preprocess class
     cfg = Preprocess()
+ 
+       # import cli config
+    from improvelib.initializer.cli_params_def import cli_param_definitions
+
     params = cfg.initialize_parameters(filepath, 
                                        default_config="default.cfg",
-                                       additional_definitions=my_params_example,
+                                       additional_definitions=cli_param_definitions,
                                        required=None
                                        )
     
@@ -122,6 +126,8 @@ def main(args):
     # Initialize parameters using the DrugResponsePrediction class
     # the DrugResponsePrediction class is a subclass of Preprocess
     cfg = DrugResponsePredictionPreprocess()
+
+ 
     params = cfg.initialize_parameters(filepath, 
                                        default_config="default.cfg",
                                        additional_definitions=my_params_file_example,

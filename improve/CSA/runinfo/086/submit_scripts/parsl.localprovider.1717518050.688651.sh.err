@@ -1,0 +1,28 @@
+ImportError: dlopen(/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/_cffi_backend.cpython-310-darwin.so, 0x0002): tried: '/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/_cffi_backend.cpython-310-darwin.so' (mach-o file, but is an incompatible architecture (have (arm64), need (x86_64)))
+thread '<unnamed>' panicked at /Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pyo3-0.20.3/src/err/mod.rs:788:5:
+Python API call failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.10/bin/process_worker_pool.py", line 23, in <module>
+    from parsl import curvezmq
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/parsl/__init__.py", line 22, in <module>
+    from parsl.app.app import bash_app, join_app, python_app
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/parsl/app/app.py", line 12, in <module>
+    from parsl.dataflow.dflow import DataFlowKernel
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/parsl/dataflow/dflow.py", line 25, in <module>
+    from parsl.channels import Channel
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/parsl/channels/__init__.py", line 2, in <module>
+    from parsl.channels.ssh.ssh import SSHChannel
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/parsl/channels/ssh/ssh.py", line 5, in <module>
+    import paramiko
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/paramiko/__init__.py", line 22, in <module>
+    from paramiko.transport import (
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/paramiko/transport.py", line 33, in <module>
+    from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/cryptography/hazmat/primitives/ciphers/__init__.py", line 11, in <module>
+    from cryptography.hazmat.primitives.ciphers.base import (
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/cryptography/hazmat/primitives/ciphers/base.py", line 10, in <module>
+    from cryptography.exceptions import (
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/cryptography/exceptions.py", line 9, in <module>
+    from cryptography.hazmat.bindings._rust import exceptions as rust_exceptions
+pyo3_runtime.PanicException: Python API call failed
