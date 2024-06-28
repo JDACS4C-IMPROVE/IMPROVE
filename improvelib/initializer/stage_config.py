@@ -22,7 +22,11 @@ class PreprocessConfig(Config):
         self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.INFO))
 
         # check usage of self.options
-        self.options = improve_basic_conf + improve_preprocess_conf
+        self.options = []
+        self.cli.set_command_line_options(
+            improve_basic_conf, 'IMPROVE options')
+        self.cli.set_command_line_options(
+            improve_preprocess_conf, 'Preprocessing stage options')
 
         # Add options for Benchmark Data Format
         p = self.cli.parser
