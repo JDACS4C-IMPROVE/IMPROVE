@@ -2,38 +2,18 @@ import sys
 from pathlib import Path
 from typing import Dict
 
-# from improvelib import class for cli and config
-# General parent class for preprocessing
-#from improvelib.preprocess.base import Preprocess
-#from improvelib.preprocess.drug_response_prediction import Preprocess as DrugResponsePredictionPreprocess
-from improvelib.initializer.config import Config as Preprocess
+from improvelib.initializer.stage_config import PreprocessConfig
 import pandas as pd
 
 
-
 # Global variables
-filepath = Path(__file__).resolve().parent # [Req]
-
-my_params_example    = [                                                    # see argparse.ArgumentParser.add_argument() for more information
-    {
-        "name": "y_data_files",                                                 # name of the argument
-        "type": str,                                                            # type of the argument
-        "nargs": "+",                                                           # number of arguments that should be consumed
-        "help": "List of files that contain the y (prediction variable) data.", # help message
-    },
-    {
-        "name": "supplement",                                               # name of the argument
-        "type": str,                                                        # type of the argument
-        "nargs": 2,                                                         # number of arguments that should be consumed
-        "metavar": ("FILE", "TYPE"),                                        # name of the argument in usage messages
-        "action": "append",                                                 # action to be taken when this argument is encountered
-        "help": "Supplemental data tuple FILE and TYPE. FILE is in INPUT_DIR.",   # help message
-    }
-]
+filepath = Path(__file__).resolve().parent  # [Req]
 
 # Default functions for all improve scripts are main and run
 # main initializes parameters and calls run with the parameters
-def run(params: Dict, cfg: Preprocess = None):
+
+
+def run(params: Dict):
     """ Run data preprocessing.
 
     Args:
@@ -49,8 +29,8 @@ def run(params: Dict, cfg: Preprocess = None):
         cfg = params
         params = cfg.dict()
 
-
-    cfg.logger.info("Running preprocessing.") if cfg else print("Running preprocessing.")
+    cfg.logger.info("Running preprocessing.") if cfg else print(
+        "Running preprocessing.")
     # Load data from input directory, the input directory is defined in the configuration file
     # and is accessible through the cfg object
     # The input directory is the directory where the raw data is stored in the IMPROVE Benchmark Format
@@ -59,36 +39,28 @@ def run(params: Dict, cfg: Preprocess = None):
     # y_data: directory that contains the files with target data (y data)
     # splits: directory that contains files that store split ids of the y data file
     # supplement: directory that contains supplemental data (optional) and not used in this example or part of the IMPROVE Benchmark Format
-    cfg.logger.debug(f"Loading data from {cfg.input_dir}.") if cfg else print(f"Loading data from {params['input_dir']}.")
+    cfg.logger.debug(f"Loading data from {cfg.input_dir}.") if cfg else print(
+        f"Loading data from {params['input_dir']}.")
 
     ###### Place your code here ######
-    
+
     # Load x data, e.g.
-    # data = cfg.loader.load_data()    # Load y data, e.g. 
+    # data = cfg.loader.load_data()    # Load y data, e.g.
 
     # y_data = pd.read_csv(Path(cfg.input_dir,"y_data","response.tsv"), sep="\t")
     # y_data = pd.read_csv(params['input_dir'] / "y_data" / "response.tsv", sep="\t")
     # y_data = cfg.loader.load_data()
 
-
     # Transform data
-   
 
     # Save data
     # y_data.to_csv(params["output_dir"] / "y_data.csv", index=False)
 
-
     return params["output_dir"]
 
 
-
-
-# Default functions for all improve scripts are main and run
-# main initializes parameters and calls run with the parameters
-# run is the main function that executes the script
-def main(args):
-    
-    # List of custom parameters, if any
+def example_parameter_initialization_1():
+   # List of custom parameters, if any
     # can be list or file in json or yaml format, e.g. :
     # my_additional_definitions = [{"name": "param_name", "type": str, "default": "default_value", "help": "help message"}]
     # my_additional_definitions = None
@@ -96,47 +68,75 @@ def main(args):
     # my_additional_definitions = filepath/"custom_params.json"
 
     # Set additional_definitions to None if no custom parameters are needed
-   
-    # Example of file with custom parameters, the file should be in json or yaml format and is located in the same directory as the script
-    # additional_definitions = Path("custom_params.json")
-    my_params_file_example = filepath/"common_params.yml"
 
     # Exampple 1: Initialize parameters using the Preprocess class
 
     # Initialize parameters using the Preprocess class
-    cfg = Preprocess()
- 
-       # import cli config
-    from improvelib.initializer.cli_params_def import cli_param_definitions
+    cfg = PreprocessConfig()
 
-    params = cfg.initialize_parameters(filepath, 
+    params = cfg.initialize_parameters(filepath,
                                        default_config="default.cfg",
-                                       additional_definitions=cli_param_definitions,
+                                       additional_definitions=[],
                                        required=None
                                        )
-    
+    return params, cfg
+
+
+def example_parameter_initialization_2():
+    # Example 2: Initialize parameters using custom list
+
+    # Initialize parameters using custom parameters list defined in Python argparse.ArgumentParser format
+    cfg = PreprocessConfig()
+    my_params_example = [
+        # see argparse.ArgumentParser.add_argument() for more information
+        {
+            # name of the argument
+            "name": "y_data_files",
+            # type of the argument
+            "type": str,
+            # number of arguments that should be consumed
+            "nargs": "+",
+            # help message
+            "help": "List of files that contain the y (prediction variable) data.",
+        },
+        {
+            # name of the argument
+            "name": "supplement",
+            # type of the argument
+            "type": str,
+            # number of arguments that should be consumed
+            "nargs": 2,
+            # name of the argument in usage messages
+            "metavar": ("FILE", "TYPE"),
+            # action to be taken when this argument is encountered
+            "action": "append",
+            "help": "Supplemental data tuple FILE and TYPE. FILE is in INPUT_DIR.",   # help message
+        }
+    ]
+
+    params = cfg.initialize_parameters(filepath,
+                                       default_config="default.cfg",
+                                       additional_definitions=my_params_example,
+                                       required=None
+                                       )
+
+    cfg.logger.info(f"Preprocessing completed. Data saved in {cfg.output_dir}")
+    return params, cfg
+
+
+# Default functions for all improve scripts are main and run
+# main initializes parameters and calls run with the parameters
+# run is the main function that executes the script
+def main(args):
+    params1, cfg1 = example_parameter_initialization_1()
+    params2, cfg2 = example_parameter_initialization_2()
+
     # run task, passing params to run for backward compatibility, cfg could be used instead and contains the same information as params
     # in addition to the parameters, the cfg object provides access to the logger, the config object and data loaders
     # default is run(params)
-    run(cfg)
+    status1 = run(params1, cfg1)
+    status2 = run(params2, cfg2)
 
-
-    # Example 2: Initialize parameters using the DrugResponsePrediction class
-
-    # Initialize parameters using the DrugResponsePrediction class
-    # the DrugResponsePrediction class is a subclass of Preprocess
-    cfg = DrugResponsePredictionPreprocess()
-
- 
-    params = cfg.initialize_parameters(filepath, 
-                                       default_config="default.cfg",
-                                       additional_definitions=my_params_file_example,
-                                       required=None
-                                       )
-  
-    status = run(params)
-    cfg.logger.info(f"Preprocessing completed. Data saved in {cfg.output_dir}")
-    return status
 
 if __name__ == "__main__":
     main(sys.argv[1:])
