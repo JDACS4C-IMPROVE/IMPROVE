@@ -12,10 +12,17 @@ import pandas as pd
 from .metrics import compute_metrics
 
 # Check that environment variable "IMPROVE_DATA_DIR" has been specified
-# if os.getenv("IMPROVE_DATA_DIR", "./") is None:
+# if os.getenv("IMPROVE_DATA_DIR", os.getenv("CANDLE_DATA_DIR") ) is None:
 #     raise Exception("ERROR ! Required system variable not specified.  \
 #                     You must define IMPROVE_DATA_DIR ... Exiting.\n")
-# os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
+
+# if os.getenv("IMPROVE_DATA_DIR")    :
+#     os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
+# elif os.getenv("CANDLE_DATA_DIR")    :
+#     os.environ["IMPROVE_DATA_DIR"] = os.environ["CANDLE_DATA_DIR"]
+# else:
+#     raise Exception("ERROR ! Required system variable not specified.  \
+#                     You must define IMPROVE_DATA_DIR or CANDLE_DATA_DIR ... Exiting.\n")
 
 SUPPRESS = argparse.SUPPRESS
 
@@ -498,7 +505,12 @@ def store_predictions_df(params: Dict,
                       decimals=round_decimals)
         v2 = np.round(pred_df[true_col_name].values.astype(np.float32),
                       decimals=round_decimals)
-        assert np.array_equal(v1, v2), "Loaded y data vector is not equal to the true vector"
+        
+        # Check that loaded metadata is aligned with the vector of true values
+        assert np.array_equal(v1, v2), ""\
+            f"Y data vector from the loaded metadata is not equal to the true vector:\n"\
+            f"Y data vector from loaded metadata:  {v1[:10]}\n"\
+            f"Y data vector of true target values: {v2[:10]}\n"
         mm = pd.concat([rsp_df, pred_df], axis=1)
         mm = mm.astype({params["y_col_name"]: np.float32,
                         true_col_name: np.float32,
@@ -511,7 +523,7 @@ def store_predictions_df(params: Dict,
     else:
         # Save only ground truth and predictions since did not load the corresponding dataframe
         df = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})  # This includes true and predicted values
-        df = mm.round({true_col_name: round_decimals,
+        df = df.round({true_col_name: round_decimals,
                        pred_col_name: round_decimals})
         df.to_csv(ydf_out_fpath, index=False)
         # y_true_return = y_true
