@@ -13,7 +13,7 @@ filepath = Path(__file__).resolve().parent  # [Req]
 # main initializes parameters and calls run with the parameters
 
 
-def run(params: Dict):
+def run(params: Dict, logger=None):
     """ Run data preprocessing.
 
     Args:
@@ -24,12 +24,7 @@ def run(params: Dict):
         str: status of the preprocessing.
     """
 
-    # Check if params is dict or of type Preprocess
-    if not isinstance(params, dict):
-        cfg = params
-        params = cfg.dict()
-
-    cfg.logger.info("Running preprocessing.") if cfg else print(
+    logger.info("Running preprocessing.") if logger else print(
         "Running preprocessing.")
     # Load data from input directory, the input directory is defined in the configuration file
     # and is accessible through the cfg object
@@ -39,8 +34,7 @@ def run(params: Dict):
     # y_data: directory that contains the files with target data (y data)
     # splits: directory that contains files that store split ids of the y data file
     # supplement: directory that contains supplemental data (optional) and not used in this example or part of the IMPROVE Benchmark Format
-    cfg.logger.debug(f"Loading data from {cfg.input_dir}.") if cfg else print(
-        f"Loading data from {params['input_dir']}.")
+    logger.debug(f"Loading data from {params['input_dir']}.")
 
     ###### Place your code here ######
 
@@ -79,7 +73,7 @@ def example_parameter_initialization_1():
                                        additional_definitions=[],
                                        required=None
                                        )
-    return params, cfg
+    return params, cfg.logger
 
 
 def example_parameter_initialization_2():
@@ -121,21 +115,21 @@ def example_parameter_initialization_2():
                                        )
 
     cfg.logger.info(f"Preprocessing completed. Data saved in {cfg.output_dir}")
-    return params, cfg
+    return params, cfg.logger
 
 
 # Default functions for all improve scripts are main and run
 # main initializes parameters and calls run with the parameters
 # run is the main function that executes the script
 def main(args):
-    params1, cfg1 = example_parameter_initialization_1()
-    params2, cfg2 = example_parameter_initialization_2()
+    cfg1, logger1 = example_parameter_initialization_1()
+    cfg2, logger2 = example_parameter_initialization_2()
 
     # run task, passing params to run for backward compatibility, cfg could be used instead and contains the same information as params
     # in addition to the parameters, the cfg object provides access to the logger, the config object and data loaders
     # default is run(params)
-    status1 = run(params1, cfg1)
-    status2 = run(params2, cfg2)
+    status1 = run(cfg1, logger1)
+    status2 = run(cfg2, logger2)
 
 
 if __name__ == "__main__":
