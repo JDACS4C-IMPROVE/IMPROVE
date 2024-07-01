@@ -110,6 +110,7 @@ def example_parameter_initialization_2():
 
     params = cfg.initialize_parameters(filepath,
                                        default_config="default.cfg",
+                                       # additional_cli_section='My section',
                                        additional_definitions=my_params_example,
                                        required=None
                                        )
@@ -122,13 +123,13 @@ def example_parameter_initialization_2():
 # main initializes parameters and calls run with the parameters
 # run is the main function that executes the script
 def main(args):
-    params1, logger1 = example_parameter_initialization_1()
+    # params1, logger1 = example_parameter_initialization_1()
     params2, logger2 = example_parameter_initialization_2()
 
     # run task, passing params to run for backward compatibility, cfg could be used instead and contains the same information as params
     # in addition to the parameters, the cfg object provides access to the logger, the config object and data loaders
     # default is run(params)
-    status1 = run(params1, logger1)
+    # status1 = run(params1, logger1)
     status2 = run(params2, logger2)
 
 

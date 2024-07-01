@@ -14,6 +14,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.ERROR))
 
+
 def get_common_samples(
         df1: pd.DataFrame,
         df2: pd.DataFrame,
@@ -133,7 +134,7 @@ class DrugResponseLoader():
 
         # self.y_data_path = params["y_data_path"]/params["y_data_files"][0][0]
         self.y_data_path = params["y_data_path"]
-        self.split_fpath = os.path.join(params["splits_path"], split_file)
+        self.split_fpath = Path(params["splits_path"]) / split_file
         self.dfs = {}
         self.verbose = verbose
 
@@ -169,7 +170,7 @@ class DrugResponseLoader():
             raise Exception(f"ERROR ! {fpath} not found.\n")
 
     def load_response_data(self, fname):
-        fpath = Path(os.path.join(self.y_data_path, fname))
+        fpath = Path(os.path.join(str(self.y_data_path), fname))
         logger.debug(f"Loading {fpath}")
         DrugResponseLoader.check_path(fpath)
         df = pd.read_csv(fpath, sep=self.sep)
@@ -177,7 +178,7 @@ class DrugResponseLoader():
 
     def load_all_response_data(self, verbose: str = True):
         """ ... """
-        for i in self.inp:
+        for i in self.inp[0]:
             fname = i
             df = self.load_response_data(fname)
             DrugResponseLoader.check_path(self.split_fpath)

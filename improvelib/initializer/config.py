@@ -204,7 +204,7 @@ class Config:
                     self.logger.error("Unsupported type %s", p['type'])
                     p['type'] = str
 
-    def load_parameters(self, file, section=None):
+    def load_cli_parameters(self, file, section=None):
         """Load parameters from a file."""
         self.logger.debug("Loading parameters from %s", file)
 
@@ -272,7 +272,7 @@ class Config:
             if isinstance(additional_definitions, str) and os.path.isfile(additional_definitions):
                 self.logger.debug(
                     "Loading additional definitions from file %s", additional_definitions)
-                additional_definitions = self.load_parameters(
+                additional_definitions = self.load_cli_parameters(
                     additional_definitions)
 
             duplicates = []
@@ -339,13 +339,14 @@ class Config:
             else:
                 self.logger.warning("Can't find config file: %s", self.file)
                 self.config[section] = {}
-
         else:
             self.logger.critical("No input directory: %s", cli.args.input_dir)
 
         # Set/update config with arguments from command line
         self.logger.debug("Updating config")
         for k in cli.params:
+            if cli.params[k] is None:
+                continue
             self.logger.debug("Setting %s to %s", k, cli.params[k])
             self.set_param(section, k, cli.params[k])
             # self.config[section][k] = cli.params[k]
@@ -398,7 +399,7 @@ if __name__ == "__main__":
         }
     ]
 
-    params = cfg.load_parameters("./Tests/Data/common_parameters.yml")
+    params = cfg.load_cli_parameters("./Tests/Data/common_parameters.yml")
     cfg.cli.set_command_line_options(options=params)
     print(params)
 

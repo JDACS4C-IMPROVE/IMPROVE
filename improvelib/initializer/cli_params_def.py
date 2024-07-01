@@ -57,7 +57,7 @@ improve_preprocess_conf = [
     # Values for these args are expected to be passed:
     # train_split_file, val_split_file, test_split_file
     {"name": "train_split_file",  # workflow
-     "default": "train_split.txt",
+     "default": None,
      "type": str,
      # "nargs": "+",
      "required": True,
@@ -65,14 +65,14 @@ improve_preprocess_conf = [
              'split_0_train_id', 'split_0_train_size_1024').",
      },
     {"name": "val_split_file",  # workflow
-     "default": "val_split.txt",
+     "default": None,
      "type": str,
      # "nargs": "+",
      "required": True,
      "help": "The path to the file that contains the split ids (e.g., 'split_0_val_id').",
      },
     {"name": "test_split_file",  # workflow
-     "default": "test_split.txt",
+     "default": None,
      "type": str,
      # "nargs": "+",
      "required": True,
@@ -86,7 +86,7 @@ improve_preprocess_conf = [
      },
     {"name": "data_format",  # [Req] Must be specified for the model! TODO. rename to ml_data_format?
      "type": str,
-     "default": "",
+     "default": ".parquet",
      "help": "File format to save the ML data file (e.g., '.pt', '.tfrecords')",
      },
     {"name": "y_col_name",  # workflow

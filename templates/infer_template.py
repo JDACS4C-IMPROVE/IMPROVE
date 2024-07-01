@@ -1,49 +1,37 @@
+from model_parameters import model_params
 import sys
 from pathlib import Path
 from typing import Dict
 
 import pandas as pd
-import lightgbm as lgb
+from improvelib.initializer.stage_config import InferConfig
 
-# [Req] IMPROVE/CANDLE imports
-from improve import framework as frm
-from improve.metrics import compute_metrics
+# [Req] IMPROVE imports
+from improvelib.tools import utils
 
-# Model-specifc imports
-from model_utils.utils import extract_subset_fea
-
-# [Req] Imports from preprocess and train scripts
-from lgbm_preprocess_improve import preprocess_params
-from lgbm_train_improve import metrics_list, train_params
-
-filepath = Path(__file__).resolve().parent # [Req]
+filepath = Path(__file__).resolve().parent  # [Req]
+metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]
 
 # ---------------------
 # [Req] Parameter lists
 # ---------------------
-# Two parameter lists are required:
-# 1. app_infer_params
-# 2. model_infer_params
+# model_infer_params
 #
-# The values for the parameters in both lists should be specified in a
+# The values for the parameters in a list should be specified in a
 # parameter file that is passed as default_model arg in
 # frm.initialize_parameters().
 
-# 1. App-specific params (App: monotherapy drug response prediction)
-# Currently, there are no app-specific params in this script.
-app_infer_params = []
 
-# 2. Model-specific params (Model: LightGBM)
+# Model-specific params (Model: LightGBM)
 # All params in model_infer_params are optional.
 # If no params are required by the model, then it should be an empty list.
 model_infer_params = []
 
-# [Req] Combine the two lists (the combined parameter list will be passed to
-# frm.initialize_parameters() in the main().
-infer_params = app_infer_params + model_infer_params
 # ---------------------
 
 # [Req]
+
+
 def run(params: Dict):
     """ Run model inference.
 
@@ -58,31 +46,31 @@ def run(params: Dict):
     # ------------------------------------------------------
     # [Req] Create output dir
     # ------------------------------------------------------
-    frm.create_outdir(outdir=params["infer_outdir"])
+    utils.create_outdir(outdir=params["infer_outdir"])
 
     # ------------------------------------------------------
     # [Req] Create data name for test set
     # ------------------------------------------------------
-    test_data_fname = frm.build_ml_data_name(params, stage="test")
+    test_data_fname = utils.build_ml_data_name(params, stage="test")
 
     # ------------------------------------------------------
     # Load model input data (ML data)
     # ------------------------------------------------------
     te_data = pd.read_parquet(Path(params["test_ml_data_dir"])/test_data_fname)
 
-    fea_list = ["ge", "mordred"]
-    fea_sep = "."
-
     # Test data
-    xte = extract_subset_fea(te_data, fea_list=fea_list, fea_sep=fea_sep)
     yte = te_data[[params["y_col_name"]]]
 
     # ------------------------------------------------------
     # Load best model and compute predictions
     # ------------------------------------------------------
     # Build model path
-    modelpath = frm.build_model_path(params, model_dir=params["model_dir"]) # [Req]
+    modelpath = utils.build_model_path(
+        params, model_dir=params["model_dir"])  # [Req]
 
+    ########################################################
+    ############# Your model's code is here ################
+    ########################################################
     # Load LightGBM
     model = lgb.Booster(model_file=str(modelpath))
 
@@ -90,10 +78,14 @@ def run(params: Dict):
     test_pred = model.predict(xte)
     test_true = yte.values.squeeze()
 
+    ########################################################
+    ########################################################
+    ########################################################
+
     # ------------------------------------------------------
     # [Req] Save raw predictions in dataframe
     # ------------------------------------------------------
-    frm.store_predictions_df(
+    utils.store_predictions_df(
         params,
         y_true=test_true, y_pred=test_pred, stage="test",
         outdir=params["infer_outdir"]
@@ -102,7 +94,7 @@ def run(params: Dict):
     # ------------------------------------------------------
     # [Req] Compute performance scores
     # ------------------------------------------------------
-    test_scores = frm.compute_performace_scores(
+    test_scores = utils.compute_performace_scores(
         params,
         y_true=test_true, y_pred=test_pred, stage="test",
         outdir=params["infer_outdir"], metrics=metrics_list
@@ -111,17 +103,29 @@ def run(params: Dict):
     return test_scores
 
 # [Req]
+
+
 def main(args):
     # [Req]
-    additional_definitions = preprocess_params + train_params + infer_params
-    params = frm.initialize_parameters(
-        filepath,
-        default_model="lgbm_params.txt",
+    cfg = InferConfig()
+    model_name = 'Model Name'
+    model_params_filepath = 'default_model_params.cfg'
+    # Required parameters
+    required_parameters = None
+    additional_definitions = model_params
+
+    params = cfg.initialize_parameters(
+        pathToModelDir=filepath,
+        default_config=model_params_filepath,
+        default_model=None,
+        additional_section=model_name,
         additional_definitions=additional_definitions,
-        required=None,
+        required=required_parameters
     )
+
     test_scores = run(params)
     print("\nFinished model inference.")
+
 
 # [Req]
 if __name__ == "__main__":

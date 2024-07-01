@@ -1,5 +1,5 @@
 from improvelib.Benchmarks.Base import Benchmark, Stage, ParameterConverter, DataFrameDescription, DatasetDescription
-from improvelib.tools.data_loader import DataInputOutput
+from improvelib.data_loader import DataInputOutput
 import pandas as pd
 import os
 from enum import Enum

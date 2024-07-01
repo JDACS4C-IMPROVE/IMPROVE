@@ -7,7 +7,6 @@ from candle import parse_from_dictlist
 # from improve import config as BaseConfig
 
 
-
 class CLI:
     """Base Class for Command Line Options"""
 
@@ -19,18 +18,18 @@ class CLI:
 
         # Class attributes and defautl values
         # Initialize parser
-        self.parser=argparse.ArgumentParser(description='IMPROVE Command Line Parser')
+        self.parser = argparse.ArgumentParser(
+            description='IMPROVE Command Line Parser')
 
         # Initialize logger
-        self.logger=logging.getLogger('CLI')
+        self.logger = logging.getLogger('CLI')
 
         # Command line options after parsing, results of self.parser.parse_args()
-        self.args = None # placeholder for args from argparse
-        self.params = None # dict of args
-        
+        self.args = None  # placeholder for args from argparse
+        self.params = None  # dict of args
+
         # Set logger level
-        self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL" , logging.DEBUG))
-      
+        self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.DEBUG))
 
     """        # Set common options for all model scripts
         common_options = self.parser.add_argument_group('Standard Options')
@@ -47,25 +46,25 @@ class CLI:
         common_options.add_argument('-cfg', '--config_file', metavar='INI_FILE', dest="config_file", 
                                   type=str,
                                   default=None, help="Config file in INI format.")  """
-                                  
 
-
-    def set_command_line_options(self,options=[] , group=None):
+    def set_command_line_options(self, options=[], group=None):
         """Set Command Line Options, saveguard standard options."""
         self.logger.debug("Setting Command Line Options")
-
+        self.logger.debug(f"Group: {group}")
         if not options:
             self.logger.warning("No options provided. Ignoring.")
             return
 
-        predefined_options = [ o.lstrip('-') for o in self.parser._option_string_actions ]
-        # ['input_dir', 'output_dir', 'log_level', 'config_file'] 
+        predefined_options = [o.lstrip('-')
+                              for o in self.parser._option_string_actions]
+        # ['input_dir', 'output_dir', 'log_level', 'config_file']
         for o in predefined_options:
             # check if o is the value of name in one of the dicts in options
             for d in options:
                 if o == d['name']:
-                    self.logger.warning("Found %s in options. This option is predifined and can not be overwritten." , o)
-                    self.logger.debug("Removing %s from options" , o)
+                    self.logger.warning(
+                        "Found %s in options. This option is predifined and can not be overwritten.", o)
+                    self.logger.debug("Removing %s from options", o)
                     options.remove(d)
 
         # Find and remove duplicates
@@ -74,23 +73,19 @@ class CLI:
             if d['name'] not in unique_options:
                 unique_options[d['name']] = d
             else:
-                self.logger.warning("Found duplicate option %s in options. Removing duplicate" , d['name'])
+                self.logger.warning(
+                    "Found duplicate option %s in options. Removing duplicate", d['name'])
 
         # Create list of unique options
         options = list(unique_options.values())
-        
 
         # From Candle, can't handle bool, need to fork if we want to support argument groups
         if group:
             group = self.parser.add_argument_group(group)
-            print(options)
-            print(group)
-            parse_from_dictlist( options , group)
+            self.logger.debug(f"Setting Group to {group}")
+            parse_from_dictlist(options, group)
         else:
-            parse_from_dictlist( options , self.parser)
-       
-
-        
+            parse_from_dictlist(options, self.parser)
 
     def get_command_line_options(self):
         """Get Command Line Options"""
@@ -99,9 +94,8 @@ class CLI:
         self.args = self.parser.parse_args()
         self.params = vars(self.args)
 
-    def _check_option(self,option) -> bool:
+    def _check_option(self, option) -> bool:
         pass
-    
 
     # def config(self, section) -> BaseConfig :
     #     cfg=BaseConfig.Config()
@@ -112,7 +106,7 @@ class CLI:
     #             cfg.load_config()
     #         else:
     #             self.logger.critical("Can't load Config from %s", self.params['config_file'])
-    #     else: 
+    #     else:
     #         self.logger.debug('No config file')
 
     #     # Set params in config
@@ -121,8 +115,7 @@ class CLI:
 
     #     return cfg
 
-
-    def initialize_parameters( self,
+    def initialize_parameters(self,
                               pathToModelDir,
                               default_model=None,
                               additional_definitions=None,
@@ -131,13 +124,13 @@ class CLI:
 
 
 if __name__ == "__main__":
-    cli=CLI()
-    defaults=[{ 'action' : 'store' , 'choices' : [ 'A' , 'B' , 'C' ] , 'type' : str , 'name' : "dest" }]
+    cli = CLI()
+    defaults = [{'action': 'store', 'choices': [
+        'A', 'B', 'C'], 'type': str, 'name': "dest"}]
     cli.set_command_line_options(options=defaults)
     cli.get_command_line_options()
     # cfg=cli.config("Preprocess")
-   
-   
+
     # for k in cli.params :
     #     print("\t".join([k , cli.params[k]]))
     # print(cfg.dict(section="Preprocess"))

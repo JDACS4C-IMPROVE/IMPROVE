@@ -4,8 +4,7 @@ import pandas as pd
 from enum import Enum
 from abc import ABC, ABCMeta, abstractmethod
 
-import improvelib.framework as frm
-from improvelib.tools.data_loader import DataInputOutput
+import improvelib.utils as frm
 from typing import Any
 
 
