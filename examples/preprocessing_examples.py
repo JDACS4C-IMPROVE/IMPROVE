@@ -235,9 +235,8 @@ def example_parameter_from_dictionary():
 # main() initializes parameters and calls run() with the parameters.
 # run() is the function that executes the primary processing of the model script.
 def main(args):
-    # params1, logger1 = example_parameter_initialization_1()
-    # params2, logger2 = example_parameter_initialization_2()
 
+    # Model specific parameters from LGBM for preprocessing for example
     model_cli_config_params = example_parameter_from_dictionary()
  
 
@@ -252,7 +251,7 @@ def main(args):
     status_lgbm = run(params_lgbm, logger_lgbm)
     
     cfg.logger.info(f"Preprocessing completed with {status_lgbm}. Data saved in {params['output_dir']}") if cfg.logger else print(
-        f"Preprocessing completed. Data saved in {params['output_dir]}")
+        f"Preprocessing completed. Data saved in {params['output_dir']}")
     
 
 
