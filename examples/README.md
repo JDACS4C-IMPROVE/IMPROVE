@@ -2,8 +2,14 @@
 
 
 ## Dependencies
-Run [download_example_model.sh](download_example_model.sh) to get curated LGBM model
-Set up `IMPROVE_BENCHMARK_DIR` to point to drug response prediction benchmark
+* Run [download_example_model.sh](download_example_model.sh) to get curated LGBM model.
+* Set up `PYTHONPATH` to point the main IMPROVE repo dir
+* Don't set up `IMPROVE_DATA_DIR`
+* Set up `IMPROVE_BENCHMARK_DIR` to point to the full path of DRP benchmark dir (e.g., `raw_data`)
+```bash
+export IMPROVE_BENCHMARK_DIR="/nfs/lambda_stor_01/data/apartin/projects/IMPROVE/pan-models/IMPROVE/csa_data/raw_data"
+```
+
 
 ## Usage
 
