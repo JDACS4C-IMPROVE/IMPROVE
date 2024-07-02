@@ -123,7 +123,7 @@ def main(args):
     )
 
     val_scores = run(params)
-    print("\nFinished model training.")
+    print("\nFinished model inference.")
 
 
 # [Req]

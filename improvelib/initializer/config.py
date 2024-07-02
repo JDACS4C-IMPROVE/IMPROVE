@@ -4,8 +4,8 @@ import logging
 import configparser
 import yaml
 import json
-
 from pathlib import Path
+
 from improvelib.initializer.cli import CLI
 
 
@@ -61,6 +61,7 @@ class Config:
                         os.environ.get("IMPROVE_OUTPUT_DIR", "./"))
 
     def load_config(self):
+        """ TODO ... """
         if self.file and os.path.isfile(self.file):
             self.logger.info("Loading config from %s", self.file)
             self.config.read(self.file)
@@ -69,6 +70,7 @@ class Config:
             self.config['DEFAULT'] = {}
 
     def save_config(self, file, config=None):
+        """ TODO ... """
         if os.path.isabs(file):
             self.config.write(file)
         else:
@@ -152,7 +154,10 @@ class Config:
         return (self.config[section][key], msg)
 
     def dict(self, section=None) -> dict:
-        """Return a dictionary of all options in the config file. If section is provided, return a dictionary of options in that section"""
+        """Return a dictionary of all options in the config file. If section
+        is provided, return a dictionary of options in that section.
+        TODO do really want of overload python's dict function?
+        """
         params = {}
         sections = []
 
@@ -359,7 +364,7 @@ class Config:
 
         # Set environment variables
 
-        os.environ["IMPROVE_DATA_DIR"] = self.input_dir
+        os.environ["IMPROVE_DATA_DIR"] = self.input_dir # TODO why input_dir overrides IMPROVE_DATA_DIR?
         os.environ["IMPROVE_OUTPUT_DIR"] = self.output_dir
         os.environ["IMPROVE_LOG_LEVEL"] = self.config[section]['log_level']
 
