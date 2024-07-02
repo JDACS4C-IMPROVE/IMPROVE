@@ -237,15 +237,15 @@ def example_parameter_from_dictionary():
 def main(args):
     # params1, logger1 = example_parameter_initialization_1()
     # params2, logger2 = example_parameter_initialization_2()
-    
-    custom_params = example_parameter_from_dictionary()
+
+    model_cli_config_params = example_parameter_from_dictionary()
  
 
     cfg = DRPPreprocessConfig()
     params = cfg.initialize_parameters('LGBM',
-                                       default_config='lgbm_params.txt',
+                                       default_config=None, # e.g. default.cfg or default.ini
                                        additional_cli_section='LGBM',
-                                       additional_definitions=model_params,
+                                       additional_definitions=model_cli_config_params,
                                        required=None
                                        )
 
