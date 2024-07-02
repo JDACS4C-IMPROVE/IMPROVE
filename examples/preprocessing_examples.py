@@ -1,23 +1,29 @@
 import pandas as pd
 import joblib
+import os
 import sys
 from pathlib import Path
 from typing import Dict
 
+# IMPROVE general imports
 from improvelib.initializer.stage_config import PreprocessConfig
-from lgbm_model_parameters import model_params
-from improvelib import utils
-import improvelib.applications.drug_response_prediction.omics_utils as omics
-import improvelib.applications.drug_response_prediction.drp_utils as drp
-import improvelib.applications.drug_response_prediction.drug_utils as drug
+from improvelib import utils # TODO consider "... import utils as imp_utils"
+
+# DRP specific imports
 from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+import improvelib.applications.drug_response_prediction.omics_utils as omics
+import improvelib.applications.drug_response_prediction.drug_utils as drug
+import improvelib.applications.drug_response_prediction.drp_utils as drp
+
+# LGBM specific imports
+from lgbm_model_parameters import model_params
 from LGBM.model_utils.utils import gene_selection, scale_df
 
 # Global variables
 filepath = Path(__file__).resolve().parent  # [Req]
 
-# Default functions for all improve scripts are main and run
-# main initializes parameters and calls run with the parameters
+# Required functions for all improve scripts are main() and run().
+# main() initializes parameters and calls run() with the parameters.
 
 
 def run(params: Dict, logger=None):
@@ -25,7 +31,7 @@ def run(params: Dict, logger=None):
 
     Args:
         params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
-        cfg (Preprocess): Preprocess object. Default is None. 
+        cfg (Preprocess): Preprocess object. Default is None. TODO currently logger is passed instead of cfg?!
 
     Returns:
         str: status of the preprocessing.
@@ -61,6 +67,15 @@ def run(params: Dict, logger=None):
 
 
 def run_lgbm(params: Dict, logger=None):
+    """ Run data preprocessing.
+
+    Args:
+        params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
+        cfg (Preprocess): Preprocess object. Default is None. TODO currently logger is passed?!
+
+    Returns:
+        str: status of the preprocessing.
+    """
     logger.info("Running preprocessing.") if logger else print(
         "Running preprocessing.")
     logger.debug(f"Loading data from {params['input_dir']}.")
@@ -193,7 +208,7 @@ def run_lgbm(params: Dict, logger=None):
 
 
 def example_parameter_initialization_1():
-   # List of custom parameters, if any
+    # List of custom parameters, if any
     # can be list or file in json or yaml format, e.g. :
     # my_additional_definitions = [{"name": "param_name", "type": str, "default": "default_value", "help": "help message"}]
     # my_additional_definitions = None
@@ -259,6 +274,14 @@ def example_parameter_initialization_2():
 
 
 def example_parameter_initialization_lgbm():
+    """ TODO: fill in info
+    Args:
+        None
+
+    Returns:
+        params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
+        logger (logging.Logger): logger object.
+    """
     cfg = DRPPreprocessConfig()
     params = cfg.initialize_parameters('LGBM',
                                        default_config='lgbm_params.txt',
@@ -269,17 +292,18 @@ def example_parameter_initialization_lgbm():
     return params, cfg.logger
 
 
-# Default functions for all improve scripts are main and run
-# main initializes parameters and calls run with the parameters
-# run is the main function that executes the script
+# Required functions for all improve model scripts are main() and run().
+# main() initializes parameters and calls run() with the parameters.
+# run() is the function that executes the primary processing of the model script.
 def main(args):
     # params1, logger1 = example_parameter_initialization_1()
     # params2, logger2 = example_parameter_initialization_2()
     params_lgbm, logger_lgbm = example_parameter_initialization_lgbm()
 
-    # run task, passing params to run for backward compatibility, cfg could be used instead and contains the same information as params
-    # in addition to the parameters, the cfg object provides access to the logger, the config object and data loaders
-    # default is run(params)
+    # run task, passing params to run for backward compatibility, cfg could be
+    # used instead and contains the same information as params.
+    # in addition to the parameters, the cfg object provides access to the logger,
+    # the config object and data loaders default is run(params)
 
     # status1 = run(params1, logger1)
     # status2 = run(params2, logger2)
