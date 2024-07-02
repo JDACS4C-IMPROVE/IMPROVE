@@ -25,6 +25,20 @@ improve_basic_conf = [
      "default": None,
      "help": "Configuration file for the script"
      },
+    # ---------------------------------------
+    {"name": "pred_col_name_suffix",
+     "type": str,
+     "default": "_pred",
+     "help": "Suffix to add to a column name in the y data file to identify \
+             predictions made by the model (e.g., if y_col_name is 'auc', then \
+             a new column that stores model predictions will be added to the y \
+             data file and will be called 'auc_pred')."
+     },
+
+]
+
+# Parameters that are relevant to all IMPROVE preprocessing scripts
+improve_preprocess_conf = [
     {"name": "x_data_dir",
      "type": str,
      "default": "x_data",
@@ -40,20 +54,6 @@ improve_basic_conf = [
      "default": "splits",
      "help": "Dir name that contains files that store split ids of the y data file."
      },
-    # ---------------------------------------
-    {"name": "pred_col_name_suffix",
-     "type": str,
-     "default": "_pred",
-     "help": "Suffix to add to a column name in the y data file to identify \
-             predictions made by the model (e.g., if y_col_name is 'auc', then \
-             a new column that stores model predictions will be added to the y \
-             data file and will be called 'auc_pred')."
-     },
-
-]
-
-# Parameters that are relevant to all IMPROVE preprocessing scripts
-improve_preprocess_conf = [
     # Values for these args are expected to be passed:
     # train_split_file, val_split_file, test_split_file
     {"name": "train_split_file",  # workflow
