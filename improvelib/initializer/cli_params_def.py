@@ -25,15 +25,6 @@ improve_basic_conf = [
      "default": None,
      "help": "Configuration file for the script"
      },
-    # ---------------------------------------
-    {"name": "pred_col_name_suffix",
-     "type": str,
-     "default": "_pred",
-     "help": "Suffix to add to a column name in the y data file to identify \
-             predictions made by the model (e.g., if y_col_name is 'auc', then \
-             a new column that stores model predictions will be added to the y \
-             data file and will be called 'auc_pred')."
-     },
 
 ]
 
@@ -208,6 +199,14 @@ improve_train_conf = [
      "default": "scores",
      "help": "Suffix to use for name of file to store scores."
      },
+    {"name": "pred_col_name_suffix", # also defined in improve_infer_conf
+     "type": str,
+     "default": "_pred",
+     "help": "Suffix to add to a column name in the y data file to identify \
+             predictions made by the model (e.g., if y_col_name is 'auc', then \
+             a new column that stores model predictions will be added to the y \
+             data file and will be called 'auc_pred')."
+     },
 
 ]
 
@@ -238,6 +237,14 @@ improve_infer_conf = [
      "type": int,
      "default": 64,
      "help": "Test batch size.",
+     },
+    {"name": "pred_col_name_suffix", # also defined in improve_train_conf
+     "type": str,
+     "default": "_pred",
+     "help": "Suffix to add to a column name in the y data file to identify \
+             predictions made by the model (e.g., if y_col_name is 'auc', then \
+             a new column that stores model predictions will be added to the y \
+             data file and will be called 'auc_pred')."
      },
 
 ]
