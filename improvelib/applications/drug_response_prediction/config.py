@@ -38,11 +38,20 @@ class DRPPreprocessConfig(PreprocessConfig):
          "type": str,
          "help": "Column name in the y (response) data file that contains the drug ids.",
          },
-        {"name": "data_format",  # default
-         "default": ".parquet",
-         "type": str,
-         "help": "Format to load and save data",
-         },
+        # {"name": "data_format",  # default. Note! defined in improvelib
+        #  "default": ".parquet",
+        #  "type": str,
+        #  "help": "Format to load and save data",
+        #  },
+         # ---------------------------------------
+         {"name": "y_col_name",  # workflow. Note! moved from improvelib param defs
+          "type": str,
+          "default": "auc",
+          "help": "Column name in the y data file (e.g., response.tsv), that represents \
+              the target variable that the model predicts. In drug response prediction \
+              problem it can be IC50, AUC, and others."
+              },
+
     ]
 
     def __init__(self):
@@ -53,18 +62,27 @@ class DRPPreprocessConfig(PreprocessConfig):
 
 class DRPTrainConfig(TrainConfig):
     _app_train_params = [
-        {"name": "data_format",  # default
-         "type": str,
-         "help": "Format to load and save data",
-         },
-        {"name": "y_col_name",  # default
+        # {"name": "data_format",  # default. Note! defined in improvelib
+        #  "type": str,
+        #  "help": "Format to load and save data",
+        #  },
+        {"name": "y_col_name",  # workflow. Note! moved from improvelib param defs
          "type": str,
          "help": "Name of the metric to predict",
          },
         {"name": "y_data_suffix",  # default
          "type": str,
+         # "default": "y_data", # TODO Oleksandr saya that when default is set, it gives error
          "help": "Suffix for the columns in prediction file",
          }
+         # ---------------------------------------
+         {"name": "y_col_name",  # workflow. Note! moved from improvelib param defs
+          "type": str,
+          "default": "auc",
+          "help": "Column name in the y data file (e.g., response.tsv), that represents \
+              the target variable that the model predicts. In drug response prediction \
+              problem it can be IC50, AUC, and others."
+              },
     ]
 
     def __init__(self):
@@ -76,38 +94,47 @@ class DRPTrainConfig(TrainConfig):
 
 class DRPInferConfig(InferConfig):
     _app_infer_params = [
-        {"name": "data_format",  # default
-                 "type": str,
-                 "help": "Format to load and save data",
-         },
-        {"name": "y_col_name",  # default
+        # {"name": "data_format",  # default. Note! defined in improvelib
+        #          "type": str,
+        #          "help": "Format to load and save data",
+        #  },
+        {"name": "y_col_name",  # workflow. Note! moved from improvelib param defs
          "type": str,
          "help": "Name of the metric to predict",
          },
         {"name": "y_data_suffix",  # default
          "type": str,
+         # "default": "y_data", # TODO Oleksandr saya that when default is set, it gives error
          "help": "Suffix for the columns in prediction file",
          },
-        {"name": "model_file_format",  # default
-         "type": str,
-         "help": "File format for the model",
-         },
-        {"name": "model_file_name",  # default
-         "type": str,
-         "help": "File name for the model",
-         },
-        {"name": "y_data_preds_suffix",  # default
-         "type": str,
-         "help": "???",
-         },
-        {"name": "loss",  # default
-         "type": str,
-         "help": "???",
-         },
-        {"name": "json_scores_suffix",  # default
-         "type": str,
-         "help": "???",
-         }
+        # {"name": "model_file_format",  # default
+        #  "type": str,
+        #  "help": "File format for the model",
+        #  },
+        # {"name": "model_file_name",  # default
+        #  "type": str,
+        #  "help": "File name for the model",
+        #  },
+        # {"name": "y_data_preds_suffix",  # default
+        #  "type": str,
+        #  "help": "???",
+        #  },
+        # {"name": "loss",  # default
+        #  "type": str,
+        #  "help": "???",
+        #  },
+        # {"name": "json_scores_suffix",  # default
+        #  "type": str,
+        #  "help": "???",
+        #  },
+         # ---------------------------------------
+        #  {"name": "y_col_name",  # workflow. Note! moved from improvelib param defs
+        #   "type": str,
+        #   "default": "auc",
+        #   "help": "Column name in the y data file (e.g., response.tsv), that represents \
+        #       the target variable that the model predicts. In drug response prediction \
+        #       problem it can be IC50, AUC, and others."
+        #       },
     ]
 
     def __init__(self):

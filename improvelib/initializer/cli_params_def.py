@@ -30,7 +30,12 @@ improve_basic_conf = [
      "default": None,
      "help": "Configuration file for the script"
      },
-
+     # ---------------------------------------
+    {"name": "data_format",  # [Req] Must be specified for the model! TODO. rename to ml_data_format?
+     "type": str,
+     "default": ".parquet",
+     "help": "File format to save the ML data file (e.g., '.pt', '.tfrecords')",
+     },
 ]
 
 # Parameters that are relevant to all IMPROVE preprocessing scripts
@@ -78,19 +83,7 @@ improve_preprocess_conf = [
     {"name": "ml_data_outdir",  # workflow # TODO. this was previously ml_data_outpath
      "type": str,
      "default": "./ml_data",
-     "help": "Path to save ML data (data files that can be fet to the prediction model).",
-     },
-    {"name": "data_format",  # [Req] Must be specified for the model! TODO. rename to ml_data_format?
-     "type": str,
-     "default": ".parquet",
-     "help": "File format to save the ML data file (e.g., '.pt', '.tfrecords')",
-     },
-    {"name": "y_col_name",  # workflow
-     "type": str,
-     "default": "auc",
-     "help": "Column name in the y data file (e.g., response.tsv), that represents \
-              the target variable that the model predicts. In drug response prediction \
-              problem it can be IC50, AUC, and others."
+     "help": "[Dep+] Path to save ML data (data files that can be fet to the prediction model).",
      },
     # ---------------------------------------
     # {"name": "x_data_suffix",  # TODO. rename x_data_stage_fname_suffix?
@@ -101,7 +94,7 @@ improve_preprocess_conf = [
     {"name": "y_data_suffix",  # default # TODO. rename y_data_stage_fname_suffix?
      "type": str,
      "default": "y_data",
-     "help": "Suffix to compose file name for storing true y dataframe."
+     "help": "[Dep] Suffix to compose file name for storing true y dataframe."
      },
 
 ]
@@ -112,40 +105,42 @@ improve_train_conf = [
      # "action": "store",
      "type": str,
      "default": "./ml_data",
-     "help": "Datadir where train data is stored."
+     "help": "[Dep+] Datadir where train data is stored."
      },
     {"name": "val_ml_data_dir",  # workflow
      # "action": "store",
      "type": str,
      "default": "./ml_data",
-     "help": "Datadir where val data is stored."
+     "help": "[Dep+] Datadir where val data is stored."
      },
     {"name": "model_outdir",  # workflow
      "type": str,
      "default": "./out_model",  # csa_data/models/
-     "help": "Dir to save trained models.",
+     "help": "[Dep+] Dir to save trained models.",
      },
     # {"name": "model_params",
     {"name": "model_file_name",  # default # TODO: this was previously model_file_name
      "type": str,
      # "default": "model.pt",
      "default": "model",
-     "help": "Filename to store trained model (str is w/o file_format)."
+     "help": "[Dep?] Filename to store trained model (str is w/o file_format)."
      },
     {"name": "model_file_format",  # [Req]
      "type": str,
      "default": ".pt",
-     "help": "File format to save the trained model."
+     "help": "[Dep?]File format to save the trained model."
      },
     # ---------------------------------------
     {"name": "epochs",  # [Req]
      "type": int,
-     "default": 20,
+#      "default": 20,
+     "required": True,
      "help": "Training epochs."
      },
     {"name": "batch_size",  # [Req]
      "type": int,
-     "default": 64,
+#      "default": 64,
+     "required": True,
      "help": "Trainig batch size."
      },
     {"name": "val_batch",  # [Req]
@@ -154,20 +149,21 @@ improve_train_conf = [
      # "default": argparse.SUPPRESS,
      "help": "Validation batch size."
      },
-    {"name": "loss",  # [Req] used in compute_metrics
+    {"name": "loss",  # [Req] used in compute_metrics. TODO. should be model-specific
      "type": str,
      "default": "mse",
-     "help": "Loss metric."
+     "help": "[Dep+] Loss metric."
      },
     # {"name": "optimizer",
     #  "type": str,
     #  "default": "adam",
     #  "help": "Optimizer for backpropagation."
     # },
-    # {"name": "learning_rate",
-    #  "type": float,
-    #  "default": 0.0001,
-    #  "help": "Learning rate for the optimizer."
+    {"name": "learning_rate",
+     "type": float,
+#      "default": 0.0001,
+     "required": True,
+     "help": "Learning rate for the optimizer."
     # },
     # {"name": "train_data_processed",
     #  "action": "store",
@@ -181,13 +177,13 @@ improve_train_conf = [
     # },
     # {"name": "model_eval_suffix", # TODO: what's that?
     # y_data_stage_preds_fname_suffix
-    {"name": "early_stop_metric",  # [Req]
+    {"name": "early_stop_metric",  # [Req] TODO. consider moving to app or model (with patience)
      "type": str,
      "default": "mse",
      "help": "Prediction performance metric to monitor for early stopping during \
              model training (e.g., 'mse', 'rmse').",
      },
-    {"name": "patience",  # [Req]
+    {"name": "patience",  # [Req] TODO. consider moving to app or model (with patience)
      "type": int,
      "default": 20,
      # "default": argparse.SUPPRESS,
@@ -197,17 +193,17 @@ improve_train_conf = [
     {"name": "y_data_preds_suffix",  # default
      "type": str,
      "default": "predicted",
-     "help": "Suffix to use for name of file to store inference results."
+     "help": "[Dep] Suffix to use for name of file to store inference results."
      },
     {"name": "json_scores_suffix",  # default
      "type": str,
      "default": "scores",
-     "help": "Suffix to use for name of file to store scores."
+     "help": "[Dep] Suffix to use for name of file to store scores."
      },
     {"name": "pred_col_name_suffix", # also defined in improve_infer_conf
      "type": str,
      "default": "_pred",
-     "help": "Suffix to add to a column name in the y data file to identify \
+     "help": "[Dep] Suffix to add to a column name in the y data file to identify \
              predictions made by the model (e.g., if y_col_name is 'auc', then \
              a new column that stores model predictions will be added to the y \
              data file and will be called 'auc_pred')."
@@ -221,17 +217,17 @@ improve_infer_conf = [
      # "action": "store",
      "type": str,
      "default": "./ml_data",
-     "help": "Datadir where test data is stored."
+     "help": "[Dep+] Datadir where test data is stored."
      },
     {"name": "model_dir",  # workflow
      "type": str,
      "default": "./out_model",  # csa_data/models/
-     "help": "Dir to save inference results.",
+     "help": "[Dep+] Dir to save inference results.",
      },
     {"name": "infer_outdir",  # workflow
      "type": str,
      "default": "./out_infer",  # csa_data/infer/
-     "help": "Dir to save inference results.",
+     "help": "[Dep+] Dir to save inference results.",
      },
     # {"name": "test_data_processed",  # TODO: is this test_data.pt?
     #  "action": "store",
@@ -246,7 +242,7 @@ improve_infer_conf = [
     {"name": "pred_col_name_suffix", # also defined in improve_train_conf
      "type": str,
      "default": "_pred",
-     "help": "Suffix to add to a column name in the y data file to identify \
+     "help": "[Dep] Suffix to add to a column name in the y data file to identify \
              predictions made by the model (e.g., if y_col_name is 'auc', then \
              a new column that stores model predictions will be added to the y \
              data file and will be called 'auc_pred')."
