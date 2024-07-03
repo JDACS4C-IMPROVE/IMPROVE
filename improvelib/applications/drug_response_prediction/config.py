@@ -66,15 +66,12 @@ class DRPTrainConfig(TrainConfig):
         #  "type": str,
         #  "help": "Format to load and save data",
         #  },
-        {"name": "y_col_name",  # workflow. Note! moved from improvelib param defs
-         "type": str,
-         "help": "Name of the metric to predict",
-         },
+
         {"name": "y_data_suffix",  # default
          "type": str,
          # "default": "y_data", # TODO Oleksandr saya that when default is set, it gives error
          "help": "Suffix for the columns in prediction file",
-         }
+         },
          # ---------------------------------------
          {"name": "y_col_name",  # workflow. Note! moved from improvelib param defs
           "type": str,
@@ -82,7 +79,7 @@ class DRPTrainConfig(TrainConfig):
           "help": "Column name in the y data file (e.g., response.tsv), that represents \
               the target variable that the model predicts. In drug response prediction \
               problem it can be IC50, AUC, and others."
-              },
+        },
     ]
 
     def __init__(self):

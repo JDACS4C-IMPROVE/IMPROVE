@@ -164,7 +164,7 @@ improve_train_conf = [
 #      "default": 0.0001,
      "required": True,
      "help": "Learning rate for the optimizer."
-    # },
+    },
     # {"name": "train_data_processed",
     #  "action": "store",
     #  "type": str,
