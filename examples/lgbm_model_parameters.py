@@ -35,11 +35,11 @@ model_params = [
      "default": -1,
      "help": "Max depth."
      },
-    {"name": "learning_rate",
-     "type": float,
-     "default": 0.1,
-     "help": "Learning rate for the optimizer."
-     },
+    # {"name": "learning_rate",
+    #  "type": float,
+    #  "default": 0.1,
+    #  "help": "Learning rate for the optimizer."
+    #  },
     {"name": "num_leaves",
      "type": int,
      "default": 31,
