@@ -31,6 +31,46 @@ def run(params: Dict, logger=None):
 
     Args:
         params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
+        cfg (Preprocess): Preprocess object. Default is None. TODO currently logger is passed instead of cfg?!
+
+    Returns:
+        str: status of the preprocessing.
+    """
+
+    logger.info("Running preprocessing.") if logger else print(
+        "Running preprocessing.")
+    # Load data from input directory, the input directory is defined in the configuration file
+    # and is accessible through the cfg object
+    # The input directory is the directory where the raw data is stored in the IMPROVE Benchmark Format
+    # The raw data is stored in the input directory in the following format:
+    # x_data: directory that contains the files with features data (x data)
+    # y_data: directory that contains the files with target data (y data)
+    # splits: directory that contains files that store split ids of the y data file
+    # supplement: directory that contains supplemental data (optional) and not used in this example or part of the IMPROVE Benchmark Format
+    logger.debug(f"Loading data from {params['input_dir']}.")
+
+    ###### Place your code here ######
+
+    # Load x data, e.g.
+    # data = cfg.loader.load_data()    # Load y data, e.g.
+
+    # y_data = pd.read_csv(Path(cfg.input_dir,"y_data","response.tsv"), sep="\t")
+    # y_data = pd.read_csv(params['input_dir'] / "y_data" / "response.tsv", sep="\t")
+    # y_data = cfg.loader.load_data()
+
+    # Transform data
+
+    # Save data
+    # y_data.to_csv(params["output_dir"] / "y_data.csv", index=False)
+
+    return params["output_dir"]
+
+
+def run_lgbm(params: Dict, logger=None):
+    """ Run data preprocessing.
+
+    Args:
+        params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
         cfg (Preprocess): Preprocess object. Default is None. TODO currently logger is passed?!
 
     Returns:
@@ -167,37 +207,34 @@ def run(params: Dict, logger=None):
         utils.save_stage_ydf(ydf, params, stage)
 
 
-# def example_parameter_initialization_1():
-#     # List of custom parameters, if any
-#     # can be list or file in json or yaml format, e.g. :
-#     # my_additional_definitions = [{"name": "param_name", "type": str, "default": "default_value", "help": "help message"}]
-#     # my_additional_definitions = None
-#     # my_additional_definitions = Path("custom_params.json")
-#     # my_additional_definitions = filepath/"custom_params.json"
+def example_parameter_initialization_1():
+    # List of custom parameters, if any
+    # can be list or file in json or yaml format, e.g. :
+    # my_additional_definitions = [{"name": "param_name", "type": str, "default": "default_value", "help": "help message"}]
+    # my_additional_definitions = None
+    # my_additional_definitions = Path("custom_params.json")
+    # my_additional_definitions = filepath/"custom_params.json"
 
-#     # Set additional_definitions to None if no custom parameters are needed
+    # Set additional_definitions to None if no custom parameters are needed
 
-#     # Exampple 1: Initialize parameters using the Preprocess class
+    # Exampple 1: Initialize parameters using the Preprocess class
 
-#     # Initialize parameters using the Preprocess class
+    # Initialize parameters using the Preprocess class
+    cfg = PreprocessConfig()
 
-
-#     custom_config_options = []
-
-#     cfg = PreprocessConfig()
-
-#     params = cfg.initialize_parameters(filepath,
-#                                        default_config="default.cfg",
-#                                        additional_definitions=[],
-#                                        required=None
-#                                        )
-#     return params, cfg.logger
+    params = cfg.initialize_parameters(filepath,
+                                       default_config="default.cfg",
+                                       additional_definitions=[],
+                                       required=None
+                                       )
+    return params, cfg.logger
 
 
-def example_parameter_from_dictionary():
+def example_parameter_initialization_2():
     # Example 2: Initialize parameters using custom list
 
     # Initialize parameters using custom parameters list defined in Python argparse.ArgumentParser format
+    cfg = PreprocessConfig()
     my_params_example = [
         # see argparse.ArgumentParser.add_argument() for more information
         {
@@ -224,35 +261,54 @@ def example_parameter_from_dictionary():
             "help": "Supplemental data tuple FILE and TYPE. FILE is in INPUT_DIR.",   # help message
         }
     ]
-    
-    return my_params_example
+
+    params = cfg.initialize_parameters(filepath,
+                                       default_config="default.cfg",
+                                       # additional_cli_section='My section',
+                                       additional_definitions=my_params_example,
+                                       required=None
+                                       )
+
+    cfg.logger.info(f"Preprocessing completed. Data saved in {cfg.output_dir}")
+    return params, cfg.logger
 
 
+def example_parameter_initialization_lgbm():
+    """ TODO: fill in info
+    Args:
+        None
 
+    Returns:
+        params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
+        logger (logging.Logger): logger object.
+    """
+    cfg = DRPPreprocessConfig()
+    params = cfg.initialize_parameters('LGBM',
+                                       default_config='lgbm_params.txt',
+                                       additional_cli_section='LGBM',
+                                       additional_definitions=model_params,
+                                       required=None
+                                       )
+    return params, cfg.logger
 
 
 # Required functions for all improve model scripts are main() and run().
 # main() initializes parameters and calls run() with the parameters.
 # run() is the function that executes the primary processing of the model script.
 def main(args):
+    # params1, logger1 = example_parameter_initialization_1()
+    # params2, logger2 = example_parameter_initialization_2()
+    params_lgbm, logger_lgbm = example_parameter_initialization_lgbm()
 
-    # Model specific parameters from LGBM for preprocessing for example
-    model_cli_config_params = example_parameter_from_dictionary()
- 
+    # run task, passing params to run for backward compatibility, cfg could be
+    # used instead and contains the same information as params.
+    # in addition to the parameters, the cfg object provides access to the logger,
+    # the config object and data loaders default is run(params)
 
-    cfg = DRPPreprocessConfig()
-    params = cfg.initialize_parameters('LGBM',
-                                       default_config=None, # e.g. default.cfg or default.ini
-                                       additional_cli_section='LGBM',
-                                       additional_definitions=model_cli_config_params,
-                                       required=None
-                                       )
-
-    status_lgbm = run(params_lgbm, logger_lgbm)
-    
-    cfg.logger.info(f"Preprocessing completed with {status_lgbm}. Data saved in {params['output_dir']}") if cfg.logger else print(
-        f"Preprocessing completed. Data saved in {params['output_dir']}")
-    
+    # status1 = run(params1, logger1)
+    # status2 = run(params2, logger2)
+    status_lgbm = run_lgbm(params_lgbm, logger_lgbm)
+    print(status_lgbm)
 
 
 if __name__ == "__main__":

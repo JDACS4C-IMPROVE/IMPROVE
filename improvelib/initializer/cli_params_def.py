@@ -142,7 +142,7 @@ improve_train_conf = [
      "default": "mse",
      "help": "[Dep?] Loss metric."
      },
-    {"name": "early_stop_metric",  # [Req] TODO consider moving to app or model params (with patience)
+    {"name": "early_stop_metric",  # [Req] TODO. consider moving to app or model (with patience)
      "type": str,
      "default": "mse",
      "help": "Prediction performance metric to monitor for early stopping during \
