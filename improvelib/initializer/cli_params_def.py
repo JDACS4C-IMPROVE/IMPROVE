@@ -17,9 +17,14 @@ improve_basic_conf = [
      },
     {"name": "input_dir",
      "type": str,
-     "default": "raw_data",
+     "default": "./",
      "help": "Data dir name that stores the raw data, including x data, y data, and splits."
-     },
+    },
+    {"name": "output_dir",
+     "type": str,
+     "default": "./",
+     "help": "Data dir name that stores the raw data, including x data, y data, and splits."
+    },
     {"name": "config_file",
      "type": str,
      "default": None,
