@@ -73,6 +73,9 @@ def run(params: Dict):
     # Load best model and compute predictions
     # ------------------------------------------------------
     # Build model path
+    params['model_file_format'] = 'pt'
+    params['model_file_name'] = 'model'
+    params['loss'] = 'r2'
     modelpath = utils.build_model_path(
         params, model_dir=params["model_dir"])  # [Req]
 

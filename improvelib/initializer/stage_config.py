@@ -29,7 +29,7 @@ class SectionConfig(Config):
         self.cli.set_command_line_options(
             improve_basic_conf, 'IMPROVE options')
         self.cli.set_command_line_options(
-            stage_config_parameters, f'{self.section} stage options')
+            options=stage_config_parameters, group=f'{self.section} stage options')
 
         # Add options for Benchmark Data Format
         p = self.cli.parser

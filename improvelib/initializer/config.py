@@ -364,7 +364,8 @@ class Config:
 
         # Set environment variables
 
-        os.environ["IMPROVE_DATA_DIR"] = self.input_dir # TODO why input_dir overrides IMPROVE_DATA_DIR?
+        # TODO why input_dir overrides IMPROVE_DATA_DIR?
+        os.environ["IMPROVE_DATA_DIR"] = self.input_dir
         os.environ["IMPROVE_OUTPUT_DIR"] = self.output_dir
         os.environ["IMPROVE_LOG_LEVEL"] = self.config[section]['log_level']
 
