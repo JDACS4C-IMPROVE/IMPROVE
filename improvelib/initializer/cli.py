@@ -78,7 +78,7 @@ class CLI:
 
         # Create list of unique options
         options = list(unique_options.values())
-
+        # breakpoint()
         # From Candle, can't handle bool, need to fork if we want to support argument groups
         if group:
             group = self.parser.add_argument_group(group)
@@ -93,6 +93,8 @@ class CLI:
         self.logger.debug("Getting Command Line Options")
         self.args = self.parser.parse_args()
         self.params = vars(self.args)
+
+        return self.params
 
     def _check_option(self, option) -> bool:
         pass

@@ -72,7 +72,8 @@ class Config:
     def save_config(self, file, config=None):
         """ TODO ... """
         if os.path.isabs(file):
-            self.config.write(file)
+            with open(file, 'w') as out_file:
+                self.config.write(out_file)
         else:
             if config and 'output_dir' in config:
                 path = Path(config['output_dir'], file)
@@ -168,7 +169,7 @@ class Config:
 
         if section:
             # check if section exists
-            if self.config.has_section(section):
+            if section in self.config:
                 for i in self.config.items(section):
                     params[i[0]] = i[1]
             else:
