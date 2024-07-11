@@ -196,7 +196,10 @@ class Config:
                     p['type'] = str
 
     def load_parameter_definitions(self, file, section=None):
-        """Load parameters from a file."""
+        """
+        Load parameters definitions from from a file. 
+        Used if not passed as a list.
+        """
         self.logger.debug("Loading parameters from %s", file)
 
         # Convert Path to string
@@ -228,7 +231,9 @@ class Config:
         pass
 
     def load_config_file(self, pathToModelDir, default_config):
-        # Load Config
+        """
+        Loads the configuration file. 
+        """
         if os.path.isdir(self.cli.args.input_dir):
 
             # Set config file name
@@ -336,11 +341,9 @@ class Config:
             self.log_level = self.cli.cli_params["log_level"]
             self.logger.setLevel(self.log_level)
 
-            
         # Load config file
         self.logger.debug("Loading configuration file")
         self.load_config_file(pathToModelDir, default_config)
-        self.logger.debug("Natasha param update here")
         # Sets dictionary of parameters with defaults
         self.final_params = self.cli.default_params
         # Gets dictionary of parameters from config for this section
@@ -372,7 +375,6 @@ class Config:
         self.logger.debug("Current log level is %s", self.log_level)
 
         # Set environment variables
-
         # TODO why input_dir overrides IMPROVE_DATA_DIR?
         # NCK: this is a good question, what are we doing with this?
         os.environ["IMPROVE_DATA_DIR"] = self.input_dir
@@ -383,6 +385,7 @@ class Config:
         if not os.path.isdir(self.output_dir):
             self.logger.debug("Creating output directory: %s", self.output_dir)
             os.makedirs(self.output_dir)
+        # Save parameters to file
         self.logger.debug("Saving final parameters to file.")
         self.save_parameter_file(self.final_params["param_log_file"])
 
