@@ -60,9 +60,10 @@ class SectionConfig(Config):
         if additional_cli_section is None:
             additional_cli_section = 'Additional Parameters'
 
+        print("additional_definitions(stage):", additional_definitions)
         if additional_definitions is not None:
             if isinstance(additional_definitions, str) or isinstance(additional_definitions, Path):
-                additional_definitions = self.load_cli_parameters(
+                additional_definitions = self.load_parameter_definitions(
                     additional_definitions)
             self.cli.set_command_line_options(
                 additional_definitions, f'{additional_cli_section} options')

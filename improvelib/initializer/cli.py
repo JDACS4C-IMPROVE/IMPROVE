@@ -71,7 +71,7 @@ class CLI:
             for d in options:
                 if o == d['name']:
                     self.logger.warning(
-                        "Found %s in options. This option is predifined and can not be overwritten.", o)
+                        "Found %s in options. This option is predefined and can not be overwritten.", o)
                     self.logger.debug("Removing %s from options", o)
                     options.remove(d)
 
@@ -121,12 +121,14 @@ class CLI:
     def _check_option(self, option) -> bool:
         pass
 
+    """
     def initialize_parameters(self,
                               pathToModelDir,
                               default_model=None,
                               additional_definitions=None,
                               required=None,):
         pass
+    """
 
 
 if __name__ == "__main__":

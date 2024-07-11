@@ -195,7 +195,7 @@ class Config:
                     self.logger.error("Unsupported type %s", p['type'])
                     p['type'] = str
 
-    def load_cli_parameters(self, file, section=None):
+    def load_parameter_definitions(self, file, section=None):
         """Load parameters from a file."""
         self.logger.debug("Loading parameters from %s", file)
 
@@ -227,6 +227,51 @@ class Config:
         """Validate parameters."""
         pass
 
+    def load_config_file(self, pathToModelDir, default_config):
+        # Load Config
+        if os.path.isdir(self.cli.args.input_dir):
+
+            # Set config file name
+            if self.cli.args.config_file:
+                self.file = self.cli.args.config_file
+            else:
+                # Make pathToModelDir and default_config same type. Possible types are: str, Path
+                if isinstance(pathToModelDir, Path):
+                    pathToModelDir = str(pathToModelDir)
+                if isinstance(default_config, Path):
+                    default_config = str(default_config)
+
+                if pathToModelDir is not None:
+                    if not pathToModelDir.endswith("/"):
+                        pathToModelDir += "/"
+                else:
+                    pathToModelDir = "./"
+
+                if default_config is not None:
+                    self.file = pathToModelDir + default_config
+                else:
+                    self.logger.warning("No default config file provided")
+
+                self.logger.debug("No config file provided. Using default: %s", self.file)
+
+            # Set full path for config
+            if self.file and not os.path.abspath(self.file):
+                self.logger.debug(
+                    "Not absolute path for config file. Should be relative to input_dir")
+                self.file = self.input_dir + "/" + self.file
+                self.logger.debug("New file path: %s", self.file)
+
+            # Load config if file exists
+            if self.file and os.path.isfile(self.file):
+                self.load_config()
+            else:
+                self.logger.warning("Can't find config file: %s", self.file)
+                self.config[section] = {}
+        else:
+            self.logger.critical("No input directory: %s", self.cli.args.input_dir)
+
+
+
     def initialize_parameters(self,
                               pathToModelDir,
                               section='DEFAULT',
@@ -235,12 +280,12 @@ class Config:
                               additional_definitions=None,
                               required=None,):
         """Initialize parameters from command line and config file."""
-
+        self.logger.setLevel(self.log_level) #why
+        self.logger.debug("Initializing parameters for %s", section)
         # preserve the type of the object
         current_class = self.__class__
         self.__class__ = Config
 
-        print("initialize_parameters" + str(type(self)))
 
         # Set and get command line args
         #
@@ -251,10 +296,11 @@ class Config:
         # Find duplicate dicts in additon_definitions for the key 'name'
         # if in dict then remove and log warning
 
-        self.logger.debug("Initializing parameters for %s", section)
-
+        
+        #print("additional_definitions:", additional_definitions)
+        """
         if additional_definitions:
-
+            
             # Convert Path to string
             if additional_definitions and isinstance(additional_definitions, Path):
                 additional_definitions = str(additional_definitions)
@@ -279,85 +325,43 @@ class Config:
             # Loop through duplicates in reverse order and remove from additional_definitions
             for i in duplicates[::-1]:
                 additional_definitions.pop(i)
-
-        cli = self.cli
-        cli.set_command_line_options(options=additional_definitions)
-        cli.get_command_line_options()
+        """
+        #cli = self.cli
+        self.cli.set_command_line_options()
+        self.cli.get_command_line_options()
 
         # Set log level
-        if "log_level" in cli.cli_params:
-            self.logger.debug("Log level set by command line, updating to %s", cli.cli_params["log_level"])
-            self.log_level = cli.cli_params["log_level"]
+        if "log_level" in self.cli.cli_params:
+            self.logger.debug("Log level set by command line, updating to %s", self.cli.cli_params["log_level"])
+            self.log_level = self.cli.cli_params["log_level"]
             self.logger.setLevel(self.log_level)
+
             
-
-        # Load Config
-        if os.path.isdir(cli.args.input_dir):
-
-            # Set config file name
-            if cli.args.config_file:
-                self.file = cli.args.config_file
-            else:
-                # Make pathToModelDir and default_config same type. Possible types are: str, Path
-                if isinstance(pathToModelDir, Path):
-                    pathToModelDir = str(pathToModelDir)
-                if isinstance(default_config, Path):
-                    default_config = str(default_config)
-
-                if pathToModelDir is not None:
-                    if not pathToModelDir.endswith("/"):
-                        pathToModelDir += "/"
-                else:
-                    pathToModelDir = "./"
-
-                if default_config is not None:
-                    self.file = pathToModelDir + default_config
-                else:
-                    self.logger.warning("No default config file provided")
-
-                self.logger.debug(
-                    "No config file provided. Using default: %s", self.file)
-
-            # Set full path for config
-            if self.file and not os.path.abspath(self.file):
-                self.logger.debug(
-                    "Not absolute path for config file. Should be relative to input_dir")
-                self.file = self.input_dir + "/" + self.file
-                self.logger.debug("New file path: %s", self.file)
-
-            # Load config if file exists
-            if self.file and os.path.isfile(self.file):
-                self.load_config()
-            else:
-                self.logger.warning("Can't find config file: %s", self.file)
-                self.config[section] = {}
-        else:
-            self.logger.critical("No input directory: %s", cli.args.input_dir)
-
-        # Set/update config with arguments from command line
+        # Load config file
+        self.logger.debug("Loading configuration file")
+        self.load_config_file(pathToModelDir, default_config)
         self.logger.debug("Natasha param update here")
         # Sets dictionary of parameters with defaults
-        self.nckparam = cli.default_params
+        self.nckparam = self.cli.default_params
         # Gets dictionary of parameters from config for this section
         section_config = dict(self.config[section])
-        print("section:", section)
-        print("section_config:", section_config)
+        self.logger.debug("Default parameters: %s", self.cli.default_params)
+        self.logger.debug("Current section: %s", section)
+        self.logger.debug("Current section config parameters: %s", section_config)
         self.logger.debug("Updating config")
-        print("cli.defaults", cli.default_params)
         # Overrides dictionary of defaults with config params
         for cfp in section_config:
             if cfp in self.nckparam:
-                self.logger.debug("Overriding %s default with config value of %s", cfp, section_config[cfp])
+                self.logger.info("Overriding %s default with config value of %s", cfp, section_config[cfp])
                 self.nckparam[cfp] = section_config[cfp]
             else:
-                self.logger.debug("Config parameter %s is not defined, skipping.", cfp)
-        print("nckparam:", self.nckparam)
-        print("cli.cli_params", cli.cli_params)
+                self.logger.warning("Config parameter %s is not defined, skipping.", cfp)
+        self.logger.debug("Current section CLI set parameters: %s", self.cli.cli_params)
         # Overrides dictionary of defaults+config with CLI params
-        for clip in cli.cli_params:
-            self.logger.debug("Overriding %s default or config with command line value of %s", clip, cli.cli_params[clip])
-            self.nckparam[clip] = cli.cli_params[clip]
-        print("nckparam:", self.nckparam)
+        for clip in self.cli.cli_params:
+            self.logger.info("Overriding %s default or config with command line value of %s", clip, self.cli.cli_params[clip])
+            self.nckparam[clip] = self.cli.cli_params[clip]
+        self.logger.debug("Final parameters: %s", self.nckparam)
         self.logger.debug("Final parameters set.")
 
         # Update input and output directories
