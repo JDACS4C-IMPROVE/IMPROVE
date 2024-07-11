@@ -34,6 +34,7 @@ class Config:
         # Default values are set in command line parser
         self.input_dir = None
         self.output_dir = None
+        self.nckparam = {}
 
         # Set Defaults and conventions
         if "CANDLE_DATA_DIR" in os.environ and "IMPROVE_DATA_DIR" in os.environ:
@@ -87,28 +88,7 @@ class Config:
             with path.open("w") as f:
                 self.config.write(f)
 
-    def param(self, section="DEFAULT", key=None, value=None) -> (str, str):
-        """
-        Get or set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
-        Allowed section names are: Preprocess, Train and Infer
-        """
 
-        error = None
-
-        if value is not None:
-            if self.config.has_section(section):
-                self.config[section][key] = value
-            else:
-                error = "Unknow section " + str(section)
-                self.logger.error(error)
-        if self.config.has_option(section, key):
-            value = self.config[section][key]
-        else:
-            error = "Can't find option " + str(key)
-            self.logger.error(error)
-            value = None
-
-        return (value, error)
 
     def get_param(self, section="DEFAULT", key=None) -> str:
         """
@@ -127,12 +107,12 @@ class Config:
 
         return value
 
-    def set_param(self, section="DEFAULT", key=None, value=None) -> (str, str):
+    #def set_param(self, section="DEFAULT", key=None, value=None) -> (str, str):
         """
         Set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
-
+    """
         msg = None
 
         if key:
@@ -152,12 +132,14 @@ class Config:
             return (None, msg)
 
         return (self.config[section][key], msg)
+    """
 
-    def dict(self, section=None) -> dict:
-        """Return a dictionary of all options in the config file. If section
+    #def section_parameters(self, section=None) -> dict:
+    """Return a dictionary of all options in the config file. If section
         is provided, return a dictionary of options in that section.
         TODO do really want of overload python's dict function?
         """
+    """
         params = {}
         sections = []
 
@@ -181,6 +163,7 @@ class Config:
                     params[s][i[0]] = i[1]
 
         return params
+    """
 
     def check_required(self):
         """Check if all required parameters are set."""
@@ -348,26 +331,54 @@ class Config:
             self.logger.critical("No input directory: %s", cli.args.input_dir)
 
         # Set/update config with arguments from command line
+        self.logger.debug("Natasha param update here")
+        # Sets dictionary of parameters with defaults
+        self.nckparam = cli.default_params
+        print("self.config:", self.config)
+        # Gets dictionary of parameters from config for this section
+        section_config = dict(self.config[section])
+        print("section:", section)
+        print("section_config:", section_config)
         self.logger.debug("Updating config")
-        for k in cli.params:
-            if cli.params[k] is None:
-                continue
-            self.logger.debug("Setting %s to %s", k, cli.params[k])
-            self.set_param(section, k, cli.params[k])
-            # self.config[section][k] = cli.params[k]
+        print("cli.defaults", cli.default_params)
+        # Overrides dictionary of defaults with config params
+        for cfp in section_config:
+            self.logger.debug("Overriding %s default with config value of %s", cfp, section_config[cfp])
+            self.nckparam[cfp] = section_config[cfp]
+        print("nckparam:", self.nckparam)
+        print("cli.cli_params", cli.cli_params)
+        # Overrides dictionary of defaults+config with CLI params
+        for clip in cli.cli_params:
+            self.logger.debug("Overriding %s default or config with command line value of %s", clip, cli.cli_params[clip])
+            self.nckparam[clip] = cli.cli_params[clip]
+        print("nckparam:", self.nckparam)
+        self.logger.debug("Final parameters set.")
+
+
+
+
+
+        #for k in cli.params:
+        #    if cli.params[k] is None:
+        #        continue
+        #    self.logger.debug("Setting %s to %s", k, cli.params[k])
+        #    self.set_param(section, k, cli.params[k])
+        #    # self.config[section][k] = cli.params[k]
 
         # Update input and output directories
-        self.output_dir = self.config[section]['output_dir']
-        self.input_dir = self.config[section]['input_dir']
-        self.log_level = self.config[section]['log_level']
+        self.output_dir = self.nckparam['output_dir']
+        self.input_dir = self.nckparam['input_dir']
+        self.log_level = self.nckparam['log_level']
+        print("THISLOGLEVEL:", self.log_level)
         self.logger.setLevel(self.log_level)
 
         # Set environment variables
 
         # TODO why input_dir overrides IMPROVE_DATA_DIR?
+        # NCK: this is a good question, what are we doing with this?
         os.environ["IMPROVE_DATA_DIR"] = self.input_dir
         os.environ["IMPROVE_OUTPUT_DIR"] = self.output_dir
-        os.environ["IMPROVE_LOG_LEVEL"] = self.config[section]['log_level']
+        os.environ["IMPROVE_LOG_LEVEL"] = self.log_level
 
         # Create output directory if not exists
         if not os.path.isdir(self.output_dir):
@@ -375,7 +386,7 @@ class Config:
             os.makedirs(self.output_dir)
 
         self.__class__ = current_class
-        return self.dict()
+        return self.nckparam
 
 
 if __name__ == "__main__":

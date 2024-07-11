@@ -34,20 +34,17 @@ class SectionConfig(Config):
         # Add options for Benchmark Data Format
         p = self.cli.parser
 
+    """
     def get_param(self, key):
-        """Get a parameter from the Preprocessing config."""
         return super().get_param(self.section, key)
-
-    def set_params(self, key=None, value=None):
-        print("set_params" + type(self))
-        return super().set_param(self.section, key, value)
 
     def set_param(self, key=None, value=None):
         return super().set_param(self.section, key, value)
 
     def dict(self):
-        """Get the Preprocessing config as a dictionary."""
         return super().dict(self.section)
+    """
+
 
     def initialize_parameters(self,
                               pathToModelDir,
@@ -56,7 +53,7 @@ class SectionConfig(Config):
                               additional_cli_section=None,
                               additional_definitions=None,
                               required=None):
-        """Initialize Command line Interfcace and config for Preprocessing."""
+        """Initialize Command Line Interface and Config."""
         self.logger.debug(
             f"Initializing parameters for {self.section}.")
 
@@ -74,7 +71,7 @@ class SectionConfig(Config):
                                           default_config, default_model, self.options, required)
 
         print(self.get_param("log_level"))
-        self.logger.setLevel(self.get_param("log_level"))
+        self.logger.setLevel(self.log_level)
         return p
 
 
