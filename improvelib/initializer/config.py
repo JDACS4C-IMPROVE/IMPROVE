@@ -6,6 +6,7 @@ import yaml
 import json
 from pathlib import Path
 
+from improvelib.utils import str2bool
 from improvelib.initializer.cli import CLI
 
 
