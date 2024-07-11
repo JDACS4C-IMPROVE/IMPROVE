@@ -91,11 +91,12 @@ class Config:
             f.write(str(self.nckparam)) 
       
 
-    def get_param(self, section="DEFAULT", key=None) -> str:
+    #def get_param(self, section="DEFAULT", key=None) -> str:
         """
         Get value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
+    """
 
         error = None
 
@@ -107,9 +108,10 @@ class Config:
             value = None
 
         return value
+    """
 
     #def set_param(self, section="DEFAULT", key=None, value=None) -> (str, str):
-        """
+    """
         Set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
@@ -278,15 +280,16 @@ class Config:
             for i in duplicates[::-1]:
                 additional_definitions.pop(i)
 
-        # cli=CLI()
         cli = self.cli
         cli.set_command_line_options(options=additional_definitions)
         cli.get_command_line_options()
 
         # Set log level
-        if cli.args.log_level:
-            self.logger.setLevel(cli.args.log_level)
-            self.log_level = cli.args.log_level
+        if "log_level" in cli.cli_params:
+            self.logger.debug("Log level set by command line, updating to %s", cli.cli_params["log_level"])
+            self.log_level = cli.cli_params["log_level"]
+            self.logger.setLevel(self.log_level)
+            
 
         # Load Config
         if os.path.isdir(cli.args.input_dir):

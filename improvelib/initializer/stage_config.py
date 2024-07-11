@@ -70,7 +70,6 @@ class SectionConfig(Config):
         p = super().initialize_parameters(pathToModelDir, self.section,
                                           default_config, default_model, self.options, required)
 
-        print(self.get_param("log_level"))
         self.logger.setLevel(self.log_level)
         return p
 

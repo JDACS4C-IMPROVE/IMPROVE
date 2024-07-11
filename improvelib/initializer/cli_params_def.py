@@ -12,7 +12,7 @@ improve_basic_conf = [
     {"name": "log_level",
      "type": str,
      "default": "DEBUG",
-     "help": "Logger verbosity"
+     "help": "Logger verbosity. Options: ERROR, etc etc"
      },
     {"name": "input_dir",
      "type": str,
