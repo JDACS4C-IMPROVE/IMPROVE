@@ -35,7 +35,7 @@ class Config:
         # Default values are set in command line parser
         self.input_dir = None
         self.output_dir = None
-        self.nckparam = {}
+        self.final_params = {}
 
         # Set Defaults and conventions
         if "CANDLE_DATA_DIR" in os.environ and "IMPROVE_DATA_DIR" in os.environ:
@@ -88,7 +88,7 @@ class Config:
                 Path(path.parent).mkdir(parents=True, exist_ok=True)
 
         with path.open("w") as f:
-            f.write(str(self.nckparam)) 
+            f.write(str(self.final_params)) 
       
 
     #def get_param(self, section="DEFAULT", key=None) -> str:
@@ -342,7 +342,7 @@ class Config:
         self.load_config_file(pathToModelDir, default_config)
         self.logger.debug("Natasha param update here")
         # Sets dictionary of parameters with defaults
-        self.nckparam = self.cli.default_params
+        self.final_params = self.cli.default_params
         # Gets dictionary of parameters from config for this section
         section_config = dict(self.config[section])
         self.logger.debug("Default parameters: %s", self.cli.default_params)
@@ -351,23 +351,23 @@ class Config:
         self.logger.debug("Updating config")
         # Overrides dictionary of defaults with config params
         for cfp in section_config:
-            if cfp in self.nckparam:
+            if cfp in self.final_params:
                 self.logger.info("Overriding %s default with config value of %s", cfp, section_config[cfp])
-                self.nckparam[cfp] = section_config[cfp]
+                self.final_params[cfp] = section_config[cfp]
             else:
                 self.logger.warning("Config parameter %s is not defined, skipping.", cfp)
         self.logger.debug("Current section CLI set parameters: %s", self.cli.cli_params)
         # Overrides dictionary of defaults+config with CLI params
         for clip in self.cli.cli_params:
             self.logger.info("Overriding %s default or config with command line value of %s", clip, self.cli.cli_params[clip])
-            self.nckparam[clip] = self.cli.cli_params[clip]
-        self.logger.debug("Final parameters: %s", self.nckparam)
+            self.final_params[clip] = self.cli.cli_params[clip]
+        self.logger.debug("Final parameters: %s", self.final_params)
         self.logger.debug("Final parameters set.")
 
         # Update input and output directories
-        self.output_dir = self.nckparam['output_dir']
-        self.input_dir = self.nckparam['input_dir']
-        self.log_level = self.nckparam['log_level']
+        self.output_dir = self.final_params['output_dir']
+        self.input_dir = self.final_params['input_dir']
+        self.log_level = self.final_params['log_level']
         self.logger.setLevel(self.log_level)
         self.logger.debug("Current log level is %s", self.log_level)
 
@@ -384,10 +384,10 @@ class Config:
             self.logger.debug("Creating output directory: %s", self.output_dir)
             os.makedirs(self.output_dir)
         self.logger.debug("Saving final parameters to file.")
-        self.save_parameter_file(self.nckparam["param_log_file"])
+        self.save_parameter_file(self.final_params["param_log_file"])
 
         self.__class__ = current_class
-        return self.nckparam
+        return self.final_params
 
 
 if __name__ == "__main__":
