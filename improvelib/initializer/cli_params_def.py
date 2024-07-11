@@ -32,6 +32,11 @@ improve_basic_conf = [
      "help": "Configuration file for the model. The parameters defined in the \
              file override the default parameter values."
      },
+     {"name": "param_log_file",
+     "type": str,
+     "default": "param_log_file.txt",
+     "help": "Log of final parameters used for run. Saved in out_dir if file name, can be an absolute path."
+     },
      # ---------------------------------------
     {"name": "data_format",  # [Req] depends on the DL framework that used by the model
      "type": str,

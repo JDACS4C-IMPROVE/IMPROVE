@@ -338,7 +338,6 @@ class Config:
         self.logger.debug("Natasha param update here")
         # Sets dictionary of parameters with defaults
         self.nckparam = cli.default_params
-        print("self.config:", self.config)
         # Gets dictionary of parameters from config for this section
         section_config = dict(self.config[section])
         print("section:", section)
@@ -360,25 +359,13 @@ class Config:
             self.nckparam[clip] = cli.cli_params[clip]
         print("nckparam:", self.nckparam)
         self.logger.debug("Final parameters set.")
-        
-
-
-
-
-
-        #for k in cli.params:
-        #    if cli.params[k] is None:
-        #        continue
-        #    self.logger.debug("Setting %s to %s", k, cli.params[k])
-        #    self.set_param(section, k, cli.params[k])
-        #    # self.config[section][k] = cli.params[k]
 
         # Update input and output directories
         self.output_dir = self.nckparam['output_dir']
         self.input_dir = self.nckparam['input_dir']
         self.log_level = self.nckparam['log_level']
-        print("THISLOGLEVEL:", self.log_level)
         self.logger.setLevel(self.log_level)
+        self.logger.debug("Current log level is %s", self.log_level)
 
         # Set environment variables
 
@@ -392,8 +379,8 @@ class Config:
         if not os.path.isdir(self.output_dir):
             self.logger.debug("Creating output directory: %s", self.output_dir)
             os.makedirs(self.output_dir)
-
-        self.save_parameter_file("THISNEEDSTOBEAPARAM.txt")
+        self.logger.debug("Saving final parameters to file.")
+        self.save_parameter_file(self.nckparam["param_log_file"])
 
         self.__class__ = current_class
         return self.nckparam
