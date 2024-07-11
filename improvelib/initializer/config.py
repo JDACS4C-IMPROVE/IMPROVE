@@ -71,25 +71,25 @@ class Config:
             self.logger.error("Can't load config from %s", str(self.file))
             self.config['DEFAULT'] = {}
 
-    def save_config(self, file, config=None):
-        """ TODO ... """
-        if os.path.isabs(file):
-            self.config.write(file)
+    def save_parameter_file(self, file_name):
+        """ 
+        Saves final parameters to a file. 
+        Saves in output_dir if file name given or anywhere with absolute path
+        TODO: file name needs to be a general parameter (see initialize_param crazy name)
+        TODO: would be nice to specifiy output format
+        """
+        if os.path.isabs(file_name):
+            path = file_name
         else:
-            if config and 'output_dir' in config:
-                path = Path(config['output_dir'], file)
-            else:
-                path = Path(file)
-
+            path = Path(self.output_dir, file_name)
             if not Path(path.parent).exists():
                 self.logger.debug(
                     "Creating directory %s for saving config file.", path.parent)
                 Path(path.parent).mkdir(parents=True, exist_ok=True)
 
-            with path.open("w") as f:
-                self.config.write(f)
-
-
+        with path.open("w") as f:
+            f.write(str(self.nckparam)) 
+      
 
     def get_param(self, section="DEFAULT", key=None) -> str:
         """
@@ -344,8 +344,11 @@ class Config:
         print("cli.defaults", cli.default_params)
         # Overrides dictionary of defaults with config params
         for cfp in section_config:
-            self.logger.debug("Overriding %s default with config value of %s", cfp, section_config[cfp])
-            self.nckparam[cfp] = section_config[cfp]
+            if cfp in self.nckparam:
+                self.logger.debug("Overriding %s default with config value of %s", cfp, section_config[cfp])
+                self.nckparam[cfp] = section_config[cfp]
+            else:
+                self.logger.debug("Config parameter %s is not defined, skipping.", cfp)
         print("nckparam:", self.nckparam)
         print("cli.cli_params", cli.cli_params)
         # Overrides dictionary of defaults+config with CLI params
@@ -354,6 +357,7 @@ class Config:
             self.nckparam[clip] = cli.cli_params[clip]
         print("nckparam:", self.nckparam)
         self.logger.debug("Final parameters set.")
+        
 
 
 
@@ -385,6 +389,8 @@ class Config:
         if not os.path.isdir(self.output_dir):
             self.logger.debug("Creating output directory: %s", self.output_dir)
             os.makedirs(self.output_dir)
+
+        self.save_parameter_file("THISNEEDSTOBEAPARAM.txt")
 
         self.__class__ = current_class
         return self.nckparam

@@ -109,39 +109,17 @@ class CLI:
         """Get Command Line Options"""
 
         self.logger.debug("Getting Command Line Options")
-        print("here2")
         self.args = self.parser.parse_args()
         self.parser_params = vars(self.args)
         self.default_params = vars(self.parser.parse_args([]))
         self.cli_explicit = self.get_explicit_cli()
-        print("here")
-        print("self.cli_explicit:", self.cli_explicit)
         for explicit_key in self.cli_explicit:
             if self.cli_explicit[explicit_key]:
                 self.cli_params[explicit_key] = self.parser_params[explicit_key]
-        print("self.cli_params:", self.cli_params)
 
 
     def _check_option(self, option) -> bool:
         pass
-
-    # def config(self, section) -> BaseConfig :
-    #     cfg=BaseConfig.Config()
-    #     if self.params['config_file']:
-    #         if os.path.isfile(self.params['config_file']) :
-    #             self.logger.info('Loading Config from %s', self.params['config_file'])
-    #             cfg.file = self.params['config_file']
-    #             cfg.load_config()
-    #         else:
-    #             self.logger.critical("Can't load Config from %s", self.params['config_file'])
-    #     else:
-    #         self.logger.debug('No config file')
-
-    #     # Set params in config
-    #     for k in self.params :
-    #         (value,error) = cfg.param(section=section, key=k , value=self.params[k])
-
-    #     return cfg
 
     def initialize_parameters(self,
                               pathToModelDir,
