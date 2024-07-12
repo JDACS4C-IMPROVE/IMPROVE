@@ -24,7 +24,8 @@ class CLI:
         # Class attributes and defautl values
         # Initialize parser
         self.parser = argparse.ArgumentParser(
-            description='IMPROVE Command Line Parser')
+            description='IMPROVE Command Line Parser',
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         # Initialize logger
         self.logger = logging.getLogger('CLI')
