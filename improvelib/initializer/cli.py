@@ -66,6 +66,8 @@ class CLI:
 
         predefined_options = [o.lstrip('-')
                               for o in self.parser._option_string_actions]
+        print("1. predefined options:", predefined_options)
+        print("1. options:", options)
         # ['input_dir', 'output_dir', 'log_level', 'config_file']
         for o in predefined_options:
             # check if o is the value of name in one of the dicts in options
@@ -76,6 +78,8 @@ class CLI:
                     self.logger.debug("Removing %s from options", o)
                     options.remove(d)
 
+        print("2. predefined options:", predefined_options)
+        print("2. options:", options)
         # Find and remove duplicates
         unique_options = {}
         for d in options:
@@ -87,6 +91,9 @@ class CLI:
 
         # Create list of unique options
         options = list(unique_options.values())
+
+        print("3. predefined options:", predefined_options)
+        print("3. options:", options)
 
         # From Candle, can't handle bool, need to fork if we want to support argument groups
         if group:
