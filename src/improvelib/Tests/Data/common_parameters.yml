@@ -1,0 +1,12 @@
+- name: t1
+  default: 0
+  help: t1 flag
+- name: t2
+  help: t2 flag
+- name: t3
+  default: 0
+  section: AP Options
+  help: special
+- name: t4
+  help: delivery
+  section: AP Options

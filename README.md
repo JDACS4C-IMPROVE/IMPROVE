@@ -35,6 +35,20 @@ export PYTHONPATH=$PYTHONPATH:/your/path/to/IMPROVE
 export IMPROVE_DATA_DIR="./csa_data/"
 ```
 
+## IMPROVE repository structure
+
+The `improvelib` package follows a standard directory structure for organizing its code and resources. Here is a brief overview of the structure:
+
+- `src/`: This directory contains the source code files for the `improvelib` package.
+- `tests/`: This directory contains the unit tests for the `improvelib` package.
+- `docs/`: This directory contains the documentation files for the `improvelib` package.
+- `examples/`: This directory contains example code and usage scenarios for the `improvelib` package.
+- `LICENSE`: This file contains the license information for the `improvelib` package.
+- `README.md`: This file provides an overview and instructions for using the `improvelib` package.
+
+Please note that this is a general structure and may vary depending on the specific requirements and conventions of the project.
+
+
 ## Tutorial
 For a detailed guide on how to use the `IMPROVE library` using an example model, LightGBM, see https://jdacs4c-improve.github.io/docs/content/unified_interface.html.
 

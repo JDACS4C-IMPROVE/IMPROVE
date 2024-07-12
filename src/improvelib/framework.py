@@ -12,17 +12,17 @@ import pandas as pd
 from .metrics import compute_metrics
 
 # Check that environment variable "IMPROVE_DATA_DIR" has been specified
-if os.getenv("IMPROVE_DATA_DIR", os.getenv("CANDLE_DATA_DIR") ) is None:
-    raise Exception("ERROR ! Required system variable not specified.  \
-                    You must define IMPROVE_DATA_DIR ... Exiting.\n")
+# if os.getenv("IMPROVE_DATA_DIR", os.getenv("CANDLE_DATA_DIR") ) is None:
+#     raise Exception("ERROR ! Required system variable not specified.  \
+#                     You must define IMPROVE_DATA_DIR ... Exiting.\n")
 
-if os.getenv("IMPROVE_DATA_DIR")    :
-    os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
-elif os.getenv("CANDLE_DATA_DIR")    :
-    os.environ["IMPROVE_DATA_DIR"] = os.environ["CANDLE_DATA_DIR"]
-else:
-    raise Exception("ERROR ! Required system variable not specified.  \
-                    You must define IMPROVE_DATA_DIR or CANDLE_DATA_DIR ... Exiting.\n")
+# if os.getenv("IMPROVE_DATA_DIR")    :
+#     os.environ["CANDLE_DATA_DIR"] = os.environ["IMPROVE_DATA_DIR"]
+# elif os.getenv("CANDLE_DATA_DIR")    :
+#     os.environ["IMPROVE_DATA_DIR"] = os.environ["CANDLE_DATA_DIR"]
+# else:
+#     raise Exception("ERROR ! Required system variable not specified.  \
+#                     You must define IMPROVE_DATA_DIR or CANDLE_DATA_DIR ... Exiting.\n")
 
 SUPPRESS = argparse.SUPPRESS
 
@@ -426,8 +426,17 @@ def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
     params : parameter dict
     stage (str) : "train", "val", or "test"
     """
-    ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"  
-    ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+    ydf_fname = f"{stage}_{params['y_data_suffix']}.csv" 
+
+    # check for ml_data_outdir and output_dir in params and use the one that is available
+    # this ensures backward compatibility with previous versions of framework.py
+    if "ml_data_outdir" in params:
+        ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
+    elif "output_dir" in params:
+        ydf_fpath = Path(params["output_dir"]) / ydf_fname
+    else:
+        raise Exception("ERROR ! Neither 'ml_data_outdir' not 'output_dir' found in params.\n")
+
     ydf.to_csv(ydf_fpath, index=False)
     return None
 
@@ -523,7 +532,7 @@ def store_predictions_df(params: Dict,
     return None
 
 
-def compute_performace_scores(params: Dict,
+def compute_performance_scores(params: Dict,
                               y_true: np.array,
                               y_pred: np.array,
                               stage: str,
