@@ -18,17 +18,20 @@ class DRPPreprocessConfig(PreprocessConfig):
     # required:  these params must be specified for the model in the param file
     _preproc_params = [
         {"name": "y_data_files", # default expected
+        "default": "fake", #NCK, not sure why we need this but we need a default
          "type": str,
          "help": "List of files that contain the y (prediction variable) data. \
                 Example: [['response.tsv']]",
          },
         {"name": "x_data_canc_files", # required
+         "default": "fake", #NCK, not sure why we need this but we need a default
          "type": str,
          "help": "List of feature files including gene_system_identifer. Examples: \n\
                 1) [['cancer_gene_expression.tsv', ['Gene_Symbol']]] \n\
                 2) [['cancer_copy_number.tsv', ['Ensembl', 'Entrez']]].",
          },
         {"name": "x_data_drug_files", # required
+        "default": "fake", #NCK, not sure why we need this but we need a default
          "type": str,
          "help": "List of feature files. Examples: \n\
                 1) [['drug_SMILES.tsv']] \n\

@@ -1,10 +1,15 @@
 import logging
 import argparse
+from argparse import Namespace
+import copy
 import os
 import sys
 
-from candle import parse_from_dictlist
+
+# from candle import parse_from_dictlist
 # from improve import config as BaseConfig
+from improvelib.utils import parse_from_dictlist
+
 
 
 class CLI:
@@ -19,14 +24,18 @@ class CLI:
         # Class attributes and defautl values
         # Initialize parser
         self.parser = argparse.ArgumentParser(
-            description='IMPROVE Command Line Parser')
+            description='IMPROVE Command Line Parser',
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         # Initialize logger
         self.logger = logging.getLogger('CLI')
 
         # Command line options after parsing, results of self.parser.parse_args()
         self.args = None  # placeholder for args from argparse
-        self.params = None  # dict of args
+        self.parser_params = None  # dict of args
+        self.default_params = None # dict of defaults for the parameters
+        self.cli_explicit = None
+        self.cli_params = {}
 
         # Set logger level
         self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.DEBUG))
@@ -57,13 +66,14 @@ class CLI:
 
         predefined_options = [o.lstrip('-')
                               for o in self.parser._option_string_actions]
+
         # ['input_dir', 'output_dir', 'log_level', 'config_file']
         for o in predefined_options:
             # check if o is the value of name in one of the dicts in options
             for d in options:
                 if o == d['name']:
                     self.logger.warning(
-                        "Found %s in options. This option is predifined and can not be overwritten.", o)
+                        "Found %s in options. This option is predefined and can not be overwritten.", o)
                     self.logger.debug("Removing %s from options", o)
                     options.remove(d)
 
@@ -87,42 +97,34 @@ class CLI:
         else:
             parse_from_dictlist(options, self.parser)
 
+    def get_explicit_cli(self):
+        self.logger.debug("Determining Options set by the Command Line")
+        parser_copy = copy.deepcopy(self.parser)
+        parser_copy.set_defaults(**{x:None for x in vars(self.args)})
+        args_copy = parser_copy.parse_args()
+        explicit_cli = Namespace(**{key:(value is not None) for key, value in vars(args_copy).items()})
+        print("explicit cli:", vars(explicit_cli))
+        # True if it was set by command line
+        return vars(explicit_cli)
+
     def get_command_line_options(self):
         """Get Command Line Options"""
 
         self.logger.debug("Getting Command Line Options")
         self.args = self.parser.parse_args()
-        self.params = vars(self.args)
+        self.parser_params = vars(self.args)
+        self.default_params = vars(self.parser.parse_args([]))
+        self.cli_explicit = self.get_explicit_cli()
+        for explicit_key in self.cli_explicit:
+            if self.cli_explicit[explicit_key]:
+                self.cli_params[explicit_key] = self.parser_params[explicit_key]
+
 
         return self.params
 
     def _check_option(self, option) -> bool:
         pass
 
-    # def config(self, section) -> BaseConfig :
-    #     cfg=BaseConfig.Config()
-    #     if self.params['config_file']:
-    #         if os.path.isfile(self.params['config_file']) :
-    #             self.logger.info('Loading Config from %s', self.params['config_file'])
-    #             cfg.file = self.params['config_file']
-    #             cfg.load_config()
-    #         else:
-    #             self.logger.critical("Can't load Config from %s", self.params['config_file'])
-    #     else:
-    #         self.logger.debug('No config file')
-
-    #     # Set params in config
-    #     for k in self.params :
-    #         (value,error) = cfg.param(section=section, key=k , value=self.params[k])
-
-    #     return cfg
-
-    def initialize_parameters(self,
-                              pathToModelDir,
-                              default_model=None,
-                              additional_definitions=None,
-                              required=None,):
-        pass
 
 
 if __name__ == "__main__":

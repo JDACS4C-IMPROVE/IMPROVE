@@ -12,7 +12,7 @@ improve_basic_conf = [
     {"name": "log_level",
      "type": str,
      "default": "DEBUG",
-     "help": "Logger verbosity"
+     "help": "Logger verbosity. Options: ERROR, etc etc"
      },
     {"name": "input_dir",
      "type": str,
@@ -31,6 +31,11 @@ improve_basic_conf = [
      "default": None,
      "help": "Configuration file for the model. The parameters defined in the \
              file override the default parameter values."
+     },
+     {"name": "param_log_file",
+     "type": str,
+     "default": "param_log_file.txt",
+     "help": "Log of final parameters used for run. Saved in out_dir if file name, can be an absolute path."
      },
      # ---------------------------------------
     {"name": "data_format",  # [Req] depends on the DL framework that used by the model
@@ -61,18 +66,21 @@ improve_preprocess_conf = [
     # ---------------------------------------
     {"name": "train_split_file",
      "type": str,
+     "default": "fake", # NCK default needed
      "required": True,
      "help": "The path to the file that contains the train split ids (e.g., \
              'split_0_train_id', 'split_0_train_size_1024').",
      },
     {"name": "val_split_file",
      "type": str,
+     "default": "fake", # NCK default needed
      "required": True,
      "help": "The path to the file that contains the val split ids (e.g., \
              'split_0_val_id').",
      },
     {"name": "test_split_file",
      "type": str,
+     "default": "fake", # NCK default needed
      "required": True,
      "help": "The path to the file that contains the test split ids (e.g., \
              'split_0_test_id').",
@@ -118,16 +126,19 @@ improve_train_conf = [
     # ---------------------------------------
     {"name": "epochs",
      "type": int,
+     "default": 7, # NCK default needed
      "required": True,
      "help": "Training epochs."
      },
     {"name": "learning_rate",
      "type": float,
+     "default": 7, # NCK default needed
      "required": True,
      "help": "Learning rate for the optimizer."
      },     
     {"name": "batch_size",
      "type": int,
+     "default": 7, # NCK default needed
      "required": True,
      "help": "Trainig batch size."
      },
@@ -226,6 +237,24 @@ improve_infer_conf = [
              a new column that stores model predictions will be added to the y \
              data file and will be called 'auc_pred')."
      },
+     # --------------------------------------- NCK: infer is looking for these too
+    {"name": "model_file_name",  # default expected
+     "type": str,
+     "default": "model",
+     "help": "[Dep?] Filename to store trained model (str is w/o file_format)."
+     },
+    {"name": "model_file_format",  # [Req] depends on the DL framework used by the model
+     "type": str,
+     "default": ".pt", # Note! this default assumes PyTorch model
+     # "required": True, # TODO if this is required param, then remove default
+     "help": "[Dep?] File format to save the trained model."
+     },
+     {"name": "loss",  
+     "type": str,
+     "default": "mse",
+     "help": "[Dep?] Loss metric."
+     },
+    # ---------------------------------------
 
 ]
 
