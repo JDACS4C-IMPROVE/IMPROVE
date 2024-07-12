@@ -269,11 +269,11 @@ def build_paths(params: Dict):
     Returns:
         dict: updated dict of CANDLE/IMPROVE parameters and parsed values.
     """
-    #mainpath = Path(os.environ["IMPROVE_DATA_DIR"])
-    #check_path(mainpath)
+    mainpath = Path(params["input_dir"])
+    check_path(mainpath)
 
     # Raw data
-    raw_data_path = params["input_dir"]
+    raw_data_path = mainpath
     params["raw_data_path"] = raw_data_path
     check_path(raw_data_path)
 
