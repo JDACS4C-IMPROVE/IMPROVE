@@ -86,14 +86,14 @@ class TrainConfig(SectionConfig):
     """Class to handle configuration files for Training."""
 
     def __init__(self) -> None:
-        super().__init__('Training', improve_train_conf)
+        super().__init__('Train', improve_train_conf)
 
 
 class InferConfig(SectionConfig):
     """Class to handle configuration files for Inference."""
 
     def __init__(self) -> None:
-        super().__init__('Inference', improve_infer_conf)
+        super().__init__('Infer', improve_infer_conf)
 
 
 if __name__ == "__main__":
