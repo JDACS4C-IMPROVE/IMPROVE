@@ -123,14 +123,6 @@ class CLI:
     def _check_option(self, option) -> bool:
         pass
 
-    """
-    def initialize_parameters(self,
-                              pathToModelDir,
-                              default_model=None,
-                              additional_definitions=None,
-                              required=None,):
-        pass
-    """
 
 
 if __name__ == "__main__":
