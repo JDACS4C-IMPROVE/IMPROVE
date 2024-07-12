@@ -89,10 +89,26 @@ class Config:
 
         with path.open("w") as f:
             f.write(str(self.final_params)) 
+
+    """
+    def save_config(self, file, config=None):
+        if os.path.isabs(file):
+            with open(file, 'w') as out_file:
+                self.config.write(out_file)
+        else:
+            path = Path(self.output_dir, file_name)
+            if not Path(path.parent).exists():
+                self.logger.debug(
+                    "Creating directory %s for saving config file.", path.parent)
+                Path(path.parent).mkdir(parents=True, exist_ok=True)
+
+        with path.open("w") as f:
+            f.write(str(self.final_params)) 
+    """
       
 
     #def get_param(self, section="DEFAULT", key=None) -> str:
-        """
+    """
         Get value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
