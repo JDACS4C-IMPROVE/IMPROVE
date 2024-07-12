@@ -249,6 +249,11 @@ improve_infer_conf = [
      # "required": True, # TODO if this is required param, then remove default
      "help": "[Dep?] File format to save the trained model."
      },
+     {"name": "loss",  
+     "type": str,
+     "default": "mse",
+     "help": "[Dep?] Loss metric."
+     },
     # ---------------------------------------
 
 ]
