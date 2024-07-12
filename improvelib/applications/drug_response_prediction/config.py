@@ -23,6 +23,7 @@ class DRPPreprocessConfig(PreprocessConfig):
                 Example: [['response.tsv']]",
          },
         {"name": "x_data_canc_files", # required
+         "default": "fake",
          "type": str,
          "help": "List of feature files including gene_system_identifer. Examples: \n\
                 1) [['cancer_gene_expression.tsv', ['Gene_Symbol']]] \n\
