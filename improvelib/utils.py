@@ -568,6 +568,7 @@ def compute_performance_scores(params: Dict,
         print("Inference scores:\n\t{}".format(scores))
     return scores
 
+compute_performace_scores = compute_performance_scores # for backwards compatibility
 
 def check_path_and_files(folder_name: str, file_list: List, inpath: Path) -> Path:
     """Checks if a folder and its files are available in path.
