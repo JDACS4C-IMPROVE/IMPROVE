@@ -134,7 +134,7 @@ class OmicsLoader():
 
         self.params = params
         self.sep = sep
-        print("params:" params)
+        print("params:", params)
         print("params['x_data_canc_files']", params["x_data_canc_files"])
         """
         if isinstance(params["x_data_canc_files"], str):
