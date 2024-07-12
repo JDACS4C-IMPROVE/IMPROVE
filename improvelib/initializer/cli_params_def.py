@@ -66,18 +66,21 @@ improve_preprocess_conf = [
     # ---------------------------------------
     {"name": "train_split_file",
      "type": str,
+     "default": "fake", # NCK default needed
      "required": True,
      "help": "The path to the file that contains the train split ids (e.g., \
              'split_0_train_id', 'split_0_train_size_1024').",
      },
     {"name": "val_split_file",
      "type": str,
+     "default": "fake", # NCK default needed
      "required": True,
      "help": "The path to the file that contains the val split ids (e.g., \
              'split_0_val_id').",
      },
     {"name": "test_split_file",
      "type": str,
+     "default": "fake", # NCK default needed
      "required": True,
      "help": "The path to the file that contains the test split ids (e.g., \
              'split_0_test_id').",
