@@ -126,16 +126,19 @@ improve_train_conf = [
     # ---------------------------------------
     {"name": "epochs",
      "type": int,
+     "default": 7, # NCK default needed
      "required": True,
      "help": "Training epochs."
      },
     {"name": "learning_rate",
      "type": float,
+     "default": 7, # NCK default needed
      "required": True,
      "help": "Learning rate for the optimizer."
      },     
     {"name": "batch_size",
      "type": int,
+     "default": 7, # NCK default needed
      "required": True,
      "help": "Trainig batch size."
      },
