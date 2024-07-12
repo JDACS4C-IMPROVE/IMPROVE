@@ -134,9 +134,8 @@ class OmicsLoader():
 
         self.params = params
         self.sep = sep
-        print("params:", params)
-        print("params['x_data_canc_files']", params["x_data_canc_files"])
-        """
+
+
         if isinstance(params["x_data_canc_files"], str):
             # instanciate array from string
             logger.debug("x_data_canc_files is a string. Converting to list.")
@@ -145,8 +144,7 @@ class OmicsLoader():
             self.inp = params["x_data_canc_files"]
 
         logger.debug(f"self.inp: {self.inp}")
-        """
-        self.inp = params["x_data_canc_files"]
+
         self.x_data_path = params["x_data_path"]
         self.canc_col_name = params["canc_col_name"]
         self.dfs = {}
