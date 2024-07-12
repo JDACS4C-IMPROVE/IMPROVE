@@ -144,6 +144,7 @@ class OmicsLoader():
 
         logger.debug(f"self.inp: {self.inp}")
         """
+        self.inp = params["x_data_canc_files"]
         self.x_data_path = params["x_data_path"]
         self.canc_col_name = params["canc_col_name"]
         self.dfs = {}
