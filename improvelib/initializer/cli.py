@@ -88,7 +88,7 @@ class CLI:
 
         # Create list of unique options
         options = list(unique_options.values())
-
+        # breakpoint()
         # From Candle, can't handle bool, need to fork if we want to support argument groups
         if group:
             group = self.parser.add_argument_group(group)
@@ -119,6 +119,8 @@ class CLI:
             if self.cli_explicit[explicit_key]:
                 self.cli_params[explicit_key] = self.parser_params[explicit_key]
 
+
+        return self.params
 
     def _check_option(self, option) -> bool:
         pass

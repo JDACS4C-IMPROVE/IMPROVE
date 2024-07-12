@@ -71,6 +71,7 @@ class Config:
             self.logger.error("Can't load config from %s", str(self.file))
             self.config['DEFAULT'] = {}
 
+
     def save_parameter_file(self, file_name):
         """ 
         Saves final parameters to a file. 
@@ -169,7 +170,7 @@ class Config:
 
         if section:
             # check if section exists
-            if self.config.has_section(section):
+            if section in self.config:
                 for i in self.config.items(section):
                     params[i[0]] = i[1]
             else:
