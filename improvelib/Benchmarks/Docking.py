@@ -1,4 +1,4 @@
-from improvelib.Benchmarks.Base import Benchmark, Stage, ParameterConverter, DataFrameDescription, DatasetDescription
+from improvelib.benchmarks.base import Benchmark, Stage, ParameterConverter, DataFrameDescription, DatasetDescription
 from improvelib.data_loader import DataInputOutput
 import pandas as pd
 import os

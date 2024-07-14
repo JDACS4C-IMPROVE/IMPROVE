@@ -1,5 +1,5 @@
-from improvelib.Benchmarks import Base as Base
-from improvelib.Benchmarks.Base import Benchmark, Stage, ParameterConverter, DatasetDescription, DataFrameDescription
+from improvelib.benchmarks import base as Base
+from improvelib.benchmarks.base import Benchmark, Stage, ParameterConverter, DatasetDescription, DataFrameDescription
 from enum import Enum
 
 from pathlib import Path

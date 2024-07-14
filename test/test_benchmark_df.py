@@ -5,8 +5,8 @@ from pathlib import Path
 import sys
 import os
 
-from improvelib.Benchmarks.Base import DataStager
-from improvelib.Benchmarks.DrugResponsePrediction import *
+from improvelib.benchmarks.base import DataStager
+from improvelib.benchmarks.drug_response_prediction import *
 
 # [Req] IMPROVE/CANDLE imports
 
