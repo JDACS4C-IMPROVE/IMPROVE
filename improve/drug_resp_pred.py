@@ -185,6 +185,10 @@ class OmicsLoader():
         self.mutation_long_format_fname = "cancer_mutation_long_format.tsv"
         self.mutation_fname = "cancer_mutation.parquet"
         self.rppa_fname = "cancer_RPPA.tsv"
+
+        self.gene_expression_combined_fname = "cancer_gene_expression_combined.tsv"
+        self.gene_expression_combined_rescaled_fname = "cancer_gene_expression_combined_rescaled.tsv"
+
         self.known_file_names = [self.copy_number_fname,
                                  self.discretized_copy_number_fname,
                                  self.dna_methylation_fname,
@@ -193,7 +197,11 @@ class OmicsLoader():
                                  self.mutation_count_fname,
                                  self.mutation_long_format_fname,
                                  self.mutation_fname,
-                                 self.rppa_fname]
+                                 self.rppa_fname,
+
+                                 self.gene_expression_combined_fname,
+                                 self.gene_expression_combined_rescaled_fname,
+                                 ]
 
         self.params = params
         self.sep = sep
@@ -255,6 +263,12 @@ class OmicsLoader():
                 level_map = None  # level_map is not used with parquet file
             elif fname == self.rppa_fname: 
                 level_map = {"Antibody": 0}
+
+            elif fname == self.gene_expression_combined_fname:
+                level_map = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
+            elif fname == self.gene_expression_combined_rescaled_fname:
+                level_map = {"Ensembl": 0, "Entrez": 1, "Gene_Symbol": 2}
+
             else:
                 raise NotImplementedError(f"Option '{fname}' not recognized.")
 
@@ -316,9 +330,19 @@ class DrugsLoader():
         self.smiles_fname = "drug_SMILES.tsv"
         self.mordred_fname = "drug_mordred.tsv"
         self.ecfp4_512bit_fname = "drug_ecfp4_nbits512.tsv"
+
+        self.smiles_combined_fname = "drug_SMILES_combined.tsv"  # ovarian
+        self.mordred_combined_fname = "drug_mordred_combined.tsv"  # ovarian
+        self.ecfp4_512bit_combined_fname = "drug_ecfp4_nbits512_combined.tsv"  # ovarian
+
         self.known_file_names = [self.smiles_fname,
                                  self.mordred_fname,
-                                 self.ecfp4_512bit_fname]
+                                 self.ecfp4_512bit_fname,
+
+                                 self.smiles_combined_fname,
+                                 self.mordred_combined_fname,
+                                 self.ecfp4_512bit_combined_fname,
+                                 ]
 
         self.params = params
         self.sep = sep
@@ -414,7 +438,7 @@ class DrugResponseLoader():
                  sep: str = "\t",
                  verbose: bool = True):
 
-        self.response_fname = "response.tsv"
+        self.response_fname = "response.tsv" # TODO note it's overwritten by config
         self.known_file_names = [self.response_fname]
 
         self.params = params
