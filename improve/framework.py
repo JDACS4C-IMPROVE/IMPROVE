@@ -498,7 +498,7 @@ def store_predictions_df(params: Dict,
                       decimals=round_decimals)
         
         # Check that loaded metadata is aligned with the vector of true values
-        assert np.array_equal(v1, v2), ""\
+        assert np.array_equal(v1, v2, equal_nan=True), ""\
             f"Y data vector from the loaded metadata is not equal to the true vector:\n"\
             f"Y data vector from loaded metadata:  {v1[:10]}\n"\
             f"Y data vector of true target values: {v2[:10]}\n"
