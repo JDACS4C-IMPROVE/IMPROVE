@@ -8,14 +8,13 @@ import numpy as np
 # import torch
 
 
-
 class DataInputOutput:
 
-    # Default format 
+    # Default format
     FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
     logging.basicConfig(format=FORMAT)
 
-    def __init__(self, input_dir=None, output_dir=None, loader=None, logger=None , framework=None) -> None:
+    def __init__(self, input_dir=None, output_dir=None, loader=None, logger=None, framework=None) -> None:
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.logger = logging.getLogger('IO')
@@ -40,9 +39,8 @@ class DataInputOutput:
                 self.torch = None
                 self.logger.warning("Pytorch not installed")
 
-
     def set_input_dir(self, input_dir):
-        self.input_dir = input_dir  
+        self.input_dir = input_dir
 
     def set_output_dir(self, output_dir):
         self.output_dir = output_dir
@@ -53,15 +51,13 @@ class DataInputOutput:
     def set_loader(self, loader):
         self.loader = loader
 
-
-
     def load_data(self, file, format=None, loader=None):
         """Load data from a file."""
 
         if format == 'CSV':
             df = pd.read_csv(file)
         elif format == 'parquet':
-            df = pd.read_parquet(file)    
+            df = pd.read_parquet(file)
         elif format == 'hdf5':
             df = pd.read_hdf(file)
         elif format == 'npy':
@@ -74,15 +70,15 @@ class DataInputOutput:
             self.logger.critical("Unknown format: %s", format)
             return None
         return df
-    
+
     def load_features(self, file, format=None, loader=None):
         """Load features from a file."""
         return self.load_data(file, format, loader)
-    
+
     def load_labels(self, file, format=None, loader=None):
         """Load labels from a file."""
         return self.load_data(file, format, loader)
-        
+
     def save_weights(self, file, data, format=None, loader=None):
         """Save tensorflow or pytorch weights to a file."""
 
@@ -111,7 +107,6 @@ class DataInputOutput:
             self.logger.critical("Unknown format: %s", format)
             return None
         return model
-        
 
     def save_data(self, file, data, format=None, loader=None):
         """Save data to a file. Data is a pandas dataframe or numpy array."""
@@ -119,7 +114,7 @@ class DataInputOutput:
         # if data is a numpy array convert it to a pandas dataframe
         if isinstance(data, np.ndarray):
             data = pd.DataFrame(data)
-        
+
         # if data is a tensorflow or pytorch tensor convert it to a dataframe
         # if self.framework == 'tensorflow':
         #     if isinstance(data, tf.Tensor):
@@ -131,9 +126,9 @@ class DataInputOutput:
         if format == 'CSV':
             data.to_csv(file)
         elif format == 'parquet':
-            data.to_parquet(file)    
+            data.to_parquet(file)
         elif format == 'hdf5':
-            data.to_hdf(file , key='data')
+            data.to_hdf(file, key='data')
         elif format == 'npy':
             np.save(file, data)
         elif format == 'BenchmarkV1':
@@ -145,6 +140,7 @@ class DataInputOutput:
             return None
         return df
 
+
 if __name__ == "__main__":
     io = DataInputOutput(framework='tensorflow')
     df = io.load_data("./tmp/iris.csv", format="CSV")
@@ -152,7 +148,6 @@ if __name__ == "__main__":
     io.save_data("./tmp/iris.parquet", df, format="parquet")
     # io.save_data("./tmp/iris.hdf5", df, format="hdf5")
     io.save_data("./tmp/iris.npy", df, format="npy")
-   
 
     print(io.load_data("./tmp/iris.parquet", format="parquet"))
     # print(io.load_data("./tmp/iris.hdf5", format="hdf5"))

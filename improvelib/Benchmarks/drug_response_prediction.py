@@ -1,5 +1,5 @@
-from improvelib.Benchmarks import Base as Base
-from improvelib.Benchmarks.Base import Benchmark, Stage, ParameterConverter, DatasetDescription, DataFrameDescription
+from improvelib.benchmarks import base as Base
+from improvelib.benchmarks.base import Benchmark, Stage, ParameterConverter, DatasetDescription, DataFrameDescription
 from enum import Enum
 
 from pathlib import Path
@@ -8,7 +8,9 @@ import logging
 import os
 
 import pandas as pd
-import improvelib.drug_resp_pred as drp
+from improvelib.applications.drug_response_prediction import drp_utils
+from improvelib.applications.drug_response_prediction import omics_utils
+from improvelib.applications.drug_response_prediction import drug_utils
 
 
 class DRP(Base.Base):
@@ -359,7 +361,7 @@ class SingleDRPBenchmark(Benchmark):
         loader_params["canc_col_name"] = dataframe.value.key_column
         loader_params["x_data_path"] = os.path.join(
             self._benchmark_dir, 'x_data')
-        omics_loader = drp.OmicsLoader(loader_params)
+        omics_loader = omics_utils.OmicsLoader(loader_params)
         return omics_loader.dfs[dataframe_file]
 
     def _load_drug_dataframe(self, dataframe: SingleDRPDataFrame):
@@ -378,7 +380,7 @@ class SingleDRPBenchmark(Benchmark):
         loader_params["drug_col_name"] = dataframe.value.key_column
         loader_params["x_data_path"] = os.path.join(
             self._benchmark_dir, 'x_data')
-        drug_loader = drp.DrugsLoader(loader_params)
+        drug_loader = drug_utils.DrugsLoader(loader_params)
         return drug_loader.dfs[dataframe_file]
 
     def _load_response_dataframe(self, dataframe: SingleDRPDataFrame):
@@ -393,7 +395,7 @@ class SingleDRPBenchmark(Benchmark):
         """
         dataframe_file = dataframe.value.file
         loader_params = {}
-        loader_params["y_data_files"] = str([dataframe_file])
+        loader_params["y_data_files"] = str([[dataframe_file]])
         loader_params["canc_col_name"] = CANCER_KEY_COL
         loader_params["drug_col_name"] = DRUG_KEY_COL
         loader_params["y_col_name"] = str(self._metric.value)
@@ -402,7 +404,7 @@ class SingleDRPBenchmark(Benchmark):
         loader_params["splits_path"] = os.path.join(
             self._benchmark_dir, self._splits_dir)
         split_file = self._construct_splits_file_name()
-        response_loader = drp.DrugResponseLoader(
+        response_loader = drp_utils.DrugResponseLoader(
             loader_params, split_file=split_file)
         df = response_loader.dfs[dataframe_file]
         cols_to_drop = [col for col in df.columns if col not in [

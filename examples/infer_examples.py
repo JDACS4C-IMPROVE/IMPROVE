@@ -1,37 +1,38 @@
-from model_parameters import model_params
+import os
 import sys
 from pathlib import Path
 from typing import Dict
 
 import pandas as pd
-from improvelib.initializer.stage_config import InferConfig
+import lightgbm as lgb
 
-# [Req] IMPROVE imports
-from improvelib.tools import utils
+# [Req] IMPROVE/CANDLE imports
+from improvelib import utils
+
+# Model-specifc imports
+from LGBM.model_utils.utils import extract_subset_fea
+from lgbm_model_parameters import model_params
+
+# [Req] Imports from preprocess and train scripts
+from train_examples import metrics_list
+from improvelib.applications.drug_response_prediction.config import DRPInferConfig
 
 filepath = Path(__file__).resolve().parent  # [Req]
-metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]
 
 # ---------------------
 # [Req] Parameter lists
 # ---------------------
-# model_infer_params
+# Two parameter lists are required:
+# 1. app_infer_params
+# 2. model_infer_params
 #
-# The values for the parameters in a list should be specified in a
+# The values for the parameters in both lists should be specified in a
 # parameter file that is passed as default_model arg in
 # frm.initialize_parameters().
-
-
-# Model-specific params (Model: LightGBM)
-# All params in model_infer_params are optional.
-# If no params are required by the model, then it should be an empty list.
-model_infer_params = []
-
 # ---------------------
 
+
 # [Req]
-
-
 def run(params: Dict):
     """ Run model inference.
 
@@ -42,6 +43,7 @@ def run(params: Dict):
         dict: prediction performance scores computed on test data according
             to the metrics_list.
     """
+    # import ipdb; ipdb.set_trace()
 
     # ------------------------------------------------------
     # [Req] Create output dir
@@ -58,29 +60,31 @@ def run(params: Dict):
     # ------------------------------------------------------
     te_data = pd.read_parquet(Path(params["test_ml_data_dir"])/test_data_fname)
 
+    fea_list = ["ge", "mordred"]
+    fea_sep = "."
+
     # Test data
+    xte = extract_subset_fea(te_data, fea_list=fea_list, fea_sep=fea_sep)
     yte = te_data[[params["y_col_name"]]]
+    print("xte:", xte.shape)
+    print("yte:", yte.shape)
 
     # ------------------------------------------------------
     # Load best model and compute predictions
     # ------------------------------------------------------
     # Build model path
+    params['model_file_format'] = 'pt'
+    params['model_file_name'] = 'model'
+    params['loss'] = 'r2'
     modelpath = utils.build_model_path(
         params, model_dir=params["model_dir"])  # [Req]
 
-    ########################################################
-    ############# Your model's code is here ################
-    ########################################################
     # Load LightGBM
     model = lgb.Booster(model_file=str(modelpath))
 
     # Predict
     test_pred = model.predict(xte)
     test_true = yte.values.squeeze()
-
-    ########################################################
-    ########################################################
-    ########################################################
 
     # ------------------------------------------------------
     # [Req] Save raw predictions in dataframe
@@ -94,7 +98,7 @@ def run(params: Dict):
     # ------------------------------------------------------
     # [Req] Compute performance scores
     # ------------------------------------------------------
-    test_scores = utils.compute_performace_scores(
+    test_scores = utils.compute_performance_scores(
         params,
         y_true=test_true, y_pred=test_pred, stage="test",
         outdir=params["infer_outdir"], metrics=metrics_list
@@ -102,28 +106,26 @@ def run(params: Dict):
 
     return test_scores
 
-# [Req]
-
 
 def main(args):
     # [Req]
-    cfg = InferConfig()
-    model_name = 'Model Name'
-    model_params_filepath = 'default_model_params.cfg'
+    cfg = DRPInferConfig()
+    model_name = 'LGBM'
+    model_params_filepath = 'lgbm_params.txt'
     # Required parameters
     required_parameters = None
     additional_definitions = model_params
 
     params = cfg.initialize_parameters(
-        pathToModelDir=filepath,
+        pathToModelDir=os.path.join(filepath, 'LGBM'),
         default_config=model_params_filepath,
         default_model=None,
-        additional_section=model_name,
+        additional_cli_section=model_name,
         additional_definitions=additional_definitions,
         required=required_parameters
     )
 
-    test_scores = run(params)
+    val_scores = run(params)
     print("\nFinished model inference.")
 
 

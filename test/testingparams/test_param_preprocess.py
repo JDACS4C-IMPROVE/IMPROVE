@@ -2,8 +2,7 @@ import sys
 from pathlib import Path
 from typing import Dict
 
-from improvelib.initializer.stage_config import PreprocessConfig
-# from improvelib.preprocess import Config as Preprocess
+from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
 
 import pandas as pd
 
@@ -81,16 +80,17 @@ def run(params: Dict, logger=None):
 def main(args):
     """ Main function for preprocessing."""
     
-    cfg = PreprocessConfig()
+    cfg = DRPPreprocessConfig()
     params = cfg.initialize_parameters(filepath,
-                                    default_config="default.cfg",
+                                    default_config="default_nck.cfg",
                                     # additional_cli_section='My section',
                                     additional_definitions=my_params_example,
                                     required=None
                                     )
+    print("these are the params from preprocess.py:", params)
 
 
-    status2 = run(params, cfg.logger)
+    #status2 = run(params, cfg.logger)
 
 
 if __name__ == "__main__":
