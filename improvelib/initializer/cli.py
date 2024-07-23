@@ -119,8 +119,7 @@ class CLI:
             if self.cli_explicit[explicit_key]:
                 self.cli_params[explicit_key] = self.parser_params[explicit_key]
 
-
-        return self.params
+        return self.cli_params
 
     def _check_option(self, option) -> bool:
         pass
