@@ -10,7 +10,7 @@ from typing import List, Set, Union, NewType, Dict, Optional
 import numpy as np
 import pandas as pd
 
-from .metrics import compgitute_metrics
+from .metrics import compute_metrics
 
 
 def str2bool(v: str) -> bool:
