@@ -108,6 +108,31 @@ class ListOfListsAction(argparse.Action):
         setattr(namespace, self.dest, decoded_list)
 
 
+class StoreIfPresent(argparse.Action):
+    """
+    This class allows to define an argument in argparse that keeps the default
+    value empty and, if not passed by the user, the argument is not available
+    in the parsed arguments. By default, argparse includes all defined arguments
+    in the Namespace object returned by parse_args(), even if they are not
+    provided by the user, assigning them the default value.
+
+    This is primarily used with args that we plan to deprecate.
+    """
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Args:
+            parser (ArgumentParser object): Object that contains this action
+            namespace (Namespace object): Namespace object that will be
+                returned by the parse_args() function.
+            values (str): The associated command-line arguments converted to
+                string type (i.e. input).
+            option_string (str): The option string that was used to invoke
+                this action. (optional)
+        """
+        setattr(namespace, self.dest, values)
+
+
 def parse_from_dictlist(dictlist, parser):
     """
     Functionality to parse options.

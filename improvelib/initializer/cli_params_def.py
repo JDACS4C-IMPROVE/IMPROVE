@@ -6,6 +6,9 @@ encoding a suggested deprecation.
 "[Dep]"  -- parameters we plan to keep in the upcoming release, but deprecate in the future
 """
 
+from improvelib.utils import StoreIfPresent
+
+
 # Parameters relevant to all IMPROVE model models
 # These parameters will be accessible in all model scripts (preprocess, train, infer)
 improve_basic_conf = [
@@ -88,7 +91,7 @@ improve_preprocess_conf = [
     # ---------------------------------------
     {"name": "ml_data_outdir",  # TODO. we plan to use output_dir instead
      "type": str,
-     "default": "./ml_data",
+     "action": StoreIfPresent,
      "help": "[Dep+] Path to save ML data (data files that can be fet to the prediction model).",
      },
 
