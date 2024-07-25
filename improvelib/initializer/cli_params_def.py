@@ -101,17 +101,20 @@ improve_preprocess_conf = [
 improve_train_conf = [
     {"name": "train_ml_data_dir",  # TODO we plan to use input_dir instead
      "type": str,
-     "default": "./ml_data",
+     # "default": "./ml_data",
+     "action": StoreIfPresent,
      "help": "[Dep+] Datadir where train data is stored."
      },
     {"name": "val_ml_data_dir",  # TODO we plan to use input_dir instead
      "type": str,
-     "default": "./ml_data",
+     # "default": "./ml_data",
+     "action": StoreIfPresent,
      "help": "[Dep+] Datadir where val data is stored."
      },
     {"name": "model_outdir",  # TODO we plan to use output_dir instead
      "type": str,
-     "default": "./out_model",  # csa_data/models/
+     # "default": "./out_model",  # csa_data/models/
+     "action": StoreIfPresent,
      "help": "[Dep+] Dir to save trained models.",
      },
     # ---------------------------------------
@@ -198,17 +201,20 @@ improve_train_conf = [
 improve_infer_conf = [
     {"name": "test_ml_data_dir", # TODO we plan to use input_dir instead
      "type": str,
-     "default": "./ml_data",
+     # "default": "./ml_data",
+     "action": StoreIfPresent,
      "help": "[Dep+] Datadir where test data is stored."
      },
     {"name": "model_dir", # TODO we plan to use input_dir instead
      "type": str,
-     "default": "./out_model",  # csa_data/models/
+     # "default": "./out_model",  # csa_data/models/
+     "action": StoreIfPresent,
      "help": "[Dep+] Dir to save inference results.",
      },
     {"name": "infer_outdir",  # TODO we plan to use output_dir instead
      "type": str,
-     "default": "./out_infer",
+     # "default": "./out_infer",
+     "action": StoreIfPresent,
      "help": "[Dep+] Dir to save inference results.",
      },
     # ---------------------------------------
