@@ -13,6 +13,8 @@ import test_infer_params
 config_file_1='test_default_1.cfg'
 config_file_2='test_default_2.cfg'
 
+# TODO: Number tests? Save param_log_file.txt per test? Check global params?
+
 class TestPreprocessConfigs(unittest.TestCase):
     
     @patch('sys.stdout')
@@ -91,8 +93,37 @@ class TestTrainConfigs(unittest.TestCase):
         self.assertEqual(int(train_params['epochs']), 20, msg=f"Parameter value {train_params['epochs']} does not match the config file value in {config_file_2}.")
         
         
+class TestInferConfigs(unittest.TestCase):   
     
-#class TestInferConfigs(unittest.TestCase):   
-
+    @patch('sys.stdout')
+    def test_infer_default_values(self, mock_stdout):
+        """INFER: Check default values of parameters when config_file_1 is set as default config file."""
+        sys.argv = ['test_infer_params.py']
+        infer_params = test_infer_params.main(sys.argv[1:])
+        self.assertEqual(infer_params['test_batch'], 64, msg="Parameter value is not the default value.")
+        self.assertTrue(infer_params['infer_test_var'] == "infer", msg="Parameter value is not the default value.")
+        
+    @patch('sys.stdout')
+    def test_infer_config_values(self, mock_stdout):
+        """INFER: Check config values of parameters listed in config_file_1 when this file is set as default config file."""
+        sys.argv = ['test_infer_params.py']
+        infer_params = test_infer_params.main(sys.argv[1:])
+        self.assertTrue(infer_params['json_scores_suffix'] == 'test_scores', msg=f"Parameter value {infer_params['json_scores_suffix']} does not match the config file value in {config_file_1}.")
+        
+    @patch('sys.stdout')
+    def test_infer_cli_values(self, mock_stdout):
+        """INFER: Check CLI values of parameters with config_file_1 set as default config file."""
+        sys.argv = ['test_infer_params.py', '--json_scores_suffix', 'test_scores_cli']
+        infer_params = test_infer_params.main(sys.argv[1:])
+        self.assertTrue(infer_params['json_scores_suffix'] == 'test_scores_cli', msg=f"Parameter value {infer_params['json_scores_suffix']} does not match the CLI value: test_splits_cli.")
+    
+    @patch('sys.stdout')    
+    def test_infer_nondefault_config_values(self, mock_stdout):
+        """INFER: Check config values of parameters listed in config_file_2 when this file is set using the CLI argument."""
+        sys.argv = ['test_infer_params.py', '--config_file', config_file_2]
+        infer_params = test_infer_params.main(sys.argv[1:])
+        self.assertTrue(infer_params['infer_test_var'] == 'test_infer', msg=f"Parameter value {infer_params['infer_test_var']} does not match the config file value in {config_file_2}.")
+        self.assertTrue(infer_params['json_scores_suffix'] == "scores", msg="Parameter value is not the default value.")
+        
 if __name__ == "__main__":
     unittest.main(verbosity=2)
