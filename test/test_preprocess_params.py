@@ -39,8 +39,7 @@ def run(params: Dict, logger=None):
 
     logger.info("Running preprocessing.") if logger else print(
         "Running preprocessing.")
-
-     ###### Place your code here ########
+    ###### Place your code here ########
 
     logger.debug(f"Loading data from {params['input_dir']}.")
     ###### Place your code here ######
@@ -62,8 +61,6 @@ def main(args):
                                     additional_definitions=test_model_preprocess_params,
                                     required=None
                                     )
-    print(params)
-    print(test_model_preprocess_params)
     return params # instead of parsing output string
 
 

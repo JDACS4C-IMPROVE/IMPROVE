@@ -12,28 +12,12 @@ test_model_train_params = [
         # see argparse.ArgumentParser.add_argument() for more information
         {
             # name of the argument
-            "name": "y_data_files",
+            "name": "train_test_var",
             # type of the argument
-            "type": str,
-            # number of arguments that should be consumed
-            "nargs": "+",
+            "type": int,
             # help message
-            "help": "List of files that contain the y (prediction variable) data.",
-        },
-        {
-            # name of the argument
-            "name": "supplement",
-            # type of the argument
-            "type": str,
-            # number of arguments that should be consumed
-            "nargs": 2,
-            # name of the argument in usage messages
-            "metavar": ("FILE", "TYPE"),
-            # action to be taken when this argument is encountered
-            "action": "append",
-            # default value of the argument
-            "default": [ ('a' , 'b')],
-            "help": "Supplemental data tuple FILE and TYPE. FILE is in INPUT_DIR.",   # help message
+            "help": "Test variable for train.",
+            "default": 5,
         }
     ]
 
@@ -55,8 +39,7 @@ def run(params: Dict, logger=None):
 
     logger.info("Running model training.") if logger else print(
         "Running model training.")
-
-     ###### Place your code here ########
+    ###### Place your code here ########
 
     logger.debug(f"Loading data from {params['input_dir']}.")
     ###### Place your code here ######
@@ -78,7 +61,7 @@ def main(args):
                                     additional_definitions=test_model_train_params,
                                     required=None
                                     )
-    print("Train parameters:", params)
+    return params
 
 
 if __name__ == "__main__":
