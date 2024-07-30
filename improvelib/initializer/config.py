@@ -6,7 +6,7 @@ import yaml
 import json
 from pathlib import Path
 
-from improvelib.utils import str2bool
+from improvelib.utils import str2bool, cast_value
 from improvelib.initializer.cli import CLI
 
 
@@ -373,7 +373,7 @@ class Config:
         for cfp in section_config:
             if cfp in self.final_params:
                 self.logger.info("Overriding %s default with config value of %s", cfp, section_config[cfp])
-                self.final_params[cfp] = section_config[cfp]
+                self.final_params[cfp] = cast_value(section_config[cfp])
             else:
                 self.logger.warning("Config parameter %s is not defined, skipping.", cfp)
         self.logger.debug("Current section CLI set parameters: %s", self.cli.cli_params)

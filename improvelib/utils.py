@@ -39,6 +39,17 @@ def str2bool(v: str) -> bool:
         raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
+def cast_value(s):
+    """Cast to numeric if possbile"""
+    try:
+        return int(s)
+    except ValueError:
+        try:
+            return float(s)
+        except ValueError:
+            return s  # Return the original string if it's neither int nor float
+
+
 class ListOfListsAction(argparse.Action):
     """This class extends the argparse.Action class by instantiating an
     argparser that constructs a list-of-lists from an input (command-line
