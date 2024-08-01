@@ -10,13 +10,19 @@ from typing import Optional
 from improvelib.metrics import compute_metrics
 
 
+def splits_generator():
+    """ Generates data splits for cross-study analysis. """
+    return None
+
+
 def csa_postprocess(res_dir_path,
                     model_name: str,
                     y_col_name: str,
                     round_digits: int=3,
                     outdir: str="./",
                     verbose: bool=False):
-    """
+    """ Generates cross-study analysis tables and a figure.
+
     Args:
         res_dir_path: full path to the cross-study results dir
         model_name: name of the model (e.g., GraphDRP, IGTD)
@@ -61,7 +67,7 @@ def csa_postprocess(res_dir_path,
     metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]  
 
     sep = ','
-    scores_fpath = outdir/"all_scores.csv"
+    scores_fpath = outdir / "all_scores.csv"
     if scores_fpath.exists():
         print("Load scores")
         scores = pd.read_csv(scores_fpath, sep=sep)
@@ -78,7 +84,7 @@ def csa_postprocess(res_dir_path,
 
             for split_dir in split_dirs:
                 # Load preds
-                preds_file_path = split_dir/preds_file_name
+                preds_file_path = split_dir / preds_file_name
                 preds = pd.read_csv(preds_file_path, sep=sep)
 
                 # Compute scores
@@ -101,7 +107,8 @@ def csa_postprocess(res_dir_path,
 
         # Concat dfs and save
         scores = pd.concat(dfs, axis=0)
-        scores.to_csv(outdir/"all_scores.csv", index=False)
+        scores.to_csv(outdir / "all_scores.csv", index=False)
+        del dfs
 
     # Average across splits
     sc_mean = scores.groupby(["met", "src", "trg"])["value"].mean().reset_index()
@@ -113,17 +120,17 @@ def csa_postprocess(res_dir_path,
     for met in scores.met.unique():
         df = scores[scores.met == met]
         # df = df.sort_values(["src", "trg", "met", "split"])
-        df.to_csv(outdir/f"{met}_scores.csv", index=True)
+        df.to_csv(outdir / f"{met}_scores.csv", index=True)
         # Mean
         mean = df.groupby(["src", "trg"])["value"].mean()
         mean = mean.unstack()
-        mean.to_csv(outdir/f"{met}_mean_csa_table.csv", index=True)
+        mean.to_csv(outdir / f"{met}_mean_csa_table.csv", index=True)
         print(f"{met} mean:\n{mean}")
         mean_tb[met] = mean
         # Std
         std = df.groupby(["src", "trg"])["value"].std()
         std = std.unstack()
-        std.to_csv(outdir/f"{met}_std_csa_table.csv", index=True)
+        std.to_csv(outdir / f"{met}_std_csa_table.csv", index=True)
         print(f"{met} std:\n{std}")
         std_tb[met] = std
 
@@ -158,6 +165,43 @@ def csa_postprocess(res_dir_path,
     # Combine dfs
     # breakpoint()
     df = pd.concat([on, off], axis=0).sort_values("met")
-    df.to_csv(outdir/"densed_csa_table.csv", index=False)
+    df.to_csv(outdir / "densed_csa_table.csv", index=False)
     print(f"Densed CSA table:\n{df}")
     return scores
+
+
+def plot_color_coded_csa_table(df: pd.DataFrame, filepath: str="./", title: str=None):
+    """
+    Creates a color-coded table with shades of red and green based on the values and saves it as a figure.
+
+    Args:
+        data (dict): Dictionary containing the data for the table.
+        filename (str): The filename for the saved figure.
+    """
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+
+    # Create a DataFrame
+    df = pd.DataFrame(df)
+    df.set_index('src', inplace=True)
+
+    # Create a color map from red to green
+    # https://seaborn.pydata.org/tutorial/color_palettes.html
+    # cmap = sns.diverging_palette(220, 20, as_cmap=True).reversed()
+    cmap = sns.diverging_palette(145, 300, s=60, as_cmap=True).reversed()
+
+    # Plot the heatmap
+    plt.figure(figsize=(10, 8))
+    ax = sns.heatmap(df, annot=True, cmap=cmap, center=0, cbar=False,
+                     linewidths=0.5, linecolor='gray', fmt=".2f")
+
+    # Set the labels and title
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+
+    # Set the title
+    plt.title(title)
+
+    # Save the plot
+    plt.savefig(filepath, bbox_inches='tight', dpi=150)
+    plt.close()
