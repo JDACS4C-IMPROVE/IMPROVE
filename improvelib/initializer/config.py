@@ -369,14 +369,21 @@ class Config:
         self.logger.debug("Current section: %s", section)
         self.logger.debug("Current section config parameters: %s", section_config)
         self.logger.debug("Updating config")
+
         # Overrides dictionary of defaults with config params
+        # breakpoint();
+        # from pprint import pprint
+        # pprint(self.cli.default_params)
         for cfp in section_config:
-            if cfp in self.final_params:
+            if cfp in self.final_params: # TODO why we need this??
                 self.logger.info("Overriding %s default with config value of %s", cfp, section_config[cfp])
                 self.final_params[cfp] = cast_value(section_config[cfp])
             else:
                 self.logger.warning("Config parameter %s is not defined, skipping.", cfp)
         self.logger.debug("Current section CLI set parameters: %s", self.cli.cli_params)
+        # pprint(self.final_params)
+        # breakpoint();
+
         # Overrides dictionary of defaults+config with CLI params
         for clip in self.cli.cli_params:
             self.logger.info("Overriding %s default or config with command line value of %s", clip, self.cli.cli_params[clip])

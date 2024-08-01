@@ -286,12 +286,12 @@ improve_infer_conf = [
      "help": "[Dep?] Loss metric."
      },
     # ---------------------------------------
-    {"name": "input_dir_data",
+    {"name": "input_data_dir",
      "type": str,
      "action": StoreIfPresent,
-     "help": "Datadir where test data is stored."
+     "help": "Dir where data for inference is stored."
      },
-    {"name": "input_dir_model",
+    {"name": "input_model_dir",
      "type": str,
      "action": StoreIfPresent,
      "help": "Dir where model is stored.",

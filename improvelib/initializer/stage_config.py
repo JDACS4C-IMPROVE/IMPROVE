@@ -68,8 +68,12 @@ class SectionConfig(Config):
             self.cli.set_command_line_options(
                 additional_definitions, f'{additional_cli_section} options')
 
-        p = super().initialize_parameters(pathToModelDir, self.section,
-                                          default_config, default_model, self.options, required)
+        p = super().initialize_parameters(pathToModelDir=pathToModelDir,
+                                          section=self.section,
+                                          default_config=default_config,
+                                          default_model=default_model,
+                                          additional_definitions=self.options,
+                                          required=required)
 
         self.logger.setLevel(self.log_level)
         return p
