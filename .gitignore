@@ -158,3 +158,8 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# other
+csa_data/
+conda_env.sh
+data_geneexp_mordred_all_source.parquet
