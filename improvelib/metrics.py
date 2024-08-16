@@ -2,10 +2,11 @@
 
 import sys
 import sklearn
+from math import sqrt
 
 from scipy.stats.mstats import pearsonr, spearmanr
-import sklearn
-if sklearn.__version__ <= "1.4.0":
+
+if sklearn.__version__ < "1.4.0":
     from sklearn.metrics import r2_score, mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
 else:
     from sklearn.metrics import r2_score, mean_squared_error, root_mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
@@ -81,10 +82,12 @@ def rmse(y_true, y_pred):
         float value corresponding to RMSE. If several outputs, errors of all outputs are averaged with uniform weight.
     """
     #rmse = root_mean_squared_error(y_true, y_pred)
-    if sklearn.__version__ <= "1.4.0":
+    if sklearn.__version__ >= "1.4.0":
+        rmse = root_mean_squared_error(y_true, y_pred) # squared is deprecated
+    elif sklearn.__version__ < "1.4.0" and sklearn.__version__ >= "0.22.0":
         rmse = mean_squared_error(y_true, y_pred , squared=False)
     else:
-        rmse = root_mean_squared_error(y_true, y_pred)
+        rmse = sqrt(mean_squared_error(y_true, y_pred))
     return rmse
 
 
