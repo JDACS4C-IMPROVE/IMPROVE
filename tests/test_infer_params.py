@@ -2,20 +2,20 @@ import sys
 from pathlib import Path
 from typing import Dict
 
-from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+from improvelib.applications.drug_response_prediction.config import DRPInferConfig
 
 # Global variables
 filepath = Path(__file__).resolve().parent  # [Req]
 
 # Define parameters for the script
-test_model_preprocess_params = [
+test_model_infer_params = [
         {
-            "name": "preprocess_test_var",
+            "name": "infer_test_var",
             "type": str,
-            "help": "Test variable for preprocess.",
-            "default": "prep",
+            "help": "Test variable for infer.",
+            "default": "infer",
         },
-        {   
+                {   
             "name": "split",
             "type": list,
             "default": ['0'],
@@ -43,12 +43,12 @@ test_model_preprocess_params = [
     ]
 
 def main(args):
-    """ Main function for preprocessing."""
+    """ Main function for inference."""
     
-    cfg = DRPPreprocessConfig()
+    cfg = DRPInferConfig()
     params = cfg.initialize_parameters(filepath,
                                     default_config="test_default_1.cfg",
-                                    additional_definitions=test_model_preprocess_params,
+                                    additional_definitions=test_model_infer_params,
                                     required=None
                                     )
     return params
