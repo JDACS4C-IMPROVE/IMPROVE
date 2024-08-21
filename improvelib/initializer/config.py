@@ -340,6 +340,35 @@ class Config:
 
         return params
 
+    # Load command line definitions from a file
+    def load_cli_parameters(self, file, section=None):
+        """Load parameters from a file."""
+        self.logger.debug("Loading parameters from %s", file)
+
+        # Convert Path to string
+        if file and isinstance(file, Path):
+            file = str(file)
+
+        if os.path.isfile(file):
+            # check if yaml or json file and load
+            params = None
+
+            if file.endswith('.json'):
+                with open(file, 'r') as f:
+                    params = json.load(f)
+            elif file.endswith('.yaml') or file.endswith('.yml'):
+                with open(file, 'r') as f:
+                    params = yaml.safe_load(f)
+            else:
+                self.logger.error("Unsupported file format")
+            self._validate_parameters(params)
+            return params
+        else:
+            print(isinstance(file, str))
+            self.logger.critical("Can't find file %s", file)
+            sys.exit(1)
+            return None
+
     def initialize_parameters(self,
                               pathToModelDir,
                               section='DEFAULT',
@@ -470,6 +499,7 @@ class Config:
 if __name__ == "__main__":
     cfg = Config()
     cfg.file = "./Tests/Data/default.cfg"
+    cfg.output_dir = "./tmp"
     cfg.load_config()
     print(cfg.params)
     print(cfg.dict())
