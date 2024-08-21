@@ -91,10 +91,10 @@ class Config:
         with path.open("w") as f:
             f.write(str(self.final_params)) 
 
-    """
-    def save_config(self, file, config=None):
-        if os.path.isabs(file):
-            with open(file, 'w') as out_file:
+
+    def save_config(self, file_name, config=None):
+        if os.path.isabs(file_name):
+            with open(file_name, 'w') as out_file:
                 self.config.write(out_file)
         else:
             path = Path(self.output_dir, file_name)
@@ -105,15 +105,37 @@ class Config:
 
         with path.open("w") as f:
             f.write(str(self.final_params)) 
-    """
       
 
-    #def get_param(self, section="DEFAULT", key=None) -> str:
-    """
+    def param(self, section="DEFAULT" , key=None , value=None) -> (str,str):
+        """
+        Get or set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
+        Allowed section names are: Preprocess, Train and Infer
+        """
+        
+        error=None
+
+        if value is not None:
+            if self.config.has_section(section):
+                self.config[section][key]=value
+            else:
+                error="Unknow section " + str(section)
+                self.logger.error(error)
+        if self.config.has_option(section, key):
+            value=self.config[section][key]
+        else:
+            error="Can't find option " + str(key)
+            self.logger.error(error)
+            value=None
+
+        return (value, error)
+
+    def get_param(self, section="DEFAULT", key=None) -> str:
+        """
         Get value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
-    """
+
 
         error = None
 
@@ -125,7 +147,7 @@ class Config:
             value = None
 
         return value
-    """
+
 
     #def set_param(self, section="DEFAULT", key=None, value=None) -> (str, str):
     """
@@ -292,7 +314,31 @@ class Config:
         else:
             self.logger.critical("No input directory: %s", self.cli.args.input_dir)
 
+    def dict(self, section=None) -> dict :
+        """Return a dictionary of all options in the config file. If section is provided, return a dictionary of options in that section"""
+        params = {}
+        sections=[]
 
+        if section :
+            sections=[section]
+        else:
+            sections=self.config.sections()
+        
+        if section:
+            # check if section exists
+            if self.config.has_section(section):
+                for i in self.config.items(section):
+                    params[i[0]]=i[1]
+            else:
+                self.logger.error("Can't find section %s", section)
+
+        else:
+            for s in self.config.sections():
+                params[s]={}
+                for i in self.config.items(s):
+                    params[s][i[0]]=i[1]
+
+        return params
 
     def initialize_parameters(self,
                               pathToModelDir,
@@ -350,6 +396,10 @@ class Config:
         """
         #cli = self.cli
         self.cli.set_command_line_options()
+
+        config_file = self.cli.args.parse_known_args(['--config_file'])
+        self.load_config_file(pathToModelDir, default_config)
+
         self.cli.get_command_line_options()
 
         # Set log level
