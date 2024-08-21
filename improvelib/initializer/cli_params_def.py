@@ -6,7 +6,7 @@ encoding a suggested deprecation.
 "[Dep]"  -- parameters we plan to keep in the upcoming release, but deprecate in the future
 """
 
-from improvelib.utils import StoreIfPresent
+from improvelib.utils import StoreIfPresent, str2bool
 
 
 # Parameters relevant to all IMPROVE model models
@@ -297,8 +297,10 @@ improve_infer_conf = [
      "help": "Dir where model is stored.",
     },
     {"name": "calc_infer_scores",
-     "type": bool,
-     "action": StoreIfPresent,
+     # "type": bool,
+     "type": str2bool,
+     # "action": "store_true",
+     "default": True,
      "help": "Calculate scores in the inference script (this is optional; \
              should not be required during inference).",
     },
