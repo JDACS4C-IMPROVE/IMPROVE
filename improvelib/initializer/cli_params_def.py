@@ -77,17 +77,17 @@ improve_preprocess_conf = [
      "type": str,
      "default": "x_data",
      "help": "Dir name that contains the files with features data (x data)."
-     },
+    },
     {"name": "y_data_dir", # default expected
      "type": str,
      "default": "y_data",
      "help": "Dir name that contains the files with target data (y data)."
-     },
+    },
     {"name": "splits_dir", # default expected
      "type": str,
      "default": "splits",
      "help": "Dir name that contains files that store split ids of the y data file."
-     },
+    },
     # ---------------------------------------
     {"name": "train_split_file",
      "type": str,
@@ -95,27 +95,27 @@ improve_preprocess_conf = [
      "required": True,
      "help": "The path to the file that contains the train split ids (e.g., \
              'split_0_train_id', 'split_0_train_size_1024').",
-     },
+    },
     {"name": "val_split_file",
      "type": str,
      "default": "fake", # NCK default needed
      "required": True,
      "help": "The path to the file that contains the val split ids (e.g., \
              'split_0_val_id').",
-     },
+    },
     {"name": "test_split_file",
      "type": str,
      "default": "fake", # NCK default needed
      "required": True,
      "help": "The path to the file that contains the test split ids (e.g., \
              'split_0_test_id').",
-     },
+    },
     # ---------------------------------------
     {"name": "ml_data_outdir",  # TODO plan using output_dir instead
      "type": str,
      "action": StoreIfPresent,
      "help": "[Dep+] Path to save ML data (data files that can be fet to the prediction model).",
-     },
+    },
 
 ]
 
@@ -126,73 +126,73 @@ improve_train_conf = [
      # "default": "./ml_data",
      "action": StoreIfPresent,
      "help": "[Dep+] Datadir where train data is stored."
-     },
+    },
     {"name": "val_ml_data_dir",  # TODO plan using input_dir instead
      "type": str,
      # "default": "./ml_data",
      "action": StoreIfPresent,
      "help": "[Dep+] Datadir where val data is stored."
-     },
+    },
     {"name": "model_outdir",  # TODO plan using output_dir instead
      "type": str,
      # "default": "./out_model",  # csa_data/models/
      "action": StoreIfPresent,
      "help": "[Dep+] Dir to save trained models.",
-     },
+    },
     # ---------------------------------------
     {"name": "model_file_name",  # default expected
      "type": str,
      "default": "model",
      "help": "[Dep?] Filename to store trained model (str is w/o file_format)."
-     },
+    },
     {"name": "model_file_format",  # [Req] depends on the DL framework used by the model
      "type": str,
      "default": ".pt", # Note! this default assumes PyTorch model
      # "required": True, # TODO if this is required param, then remove default
      "help": "[Dep?] File format to save the trained model."
-     },
+    },
     # ---------------------------------------
     {"name": "epochs",
      "type": int,
      "default": 7, # NCK default needed
      "required": True,
      "help": "Training epochs."
-     },
+    },
     {"name": "learning_rate",
      "type": float,
      "default": 7, # NCK default needed
      "required": True,
      "help": "Learning rate for the optimizer."
-     },     
+    },     
     {"name": "batch_size",
      "type": int,
      "default": 7, # NCK default needed
      "required": True,
      "help": "Trainig batch size."
-     },
+    },
     {"name": "val_batch",
      "type": int,
      "default": 64,
      "help": "Validation batch size."
-     },
+    },
     # ---------------------------------------
     {"name": "loss",  # TODO used in compute_metrics(), but probably can be removed
      "type": str,
      "default": "mse",
      "help": "[Dep?] Loss metric."
-     },
+    },
     {"name": "early_stop_metric",  # [Req] TODO consider moving to app or model (with patience)
      "type": str,
      "default": "mse",
      "help": "Prediction performance metric to monitor for early stopping during \
              model training (e.g., 'mse', 'rmse').",
-     },
+    },
     {"name": "patience",  # [Req] TODO consider moving to app or model params (with early_stop_metric)
      "type": int,
      "default": 20,
      "help": "Iterations to wait for a validation metric to get worse before \
              stop training.",
-     },
+    },
     # ---------------------------------------
     # TODO y_data_preds_suffix, json_scores_suffix, pred_col_name_suffix
     # are currently used in utils.py (previously framework.py)
@@ -202,12 +202,12 @@ improve_train_conf = [
      "type": str,
      "default": "predicted",
      "help": "[Dep] Suffix to use for file name that stores predictions."
-     },
+    },
     {"name": "json_scores_suffix", # default expected
      "type": str,
      "default": "scores",
      "help": "[Dep] Suffix to use for file name that stores scores."
-     },
+    },
     {"name": "pred_col_name_suffix", # default expected
      "type": str,
      "default": "_pred",
@@ -215,7 +215,7 @@ improve_train_conf = [
              predictions made by the model (e.g., if y_col_name is 'auc', then \
              a new column that stores model predictions will be added to the y \
              data file and will be called 'auc_pred')."
-     },
+    },
 
 ]
 
@@ -226,25 +226,25 @@ improve_infer_conf = [
      # "default": "./ml_data",
      "action": StoreIfPresent,
      "help": "[Dep+] Datadir where test data is stored."
-     },
+    },
     {"name": "model_dir", # TODO plan using input_dir instead
      "type": str,
      # "default": "./out_model",  # csa_data/models/
      "action": StoreIfPresent,
      "help": "[Dep+] Dir to save inference results.",
-     },
+    },
     {"name": "infer_outdir",  # TODO plan using output_dir instead
      "type": str,
      # "default": "./out_infer",
      "action": StoreIfPresent,
      "help": "[Dep+] Dir to save inference results.",
-     },
+    },
     # ---------------------------------------
     {"name": "test_batch", # TODO should this be infer_batch?
      "type": int,
      "default": 64,
      "help": "Test batch size.",
-     },
+    },
     # ---------------------------------------
     # TODO. y_data_preds_suffix, json_scores_suffix, pred_col_name_suffix
     # are currently used in utils.py (previously framework.py)
@@ -254,12 +254,12 @@ improve_infer_conf = [
      "type": str,
      "default": "predicted",
      "help": "[Dep] Suffix to use for file name that stores predictions."
-     },
+    },
     {"name": "json_scores_suffix", # default expected
      "type": str,
      "default": "scores",
      "help": "[Dep] Suffix to use for file name that stores scores."
-     },
+    },
     {"name": "pred_col_name_suffix", # default expected
      "type": str,
      "default": "_pred",
@@ -267,8 +267,8 @@ improve_infer_conf = [
              predictions made by the model (e.g., if y_col_name is 'auc', then \
              a new column that stores model predictions will be added to the y \
              data file and will be called 'auc_pred')."
-     },
-     # --------------------------------------- NCK: infer is looking for these too
+    },
+    # --------------------------------------- NCK: infer is looking for these too
     {"name": "model_file_name",  # default expected
      "type": str,
      "default": "model",
@@ -279,23 +279,29 @@ improve_infer_conf = [
      "default": ".pt", # Note! this default assumes PyTorch model
      # "required": True, # TODO if this is required param, then remove default
      "help": "[Dep?] File format to save the trained model."
-     },
-     {"name": "loss",  
+    },
+    {"name": "loss",  
      "type": str,
      "default": "mse",
      "help": "[Dep?] Loss metric."
-     },
+    },
     # ---------------------------------------
     {"name": "input_data_dir",
      "type": str,
      "action": StoreIfPresent,
      "help": "Dir where data for inference is stored."
-     },
+    },
     {"name": "input_model_dir",
      "type": str,
      "action": StoreIfPresent,
      "help": "Dir where model is stored.",
-     },
+    },
+    {"name": "calc_infer_scores",
+     "type": bool,
+     "action": StoreIfPresent,
+     "help": "Calculate scores in the inference script (this is optional; \
+             should not be required during inference).",
+    },
 
 ]
 
