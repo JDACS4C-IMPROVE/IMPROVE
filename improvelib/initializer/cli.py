@@ -40,7 +40,7 @@ class CLI:
         # Set logger level
         self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.DEBUG))
 
-    """        # Set common options for all model scripts
+    # Set common options for all model scripts
         common_options = self.parser.add_argument_group('Standard Options')
         common_options.add_argument('-i', '--input_dir', metavar='DIR', type=str, dest="input_dir",
                                   default=os.getenv("IMPROVE_INPUT_DIR" , "./"), 
@@ -54,7 +54,7 @@ class CLI:
                                       DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET") 
         common_options.add_argument('-cfg', '--config_file', metavar='INI_FILE', dest="config_file", 
                                   type=str,
-                                  default=None, help="Config file in INI format.")  """
+                                  default=None, help="Config file in INI format.")
 
     def set_command_line_options(self, options=[], group=None):
         """Set Command Line Options, saveguard standard options."""

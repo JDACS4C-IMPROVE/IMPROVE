@@ -528,6 +528,10 @@ if __name__ == "__main__":
     cfg.cli.set_command_line_options(options=params)
     print(params)
 
+    cfg.cli.parser.parse_known_args(['--config_file'])
+    print(cfg.cli.args)
+
+    
     cfg.initialize_parameters(
         "./", additional_definitions=common_parameters + params)
     print(cfg.config.items('DEFAULT', raw=False))
