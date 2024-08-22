@@ -240,10 +240,10 @@ improve_infer_conf = [
      "help": "[Dep+] Dir to save inference results.",
     },
     # ---------------------------------------
-    {"name": "test_batch", # TODO should this be infer_batch?
+    {"name": "infer_batch",
      "type": int,
      "default": 64,
-     "help": "Test batch size.",
+     "help": "Inference batch size.",
     },
     # ---------------------------------------
     # TODO. y_data_preds_suffix, json_scores_suffix, pred_col_name_suffix
