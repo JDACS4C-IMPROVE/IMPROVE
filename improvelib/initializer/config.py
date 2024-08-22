@@ -612,8 +612,17 @@ if __name__ == "__main__":
             entry['default'] = target_dict[entry['name']]
             if "nargs" in entry:
                 # entry['default'] = str2bool(entry['default'])
-                print(target_dict[entry['name']])
+                # print(target_dict[entry['name']])
                 entry['default'] = json.loads(target_dict[entry['name']])
+            elif entry['type'] == bool:
+                entry['default'] = str2bool(entry['default'])
+            elif entry['type'] == int:
+                entry['default'] = int(entry['default'])
+            elif entry['type'] == str:
+                entry['default'] = str(entry['default'])
+            elif entry['type'] == float:
+                entry['default'] = float(entry['default'])
+
         updated_parameters.append(entry)
     print(updated_parameters)
 
