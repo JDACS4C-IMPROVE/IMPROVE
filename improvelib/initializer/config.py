@@ -149,12 +149,12 @@ class Config:
         return value
 
 
-    #def set_param(self, section="DEFAULT", key=None, value=None) -> (str, str):
-    """
+    def set_param(self, section="DEFAULT", key=None, value=None) -> (str, str):
+        """
         Set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
-    """
+    
         msg = None
 
         if key:
@@ -174,14 +174,15 @@ class Config:
             return (None, msg)
 
         return (self.config[section][key], msg)
-    """
+    
 
-    #def section_parameters(self, section=None) -> dict:
-    """Return a dictionary of all options in the config file. If section
+    def section_parameters(self, section=None) -> dict:
+        """
+        Return a dictionary of all options in the config file. If section
         is provided, return a dictionary of options in that section.
         TODO do really want of overload python's dict function?
         """
-    """
+    
         params = {}
         sections = []
 
@@ -205,7 +206,7 @@ class Config:
                     params[s][i[0]] = i[1]
 
         return params
-    """
+    
 
     def check_required(self):
         """Check if all required parameters are set."""
@@ -273,7 +274,7 @@ class Config:
         """
         Loads the configuration file. 
         """
-        if os.path.isdir(self.cli.args.input_dir):
+        if self.input_dir and os.path.isdir(self.input_dir):
 
             # Set config file name
             if self.cli.args.config_file:
@@ -312,10 +313,13 @@ class Config:
                 self.logger.warning("Can't find config file: %s", self.file)
                 self.config[section] = {}
         else:
-            self.logger.critical("No input directory: %s", self.cli.args.input_dir)
+            self.logger.critical("No input directory: %s", self.input_dir)
 
     def dict(self, section=None) -> dict :
-        """Return a dictionary of all options in the config file. If section is provided, return a dictionary of options in that section"""
+        """
+        Return a dictionary of all options in the config file. If section is provided, 
+        return a dictionary of options in that section
+        """
         params = {}
         sections=[]
 
@@ -517,21 +521,112 @@ if __name__ == "__main__":
         {
             "name": "chkpt",
             "dest": "checkpointing",
-            # "type" : "str2bool" ,
+            "type" : bool ,
             "default": False,
             "help": "Flag to enable checkpointing",
+            "section": "DEFAULT"
+        },
+        {
+            "name": "list_of_int",
+            "dest": "loint",
+            # "nargs" :"+",
+            "type" :  int,
+            "default": 100,
+            "section": "DEFAULT"
+        },
+        {
+            "name": "list_of_strings",
+            "dest": "lostr",
+            "nargs" : "+",
+            "type" :  str,
+            "default": ['100'],
+            "section": "DEFAULT"
+        },
+        {
+            "name": "list",
+            "metavar": "lOfStrings",
+            "dest": "l",
+            "nargs" : "+",
+            "type" :  str,
+            "default": '100',
+            "section": "DEFAULT"
+        },
+        {
+            "name": "test_string",
+            "metavar": "lOfStrings",
+            "dest": "l",
+            "type" :  str,
+            "default": 100,
             "section": "DEFAULT"
         }
     ]
 
-    params = cfg.load_cli_parameters("./Tests/Data/common_parameters.yml")
-    cfg.cli.set_command_line_options(options=params)
+
+    # create path from current directory, keep everything before improvelib
+    current_dir = Path(__file__).resolve().parent
+    test_dir = current_dir.parents[1] / "tests"
+
+    params = cfg.load_cli_parameters(
+        test_dir / "data/additional_command_line_parameters.yml")
     print(params)
 
-    cfg.cli.parser.parse_known_args(['--config_file'])
-    print(cfg.cli.args)
+    # updated additional_definitions with values from config file
+    # cfg.cli.set_command_line_options(options=params)
+    import argparse
+    cfg_parser = argparse.ArgumentParser(
+                    description='Get the config file from command line.',
+                    add_help=False,)
+    cfg_parser.add_argument('--config_file', metavar='INI_FILE', type=str , dest="config_file")
+    # parse command line and grab config file
+    sys.argv.append( "--config_file" )
+    sys.argv.append( str( test_dir / "data/default.cfg") )
+ 
+    args_tmp = cfg_parser.parse_known_args()
+    config_file = args_tmp[0].config_file
+    cfg.logger.debug("Config file: %s", config_file)
+    # print(config_file)
 
+    # load config file
+    cfg.file = config_file
+    cfg.load_config()
+    print(cfg.dict())
+
+    source_dict = cfg.dict()
+    target_dict = {}
+
+    for section in  source_dict:
+        print(section)
+        for item in source_dict[section]:
+            # print(item, source_dict[section][item])
+            target_dict[item] = source_dict[section][item]
+
+    print(target_dict)
+
+    print(common_parameters)
+    updated_parameters = []
+    import json
+    for entry in common_parameters:
+        print(entry)
+        # print(entry['name'])
+        if entry['name'] in target_dict:
+            entry['default'] = target_dict[entry['name']]
+            if "nargs" in entry:
+                # entry['default'] = str2bool(entry['default'])
+                print(target_dict[entry['name']])
+                entry['default'] = json.loads(target_dict[entry['name']])
+        updated_parameters.append(entry)
+    print(updated_parameters)
+
+    cfg.cli.parser.add_argument('--test', metavar='TEST_COMMAND_LINE_OPTION', dest="test",
+                                type=str,
+                                default="a", help="Test command line option.")
+
+    cfg.cli.set_command_line_options(options=updated_parameters)
+    args = cfg.cli.parser.parse_args()
+    print(args)
+    # get type for chkpt from args
+    print(type(args.chkpt))
     
-    cfg.initialize_parameters(
-        "./", additional_definitions=common_parameters + params)
-    print(cfg.config.items('DEFAULT', raw=False))
+    # cfg.initialize_parameters(
+    #     "./", additional_definitions=common_parameters + params)
+    # print(cfg.config.items('DEFAULT', raw=False))
