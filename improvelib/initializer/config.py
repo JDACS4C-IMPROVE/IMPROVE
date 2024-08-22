@@ -24,7 +24,7 @@ class Config:
         required = ["input_dir", "output_dir", "log_level", 'config_file']
 
         self.params = {}
-        self.file = None
+        self.file = None # change to config_file
         self.logger = logging.getLogger('Config')
         self.log_level = os.getenv("IMPROVE_LOG_LEVEL", logging.DEBUG)
         self.logger.setLevel(self.log_level)
@@ -79,17 +79,22 @@ class Config:
         TODO: file name needs to be a general parameter (see initialize_param crazy name)
         TODO: would be nice to specifiy output format
         """
-        if os.path.isabs(file_name):
-            path = file_name
+        if file_name is None:
+            self.logger.warning("No file name provided to save parameters.")
+            return
         else:
-            path = Path(self.output_dir, file_name)
-            if not Path(path.parent).exists():
-                self.logger.debug(
-                    "Creating directory %s for saving config file.", path.parent)
-                Path(path.parent).mkdir(parents=True, exist_ok=True)
+            self.logger.debug("Saving parameters to %s", file_name)
+            if os.path.isabs(file_name):
+                path = file_name
+            else:
+                path = Path(self.output_dir, file_name)
+                if not Path(path.parent).exists():
+                    self.logger.debug(
+                        "Creating directory %s for saving config file.", path.parent)
+                    Path(path.parent).mkdir(parents=True, exist_ok=True)
 
-        with path.open("w") as f:
-            f.write(str(self.final_params)) 
+            with path.open("w") as f:
+                f.write(str(self.final_params)) 
 
 
     def save_config(self, file_name, config=None):
@@ -315,11 +320,12 @@ class Config:
         else:
             self.logger.critical("No input directory: %s", self.input_dir)
 
-    def dict(self, section=None) -> dict :
+    def ini2dict(self, section=None , flat=False) -> dict:
         """
-        Return a dictionary of all options in the config file. If section is provided, 
-        return a dictionary of options in that section
+        Return a dictionary of all options in the config file. If section is provided,
+        return a dictionary of options in that section. If flat is True, return a flat dictionary without sections.
         """
+
         params = {}
         sections=[]
 
@@ -337,12 +343,24 @@ class Config:
                 self.logger.error("Can't find section %s", section)
 
         else:
-            for s in self.config.sections():
-                params[s]={}
-                for i in self.config.items(s):
-                    params[s][i[0]]=i[1]
+            if flat:
+                for s in self.config.sections():
+                    for i in self.config.items(s):
+                        params[i[0]]=i[1]
+            else:
+                for s in self.config.sections():
+                    params[s]={}
+                    for i in self.config.items(s):
+                        params[s][i[0]]=i[1]
 
         return params
+
+    def dict(self, section=None) -> dict : # rename to ini2dict ; keep dict as alias
+        """
+        Return a dictionary of all options in the config file. If section is provided,
+        return a dictionary of options in that section
+        """
+        return self.ini2dict(section=section)
 
     # Load command line definitions from a file
     def load_cli_parameters(self, file, section=None):
@@ -372,6 +390,80 @@ class Config:
             self.logger.critical("Can't find file %s", file)
             sys.exit(1)
             return None
+
+    # Update the default values for the command line arguments with the new defaults
+    def update_defaults(self, cli_definitions=None, new_defaults=None):
+
+        if not new_defaults:
+            self.logger.error("No new defaults provided.")
+            return
+        if not cli_definitions:
+            self.logger.error("No command line definitions provided.")
+            return
+
+        # Initialize the target dictionary
+        updated_parameters = []
+
+        # Loop through the command line definitions and update the default values
+        # if the name is in the new defaults
+        for entry in cli_definitions:
+            self.logger.debug("Updating " + str(entry))
+            if entry['name'] in new_defaults:
+                entry['default'] = new_defaults[entry['name']]
+                if "nargs" in entry:
+                    entry['default'] = json.loads(new_defaults[entry['name']])
+                elif "type" in entry:
+                    if entry['type'] == bool:
+                        entry['default'] = str2bool(entry['default'])
+                    elif entry['type'] == int:
+                        entry['default'] = int(entry['default'])
+                    elif entry['type'] == str:
+                        entry['default'] = str(entry['default'])
+                    elif entry['type'] == float:
+                        entry['default'] = float(entry['default'])
+                else:
+                    self.logger.error("No type provided for " + str(entry['name']))
+
+            # Append the updated entry to the list
+            updated_parameters.append(entry)
+        
+        return updated_parameters
+
+    # Extract config file name from command line arguments and load config file
+    # Seed defaults for command line arguments with values from config file
+
+    def update_cli_definitions(self, definitions=None):
+        """
+        Update the command line argument definitions with values from the config file.
+        Use this before self.cli.set_command_line_options(options=updated_parameters)
+        """
+
+        # Set config file to None
+        congig_file = None
+
+        # Config file can be provided as a command line argument or as a default in the code
+        # Get the config file from the command line arguments otherwise use the default from self.file
+
+        config_file = self.cli.get_config_file()
+
+        if config_file is None:
+            if self.file:
+                config_file = self.file
+            else:
+                self.logger.debug("No config file provided on the command line.")
+        else:
+            self.file = config_file    
+
+        if self.file is None:
+            self.logger.debug("No config file provided at all.")
+            return
+        
+        # Load the config file
+        cfg.load_config()
+        
+        # Update additional_definitions with values from config file
+        return self.update_defaults(cli_definitions=definitions, new_defaults=cfg.ini2dict(flat=True))
+   
 
     def initialize_parameters(self,
                               pathToModelDir,
@@ -427,12 +519,16 @@ class Config:
             for i in duplicates[::-1]:
                 additional_definitions.pop(i)
         """
-        #cli = self.cli
-        self.cli.set_command_line_options()
+        
+        ### Set and get command line args
 
-        config_file = self.cli.args.parse_known_args(['--config_file'])
-        self.load_config_file(pathToModelDir, default_config)
-
+        # Update definitions with values from config file
+        updated_definitions = None
+        if additional_definitions:
+            updated_definitions = self.update_cli_definitions(definitions=additional_definitions)
+        # Set command line options
+        self.cli.set_command_line_options(options=updated_definitions)
+        # Get command line options
         self.cli.get_command_line_options()
 
         # Set log level
@@ -472,6 +568,7 @@ class Config:
             self.logger.info("Overriding %s default or config with command line value of %s", clip, self.cli.cli_params[clip])
             self.final_params[clip] = self.cli.cli_params[clip]
         self.logger.debug("Final parameters: %s", self.final_params)
+        self.logger.debug("Final parameters: %s", self.params)
         self.logger.debug("Final parameters set.")
 
         # Update input and output directories
@@ -494,11 +591,18 @@ class Config:
             os.makedirs(self.output_dir)
         # Save parameters to file
         self.logger.debug("Saving final parameters to file.")
-        self.save_parameter_file(self.final_params["param_log_file"])
+        # Save final configuration to file
+
+        final_config_file = None
+        if "param_log_file" in self.params:
+            final_config_file=self.final_params["param_log_file"]
+        self.save_parameter_file(final_config_file)
 
         self.__class__ = current_class
         return self.final_params
 
+
+ 
 
 if __name__ == "__main__":
     cfg = Config()
@@ -529,9 +633,9 @@ if __name__ == "__main__":
         {
             "name": "list_of_int",
             "dest": "loint",
-            # "nargs" :"+",
+            "nargs" :"+",
             "type" :  int,
-            "default": 100,
+            "default": [100],
             "section": "DEFAULT"
         },
         {
@@ -634,8 +738,8 @@ if __name__ == "__main__":
     args = cfg.cli.parser.parse_args()
     print(args)
     # get type for chkpt from args
-    print(type(args.chkpt))
+    print("Type for chkpt: " + str(type(args.chkpt)))
     
-    # cfg.initialize_parameters(
-    #     "./", additional_definitions=common_parameters + params)
-    # print(cfg.config.items('DEFAULT', raw=False))
+    cfg.initialize_parameters(
+        "./", additional_definitions=common_parameters + params)
+    print(cfg.config.items('DEFAULT', raw=False))

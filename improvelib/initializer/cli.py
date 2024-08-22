@@ -6,7 +6,6 @@ import os
 import sys
 
 
-# from candle import parse_from_dictlist
 # from improve import config as BaseConfig
 from improvelib.utils import parse_from_dictlist
 
@@ -40,7 +39,7 @@ class CLI:
         # Set logger level
         self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.DEBUG))
 
-    # Set common options for all model scripts
+        # Set common options for all model scripts
         common_options = self.parser.add_argument_group('Standard Options')
         common_options.add_argument('-i', '--input_dir', metavar='DIR', type=str, dest="input_dir",
                                   default=os.getenv("IMPROVE_INPUT_DIR" , "./"), 
@@ -125,6 +124,29 @@ class CLI:
         pass
 
 
+    def get_config_file(self):
+        """Get the config file from the command line. Expects --config_file option."""
+        self.logger.debug("Getting the config file from the command line.")
+        
+        # Create a new parser to get the config file
+        cfg_parser = argparse.ArgumentParser(
+                        description='Get the config file from command line.',
+                        add_help=False,)
+        cfg_parser.add_argument('--config_file', 
+                                metavar='INI_FILE', 
+                                type=str , 
+                                dest="config_file",
+                                default=None
+                                )
+    
+        # Parse the command line arguments
+        args_tmp = cfg_parser.parse_known_args()
+        
+        # Get the config file
+        config_file = args_tmp[0].config_file
+
+        self.logger.debug("Config file: %s", config_file)
+        return config_file
 
 if __name__ == "__main__":
     cli = CLI()
