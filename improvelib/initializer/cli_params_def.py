@@ -48,6 +48,12 @@ improve_basic_conf = [
      # "required": True, # TODO remove default if this is required param
      "help": "File format to save the ML data file (e.g., '.pt', '.tfrecords')",
     },
+    # ---------------------------------------
+    {"name": "input_supp_data_dir",
+     "type": str,
+     "default": argparse.SUPPRESS,
+     "help": "Dir containing supplementary data in addition to benchmark data (usually model-specific data).",
+    },
 
 ]
 
