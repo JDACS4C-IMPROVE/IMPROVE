@@ -633,6 +633,7 @@ if __name__ == "__main__":
         {
             "name": "list_of_int",
             "dest": "loint",
+            "help": "Need help to display default value",
             "nargs" :"+",
             "type" :  int,
             "default": [100],
@@ -660,7 +661,7 @@ if __name__ == "__main__":
             "metavar": "lOfStrings",
             "dest": "l",
             "type" :  str,
-            "default": 100,
+            "default": '100',
             "section": "DEFAULT"
         }
     ]
@@ -685,61 +686,26 @@ if __name__ == "__main__":
     sys.argv.append( "--config_file" )
     sys.argv.append( str( test_dir / "data/default.cfg") )
  
-    args_tmp = cfg_parser.parse_known_args()
-    config_file = args_tmp[0].config_file
-    cfg.logger.debug("Config file: %s", config_file)
-    # print(config_file)
-
-    # load config file
-    cfg.file = config_file
-    cfg.load_config()
-    print(cfg.dict())
-
-    source_dict = cfg.dict()
-    target_dict = {}
-
-    for section in  source_dict:
-        print(section)
-        for item in source_dict[section]:
-            # print(item, source_dict[section][item])
-            target_dict[item] = source_dict[section][item]
-
-    print(target_dict)
-
-    print(common_parameters)
-    updated_parameters = []
-    import json
-    for entry in common_parameters:
-        print(entry)
-        # print(entry['name'])
-        if entry['name'] in target_dict:
-            entry['default'] = target_dict[entry['name']]
-            if "nargs" in entry:
-                # entry['default'] = str2bool(entry['default'])
-                # print(target_dict[entry['name']])
-                entry['default'] = json.loads(target_dict[entry['name']])
-            elif entry['type'] == bool:
-                entry['default'] = str2bool(entry['default'])
-            elif entry['type'] == int:
-                entry['default'] = int(entry['default'])
-            elif entry['type'] == str:
-                entry['default'] = str(entry['default'])
-            elif entry['type'] == float:
-                entry['default'] = float(entry['default'])
-
-        updated_parameters.append(entry)
-    print(updated_parameters)
+    
 
     cfg.cli.parser.add_argument('--test', metavar='TEST_COMMAND_LINE_OPTION', dest="test",
-                                type=str,
+                                type=int,
                                 default="a", help="Test command line option.")
-
-    cfg.cli.set_command_line_options(options=updated_parameters)
-    args = cfg.cli.parser.parse_args()
-    print(args)
-    # get type for chkpt from args
-    print("Type for chkpt: " + str(type(args.chkpt)))
     
-    cfg.initialize_parameters(
+    cfg.cli.parser.set_defaults(test=100)
+
+
+    
+    print(
+        cfg.initialize_parameters(
         "./", additional_definitions=common_parameters + params)
+    )
     print(cfg.config.items('DEFAULT', raw=False))
+    print(cfg.cli.args)
+    print(type(cfg.cli.parser.get_default("test")))
+    print(type(cfg.cli.parser.get_default("list_of_int")))
+    print(type(cfg.cli.args.list_of_int))
+    print(type(cfg.cli.parser.get_default("list_of_bool")))
+
+
+
