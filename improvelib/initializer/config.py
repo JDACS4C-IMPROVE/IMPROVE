@@ -468,7 +468,7 @@ class Config:
     def initialize_parameters(self,
                               pathToModelDir,
                               section='DEFAULT',
-                              default_config='default.cfg',  # located in ModelDir
+                              default_config=None,  # located in ModelDir
                               default_model=None,
                               additional_definitions=None,
                               required=None,):
@@ -478,6 +478,20 @@ class Config:
         # preserve the type of the object
         current_class = self.__class__
         self.__class__ = Config
+
+        if default_config:
+            if pathToModelDir:
+                if not default_config.startswith("/"):
+                    default_config = pathToModelDir + "/" + default_config
+                else:
+                    self.logger.error("No path to model directory provided.")
+                if not os.path.isfile(default_config):
+                    self.logger.error("Can't find default config file %s", default_config)
+                    sys.exit(404)
+        else:
+            self.logger.warning("No default config file provided.")
+
+        
 
 
         # Set and get command line args
