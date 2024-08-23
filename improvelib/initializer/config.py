@@ -298,7 +298,7 @@ class Config:
                     pathToModelDir = "./"
 
                 if default_config is not None:
-                    if not os.path.isabspath(default_config):
+                    if not os.path.abspath(default_config):
                         self.logger.debug(
                             "Not absolute path for config file. Should be relative to model directory")
                         self.file = pathToModelDir + default_config
