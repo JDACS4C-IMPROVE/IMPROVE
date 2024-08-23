@@ -2,18 +2,18 @@ import sys
 from pathlib import Path
 from typing import Dict
 
-from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+from improvelib.applications.drug_response_prediction.config import DRPTrainConfig
 
 # Global variables
 filepath = Path(__file__).resolve().parent  # [Req]
 
 # Define parameters for the script
-test_model_preprocess_params = [
+test_model_train_params = [
         {
-            "name": "preprocess_test_var",
-            "type": str,
-            "help": "Test variable for preprocess.",
-            "default": "prep",
+            "name": "train_test_var",
+            "type": int,
+            "help": "Test variable for train.",
+            "default": 5,
         },
         {   
             "name": "split",
@@ -42,13 +42,14 @@ test_model_preprocess_params = [
         },
     ]
 
+
 def main(args):
-    """ Main function for preprocessing."""
+    """ Main function for training."""
     
-    cfg = DRPPreprocessConfig()
+    cfg = DRPTrainConfig()
     params = cfg.initialize_parameters(filepath,
-                                    default_config="test_default_1.cfg",
-                                    additional_definitions=test_model_preprocess_params,
+                                    default_config="default.cfg",
+                                    additional_definitions=test_model_train_params,
                                     required=None
                                     )
     return params

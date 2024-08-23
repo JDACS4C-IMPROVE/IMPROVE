@@ -1,21 +1,21 @@
 import sys
 from pathlib import Path
-from typing import Dict
 
-from improvelib.applications.drug_response_prediction.config import DRPTrainConfig
+
+from improvelib.applications.drug_response_prediction.config import DRPInferConfig
 
 # Global variables
 filepath = Path(__file__).resolve().parent  # [Req]
 
 # Define parameters for the script
-test_model_train_params = [
+test_model_infer_params = [
         {
-            "name": "train_test_var",
-            "type": int,
-            "help": "Test variable for train.",
-            "default": 5,
+            "name": "infer_test_var",
+            "type": str,
+            "help": "Test variable for infer.",
+            "default": "infer",
         },
-        {   
+                {   
             "name": "split",
             "type": list,
             "default": ['0'],
@@ -42,14 +42,13 @@ test_model_train_params = [
         },
     ]
 
-
 def main(args):
-    """ Main function for training."""
+    """ Main function for inference."""
     
-    cfg = DRPTrainConfig()
+    cfg = DRPInferConfig()
     params = cfg.initialize_parameters(filepath,
-                                    default_config="test_default_1.cfg",
-                                    additional_definitions=test_model_train_params,
+                                    default_config="default.cfg",
+                                    additional_definitions=test_model_infer_params,
                                     required=None
                                     )
     return params
