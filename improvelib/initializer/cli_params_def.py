@@ -6,6 +6,7 @@ encoding a suggested deprecation.
 "[Dep]"  -- parameters we plan to keep in the upcoming release, but deprecate in the future
 """
 
+import argparse
 from improvelib.utils import StoreIfPresent, str2bool
 
 
@@ -43,7 +44,7 @@ improve_basic_conf = [
     # ---------------------------------------
     {"name": "data_format",  # [Req] depends on the DL framework that used by the model
      "type": str,
-     "default": ".parquet", # Note! this default assumes LGBM model
+     "default": ".parquet", # Note! this default assumes LGBM model TODO should this be preprocess or global param?
      # "required": True, # TODO if this is required param, then remove default
      "help": "File format to save the ML data file (e.g., '.pt', '.tfrecords')",
     },
@@ -111,33 +112,38 @@ improve_preprocess_conf = [
              'split_0_test_id').",
     },
     # ---------------------------------------
-    {"name": "ml_data_outdir",  # TODO plan using output_dir instead
+    {"name": "ml_data_outdir",  # use output_dir instead
      "type": str,
-     "action": StoreIfPresent,
-     "help": "[Dep+] Path to save ML data (data files that can be fet to the prediction model).",
+     # "action": StoreIfPresent,
+     # "help": "[Dep+] Path to save ML data (data files that can be fet to the prediction model).",
+     # "default": argparse.SUPPRESS,
+     "help": argparse.SUPPRESS # when "help" SUPPRESSed, the param is not visible via --help
     },
 
 ]
 
 # Parameters relevant to all IMPROVE train scripts
 improve_train_conf = [
-    {"name": "train_ml_data_dir",  # TODO plan using input_dir instead
+    {"name": "train_ml_data_dir",  # use input_dir instead
      "type": str,
      # "default": "./ml_data",
-     "action": StoreIfPresent,
-     "help": "[Dep+] Datadir where train data is stored."
+     # "action": StoreIfPresent,
+     # "help": "[Dep+] Datadir where train data is stored."
+     "help": argparse.SUPPRESS
     },
-    {"name": "val_ml_data_dir",  # TODO plan using input_dir instead
+    {"name": "val_ml_data_dir",  # use input_dir instead
      "type": str,
      # "default": "./ml_data",
-     "action": StoreIfPresent,
-     "help": "[Dep+] Datadir where val data is stored."
+     # "action": StoreIfPresent,
+     # "help": "[Dep+] Datadir where val data is stored."
+     "help": argparse.SUPPRESS
     },
-    {"name": "model_outdir",  # TODO plan using output_dir instead
+    {"name": "model_outdir",  # use output_dir instead
      "type": str,
      # "default": "./out_model",  # csa_data/models/
-     "action": StoreIfPresent,
-     "help": "[Dep+] Dir to save trained models.",
+     # "action": StoreIfPresent,
+     # "help": "[Dep+] Dir to save trained models.",
+     "help": argparse.SUPPRESS
     },
     # ---------------------------------------
     {"name": "model_file_name",  # default expected
@@ -221,23 +227,26 @@ improve_train_conf = [
 
 # Parameters relevant to all IMPROVE infer scripts
 improve_infer_conf = [
-    {"name": "test_ml_data_dir", # TODO plan using input_dir instead
+    {"name": "test_ml_data_dir", # use input_data_dir instead
      "type": str,
      # "default": "./ml_data",
-     "action": StoreIfPresent,
-     "help": "[Dep+] Datadir where test data is stored."
+     # "action": StoreIfPresent,
+     # "help": "[Dep+] Datadir where test data is stored."
+     "help": argparse.SUPPRESS
     },
-    {"name": "model_dir", # TODO plan using input_dir instead
+    {"name": "model_dir", # use input_model_dir instead
      "type": str,
      # "default": "./out_model",  # csa_data/models/
-     "action": StoreIfPresent,
-     "help": "[Dep+] Dir to save inference results.",
+     # "action": StoreIfPresent,
+     # "help": "[Dep+] Dir to save inference results.",
+     "help": argparse.SUPPRESS
     },
-    {"name": "infer_outdir",  # TODO plan using output_dir instead
+    {"name": "infer_outdir",  # use output_dir instead
      "type": str,
      # "default": "./out_infer",
-     "action": StoreIfPresent,
-     "help": "[Dep+] Dir to save inference results.",
+     # "action": StoreIfPresent,
+     # "help": "[Dep+] Dir to save inference results.",
+     "help": argparse.SUPPRESS
     },
     # ---------------------------------------
     {"name": "infer_batch",
