@@ -42,34 +42,13 @@ improve_basic_conf = [
      "help": "Log of final parameters used for run. Saved in out_dir if file name, can be an absolute path."
     },
     # ---------------------------------------
-    {"name": "data_format",  # [Req] depends on the DL framework that used by the model
+    {"name": "data_format",  # [Req] depends on the DL/ML framework used by the model
      "type": str,
      "default": ".parquet", # Note! this default assumes LGBM model TODO should this be preprocess or global param?
-     # "required": True, # TODO if this is required param, then remove default
+     # "required": True, # TODO remove default if this is required param
      "help": "File format to save the ML data file (e.g., '.pt', '.tfrecords')",
     },
-    # ---------------------------------------
-    # # Explore new args
-    # {"name": "ml_data_dir",
-    #  "type": str,
-    #  # "default": "./",
-    #  "action": StoreIfPresent,
-    #  "help": "Dir with input data (ML data) for a model (data files that can \
-    #          be fed to the prediction model)."
-    # },
-    # {"name": "model_dir",
-    #  "type": str,
-    #  # "default": "./",
-    #  "action": StoreIfPresent,
-    #  "help": "Dir with trained model and other relevant output (i.e., \
-    #          val_scores.json)."
-    # },
-    # {"name": "infer_dir",
-    #  "type": str,
-    #  # "default": "./",
-    #  "action": StoreIfPresent,
-    #  "help": "Dir with inference run output."
-    # },
+
 ]
 
 # Parameters that are relevant to all IMPROVE preprocessing scripts
@@ -112,49 +91,45 @@ improve_preprocess_conf = [
              'split_0_test_id').",
     },
     # ---------------------------------------
-    {"name": "ml_data_outdir",  # use output_dir instead
-     "type": str,
-     # "action": StoreIfPresent,
-     # "help": "[Dep+] Path to save ML data (data files that can be fet to the prediction model).",
-     # "default": argparse.SUPPRESS,
-     "help": argparse.SUPPRESS # when "help" SUPPRESSed, the param is not visible via --help
-    },
+    # {"name": "ml_data_outdir",  # use output_dir instead
+    #  "type": str,
+    #  # "help": "[Dep+] Path to save ML data (data files that can be fet to the prediction model).",
+    #  # "default": argparse.SUPPRESS,
+    #  "help": argparse.SUPPRESS # when "help" SUPPRESSed, the param is not visible via --help
+    # },
 
 ]
 
 # Parameters relevant to all IMPROVE train scripts
 improve_train_conf = [
-    {"name": "train_ml_data_dir",  # use input_dir instead
-     "type": str,
-     # "default": "./ml_data",
-     # "action": StoreIfPresent,
-     # "help": "[Dep+] Datadir where train data is stored."
-     "help": argparse.SUPPRESS
-    },
-    {"name": "val_ml_data_dir",  # use input_dir instead
-     "type": str,
-     # "default": "./ml_data",
-     # "action": StoreIfPresent,
-     # "help": "[Dep+] Datadir where val data is stored."
-     "help": argparse.SUPPRESS
-    },
-    {"name": "model_outdir",  # use output_dir instead
-     "type": str,
-     # "default": "./out_model",  # csa_data/models/
-     # "action": StoreIfPresent,
-     # "help": "[Dep+] Dir to save trained models.",
-     "help": argparse.SUPPRESS
-    },
+    # {"name": "train_ml_data_dir",  # use input_dir instead
+    #  "type": str,
+    #  # "default": "./ml_data",
+    #  # "help": "[Dep+] Datadir where train data is stored."
+    #  "help": argparse.SUPPRESS
+    # },
+    # {"name": "val_ml_data_dir",  # use input_dir instead
+    #  "type": str,
+    #  # "default": "./ml_data",
+    #  # "help": "[Dep+] Datadir where val data is stored."
+    #  "help": argparse.SUPPRESS
+    # },
+    # {"name": "model_outdir",  # use output_dir instead
+    #  "type": str,
+    #  # "default": "./out_model",  # csa_data/models/
+    #  # "help": "[Dep+] Dir to save trained models.",
+    #  "help": argparse.SUPPRESS
+    # },
     # ---------------------------------------
     {"name": "model_file_name",  # default expected
      "type": str,
      "default": "model",
      "help": "[Dep?] Filename to store trained model (str is w/o file_format)."
     },
-    {"name": "model_file_format",  # [Req] depends on the DL framework used by the model
+    {"name": "model_file_format",  # [Req] depends on the DL/ML framework used by the model
      "type": str,
      "default": ".pt", # Note! this default assumes PyTorch model
-     # "required": True, # TODO if this is required param, then remove default
+     # "required": True, # TODO remove default if this is required param
      "help": "[Dep?] File format to save the trained model."
     },
     # ---------------------------------------
@@ -227,27 +202,27 @@ improve_train_conf = [
 
 # Parameters relevant to all IMPROVE infer scripts
 improve_infer_conf = [
-    {"name": "test_ml_data_dir", # use input_data_dir instead
-     "type": str,
-     # "default": "./ml_data",
-     # "action": StoreIfPresent,
-     # "help": "[Dep+] Datadir where test data is stored."
-     "help": argparse.SUPPRESS
-    },
-    {"name": "model_dir", # use input_model_dir instead
-     "type": str,
-     # "default": "./out_model",  # csa_data/models/
-     # "action": StoreIfPresent,
-     # "help": "[Dep+] Dir to save inference results.",
-     "help": argparse.SUPPRESS
-    },
-    {"name": "infer_outdir",  # use output_dir instead
-     "type": str,
-     # "default": "./out_infer",
-     # "action": StoreIfPresent,
-     # "help": "[Dep+] Dir to save inference results.",
-     "help": argparse.SUPPRESS
-    },
+    # {"name": "test_ml_data_dir", # use input_data_dir instead
+    #  "type": str,
+    #  # "default": "./ml_data",
+    #  # "action": StoreIfPresent,
+    #  # "help": "[Dep+] Datadir where test data is stored."
+    #  "help": argparse.SUPPRESS
+    # },
+    # {"name": "model_dir", # use input_model_dir instead
+    #  "type": str,
+    #  # "default": "./out_model",  # csa_data/models/
+    #  # "action": StoreIfPresent,
+    #  # "help": "[Dep+] Dir to save inference results.",
+    #  "help": argparse.SUPPRESS
+    # },
+    # {"name": "infer_outdir",  # use output_dir instead
+    #  "type": str,
+    #  # "default": "./out_infer",
+    #  # "action": StoreIfPresent,
+    #  # "help": "[Dep+] Dir to save inference results.",
+    #  "help": argparse.SUPPRESS
+    # },
     # ---------------------------------------
     {"name": "infer_batch",
      "type": int,
@@ -283,10 +258,10 @@ improve_infer_conf = [
      "default": "model",
      "help": "[Dep?] Filename to store trained model (str is w/o file_format)."
      },
-    {"name": "model_file_format",  # [Req] depends on the DL framework used by the model
+    {"name": "model_file_format",  # [Req] depends on the DL/ML framework used by the model
      "type": str,
      "default": ".pt", # Note! this default assumes PyTorch model
-     # "required": True, # TODO if this is required param, then remove default
+     # "required": True, # TODO remove default if this is required param
      "help": "[Dep?] File format to save the trained model."
     },
     {"name": "loss",  
