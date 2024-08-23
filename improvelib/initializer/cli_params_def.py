@@ -272,12 +272,12 @@ improve_infer_conf = [
     # ---------------------------------------
     {"name": "input_data_dir",
      "type": str,
-     "action": StoreIfPresent,
+     "default": "./",
      "help": "Dir where data for inference is stored."
     },
     {"name": "input_model_dir",
      "type": str,
-     "action": StoreIfPresent,
+     "default": "./",
      "help": "Dir where model is stored.",
     },
     {"name": "calc_infer_scores",
