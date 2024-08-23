@@ -275,7 +275,7 @@ class Config:
         """Validate parameters."""
         pass
 
-    def load_config_file(self, pathToModelDir, default_config):
+    def load_config_file(self, pathToModelDir=None, default_config=None):
         """
         Loads the configuration file. 
         """
@@ -298,7 +298,14 @@ class Config:
                     pathToModelDir = "./"
 
                 if default_config is not None:
-                    self.file = pathToModelDir + default_config
+                    if not os.path.isabspath(default_config):
+                        self.logger.debug(
+                            "Not absolute path for config file. Should be relative to model directory")
+                        self.file = pathToModelDir + default_config
+                    else:
+                        self.logger.warning("Default config not releative to model directory. Using as is.")
+                        self.file = default_config
+                        
                 else:
                     self.logger.warning("No default config file provided")
 
@@ -410,8 +417,14 @@ class Config:
             self.logger.debug("Updating " + str(entry))
             if entry['name'] in new_defaults:
                 entry['default'] = new_defaults[entry['name']]
+                # Convert the default value to the correct type
+                # The presence of nargs indicates that the default value is a list
                 if "nargs" in entry:
-                    entry['default'] = json.loads(new_defaults[entry['name']])
+                    try:
+                        entry['default'] = json.loads(new_defaults[entry['name']])
+                    except json.JSONDecodeError:
+                        self.logger.error("Can't convert %s to list", new_defaults[entry['name']])
+                        self.logger.error(json.JSONDecodeError)
                 elif "type" in entry:
                     if entry['type'] == bool:
                         entry['default'] = str2bool(entry['default'])
@@ -481,13 +494,17 @@ class Config:
 
         if default_config:
             if pathToModelDir:
+                # check if type string or Path
+                if not isinstance(pathToModelDir, Path):
+                    pathToModelDir = Path(pathToModelDir)
+
                 if not default_config.startswith("/"):
-                    default_config = pathToModelDir + "/" + default_config
+                    default_config = pathToModelDir / default_config
                 else:
                     self.logger.error("No path to model directory provided.")
-                if not os.path.isfile(default_config):
-                    self.logger.error("Can't find default config file %s", default_config)
-                    sys.exit(404)
+            if not os.path.isfile(default_config):
+                self.logger.error("Can't find default config file %s", default_config)
+                sys.exit(404)
         else:
             self.logger.warning("No default config file provided.")
 
@@ -544,6 +561,9 @@ class Config:
         self.cli.set_command_line_options(options=updated_definitions)
         # Get command line options
         self.cli.get_command_line_options()
+        # Set input and output directories
+        self.input_dir = self.cli.args.input_dir
+        self.output_dir = self.cli.args.output_dir
 
         # Set log level
         if "log_level" in self.cli.cli_params:
@@ -552,7 +572,8 @@ class Config:
             self.logger.setLevel(self.log_level)
 
         # Load config file
-        self.logger.debug("Loading configuration file")
+        self.logger.debug("Loading configuration file %s", default_config)
+        self.logger.debug("Loading configuration from %s", pathToModelDir)
         self.load_config_file(pathToModelDir, default_config)
         # Sets dictionary of parameters with defaults
         self.final_params = self.cli.default_params
@@ -703,10 +724,11 @@ if __name__ == "__main__":
     
 
     cfg.cli.parser.add_argument('--test', metavar='TEST_COMMAND_LINE_OPTION', dest="test",
+                                nargs='+',
                                 type=int,
-                                default="a", help="Test command line option.")
+                                default=[1], help="Test command line option.")
     
-    cfg.cli.parser.set_defaults(test=100)
+    # cfg.cli.parser.set_defaults(test=100)
 
 
     
