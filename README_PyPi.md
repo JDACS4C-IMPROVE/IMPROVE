@@ -22,6 +22,7 @@ For a detailed guide on how to use the `improvelib` library, including a tutoria
 ## Examples
 Two repositories demonstrating the use of the `improvelib` library for drug response prediction:
 https://github.com/JDACS4C-IMPROVE/GraphDRP -- GraphDRP (deep learning model based on graph neural network)
+
 https://github.com/JDACS4C-IMPROVE/LGBM -- LightGBM model
 
 
