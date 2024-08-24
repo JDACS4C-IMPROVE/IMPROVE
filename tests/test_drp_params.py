@@ -1,8 +1,9 @@
 """
-Unit tests for checking the parameters are read and parsed correctly.
+Unit tests for checking the parameters are read and parsed correctly using two different config files (default and one set on the command line) with test drug response model (DRP) scripts for preprocess, train, and infer.
 These include:
 1. Tests to check parameters are read in this order: CLI, config file, default.
 2. Tests to check types of the parameters match types listed in the parameter definitions.
+3. Tests to check that values are read in correctly for parameters shared among different sections. 
 """
 import unittest
 import sys
