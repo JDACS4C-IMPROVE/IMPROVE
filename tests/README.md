@@ -2,6 +2,25 @@
 
 This directory contains unit test files for our project. Each file corresponds to a specific module or functionality in our main codebase. The purpose of these tests is to ensure that all functions behave as expected under a variety of conditions.
 
+## Set Up
+
+For setting up the environment to test `improvelib`, first clone the `IMPROVE` repo:
+
+```bash
+https://github.com/JDACS4C-IMPROVE/IMPROVE.git
+```
+
+Two options for testing `improvelib` are:
+1. Set the path to the repo as an environment variable and install the dependencies (see [README.md](../README.md)).
+```bash
+export MY_PATH_TO_IMPROVE=`pwd`
+export PYTHONPATH=$PYTHONPATH:${MY_PATH_TO_IMPROVE}
+```
+2. Use pip to install the `improvelib` package.
+```bash
+pip install improvelib
+```
+
 ## Running the Tests
 
 To run all the tests, navigate to the `tests` folder and run the following command:
@@ -27,4 +46,4 @@ The end of the file must contain the following:
 if __name__ == "__main__":
     unittest.main()
 ```
-For an example of a unit test file, see `test_params.py`.
+For an example of a unit test file, see `test_drp_params.py`.
