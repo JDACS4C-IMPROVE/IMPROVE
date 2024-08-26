@@ -26,7 +26,7 @@ class Config:
         self.params = {}
         self.file = None # change to config_file
         self.logger = logging.getLogger('Config')
-        self.log_level = os.getenv("IMPROVE_LOG_LEVEL", logging.DEBUG)
+        self.log_level = os.getenv("IMPROVE_LOG_LEVEL", logging.INFO)
         self.logger.setLevel(self.log_level)
 
         self.required = required
@@ -35,7 +35,8 @@ class Config:
         # Default values are set in command line parser
         self.input_dir = None
         self.output_dir = None
-        self.final_params = {}
+        self.params = {}
+        self._options = {}
 
         # Set Defaults and conventions
         if "CANDLE_DATA_DIR" in os.environ and "IMPROVE_DATA_DIR" in os.environ:
@@ -61,6 +62,132 @@ class Config:
                         os.environ.get("IMPROVE_DATA_DIR", "./"))
         self.config.set("DEFAULT", "output_dir",
                         os.environ.get("IMPROVE_OUTPUT_DIR", "./"))
+
+
+    # Method to add a command line option definition to _options
+    # This is used to check type and default values later
+    def _add_option(self, name, option):
+
+        # check if option is a dictionary
+        if not isinstance(option, dict):
+            self.logger.error("Option %s is not a dictionary", name)
+            sys.exit(1)
+        
+        # check if name is identical to the name in the dictionary
+        if "name" in option:
+            if not name == option['name']:
+                self.logger.error("Option name %s is not identical to name in dictionary %s", name, option['name'])
+                sys.exit(1)
+        elif not name == option['dest']:
+            self.logger.error("Option name %s is not identical to name in dictionary %s", name, option['dest'])
+            sys.exit(1)
+
+        # check if name is already in _options
+        if name in self._options:
+            self.logger.error("Option %s is already defined. Skipping.", name)
+            return False
+
+        # check if all required keys are present
+        if not all(k in option for k in ('name', 'type', 'default', 'help')):
+            self.logger.warning("Option %s is missing required keys.", name)
+
+        # check if type and default are supported 
+        if "type" not in option:
+            self.logger.error("Option %s is missing type. Setting to str.", name)
+            option['type'] = str
+        if "default" not in option:
+            self.logger.error("Option %s is missing default. Setting to None.", name)
+            option['default'] = None
+            
+        if not option['type'] in ['str', 'int', 'float', 'bool', 'str2bool', None, str , int, float, bool, str2bool]:
+            self.logger.error("Unsupported type %s for option %s", option['type'], name)
+            sys.exit(1)
+
+        # add option to _options    
+        self._options[name] = option
+        return True
+    
+    
+    # Update _options with options from the command line (argparse)
+    # Call everytime a new option is added to the command line, e.g. after set_command_line_options
+    def _update_options(self):
+        for action in self.cli.parser._actions:
+            self._add_option(action.dest, action.__dict__)
+        return True       
+    
+    # Update command line defaults with values from _options
+    def _update_cli_defaults(self):
+
+        # Read config
+        
+        # Config file can be provided as a command line argument or as a default in the code
+        # Get the config file from the command line arguments otherwise use the default from self.file
+        config_file = self.cli.get_config_file()
+        
+            
+        # Set self.file ; the config will be loaded from self.file
+        if config_file is not None:
+            self.file = config_file
+        else:
+            self.logger.debug("No config file provided in command line arguments.")    
+
+        if self.file is None:
+            self.logger.debug("No config file provided at all.")
+            return
+        
+        # Load the config file
+        self.load_config()
+        
+        # Loop through config file and update command line defaults
+        for section in self.config.sections():
+            for option in self.config.items(section):
+                print(option)
+                (key, value) = option
+                if key in self._options:
+
+                    # check if type is set and cast option[1] to python type
+                    if 'nargs' in self._options[key] and \
+                        self._options[key]['nargs'] and \
+                        self._options[key]['nargs'] not in [None, 0, 1 , "0", "1"]:
+                        breakpoint()
+                        try:
+                            value = json.loads(value)
+                        except json.JSONDecodeError:
+                            self.logger.error("Can't convert %s to list", value)
+                            self.logger.critical(json.JSONDecodeError)
+                            sys.exit(1)
+                    elif 'type' in self._options[key]:
+                        t = self._options[key]['type']
+                        if t == 'str':
+                            value = str(value)
+                        elif t == 'int':
+                            value = int(value)
+                        elif t == 'float':
+                            value = float(value)
+                        elif t == 'bool':
+                            value = str2bool(value)
+                        elif t == 'str2bool':
+                            value = str2bool(value)
+                        else:
+                            self.logger.error("Unsupported type %s", self._options[option[0]]['type'])
+                            value = str(value)
+
+                    self.cli.parser.set_defaults(**{key: value})
+
+  
+        return True
+
+
+    def set_command_line_options(self, options=[] , group=None):
+        """Set command line options."""
+        self.cli.set_command_line_options(options) 
+        self._update_options()
+        return True
+    
+    def get_command_line_options(self):
+        """Get command line options."""
+        self._update_cli_defaults()
+        return self.cli.get_command_line_options()
 
     def load_config(self):
         """ TODO ... """
@@ -94,7 +221,7 @@ class Config:
                     Path(path.parent).mkdir(parents=True, exist_ok=True)
 
             with path.open("w") as f:
-                f.write(str(self.final_params)) 
+                f.write(str(self.params)) 
 
 
     def save_config(self, file_name, config=None):
@@ -109,7 +236,7 @@ class Config:
                 Path(path.parent).mkdir(parents=True, exist_ok=True)
 
         with path.open("w") as f:
-            f.write(str(self.final_params)) 
+            f.write(str(self.params)) 
       
 
     def param(self, section="DEFAULT" , key=None , value=None) -> (str,str):
@@ -401,6 +528,10 @@ class Config:
     # Update the default values for the command line arguments with the new defaults
     def update_defaults(self, cli_definitions=None, new_defaults=None):
 
+        # Get the list of added options from the parser
+        existing_options = [o.lstrip('-')
+                              for o in self.cli.parser._option_string_actions]
+
         if not new_defaults:
             self.logger.error("No new defaults provided.")
             return
@@ -437,6 +568,10 @@ class Config:
                 else:
                     self.logger.error("No type provided for " + str(entry['name']))
 
+                # Update the default value in the parser if the option is already there
+                if entry['name'] in existing_options:
+                    self.cli.parser.set_defaults(**{entry['name']: entry['default']})
+
             # Append the updated entry to the list
             updated_parameters.append(entry)
         
@@ -451,31 +586,26 @@ class Config:
         Use this before self.cli.set_command_line_options(options=updated_parameters)
         """
 
-        # Set config file to None
-        congig_file = None
-
         # Config file can be provided as a command line argument or as a default in the code
         # Get the config file from the command line arguments otherwise use the default from self.file
-
-        config_file = self.cli.get_config_file()
-
-        if config_file is None:
-            if self.file:
-                config_file = self.file
-            else:
-                self.logger.debug("No config file provided on the command line.")
+        config_file_from_cli = self.cli.get_config_file()
+        
+            
+        # Set self.file ; the config will be loaded from self.file
+        if config_file_from_cli is not None:
+            self.file = config_file_from_cli
         else:
-            self.file = config_file    
+            self.logger.debug("No config file provided in command line arguments.")    
 
         if self.file is None:
             self.logger.debug("No config file provided at all.")
             return
         
         # Load the config file
-        cfg.load_config()
+        self.load_config()
         
         # Update additional_definitions with values from config file
-        return self.update_defaults(cli_definitions=definitions, new_defaults=cfg.ini2dict(flat=True))
+        return self.update_defaults(cli_definitions=definitions, new_defaults=self.ini2dict(flat=True))
    
 
     def initialize_parameters(self,
@@ -492,6 +622,7 @@ class Config:
         current_class = self.__class__
         self.__class__ = Config
 
+        # Check if default config file is provided and reachable
         if default_config:
             if pathToModelDir:
                 # check if type string or Path
@@ -505,10 +636,12 @@ class Config:
             if not os.path.isfile(default_config):
                 self.logger.error("Can't find default config file %s", default_config)
                 sys.exit(404)
+            else:
+                self.logger.debug("Default config file found: %s", default_config)
+                self.file = default_config
         else:
             self.logger.warning("No default config file provided.")
 
-        
 
 
         # Set and get command line args
@@ -519,103 +652,49 @@ class Config:
 
         # Find duplicate dicts in additon_definitions for the key 'name'
         # if in dict then remove and log warning
-
-        
-        #print("additional_definitions:", additional_definitions)
-        """
-        if additional_definitions:
-            
-            # Convert Path to string
-            if additional_definitions and isinstance(additional_definitions, Path):
-                additional_definitions = str(additional_definitions)
-
-            # check if additional_definitions is a string
-            if isinstance(additional_definitions, str) and os.path.isfile(additional_definitions):
-                self.logger.debug(
-                    "Loading additional definitions from file %s", additional_definitions)
-                additional_definitions = self.load_cli_parameters(
-                    additional_definitions)
-
-            duplicates = []
-            names = []
-            for i, v in enumerate(additional_definitions):
-                # print(i,additional_definitions[i])
-                if additional_definitions[i]['name'] in names:
-                    self.logger.warning(
-                        "Duplicate definition for %s", additional_definitions[i]['name'])
-                    duplicates.append(i)
-                else:
-                    names.append(additional_definitions[i]['name'])
-            # Loop through duplicates in reverse order and remove from additional_definitions
-            for i in duplicates[::-1]:
-                additional_definitions.pop(i)
-        """
         
         ### Set and get command line args
 
         # Update definitions with values from config file
         updated_definitions = None
+
+        # set file to default_config if provided. load_config will use it if not specified on the command line
+        # if default_config:
+        #     self.file = default_config
         if additional_definitions:
+            self.logger.debug("Updating additional definitions with values from config file.")
             updated_definitions = self.update_cli_definitions(definitions=additional_definitions)
+        else:
+            self.logger.debug("No additional definitions provided.")
+            sys.exit(0)
+            updated_definitions = additional_definitions
         # Set command line options
-        self.cli.set_command_line_options(options=updated_definitions)
+        self.set_command_line_options(options=updated_definitions)
         # Get command line options
-        self.cli.get_command_line_options()
+        self.params = self.get_command_line_options()
+        # self.params=self.cli.get_command_line_options()
         # Set input and output directories
         self.input_dir = self.cli.args.input_dir
         self.output_dir = self.cli.args.output_dir
-
-        # Set log level
-        if "log_level" in self.cli.cli_params:
-            self.logger.debug("Log level set by command line, updating to %s", self.cli.cli_params["log_level"])
-            self.log_level = self.cli.cli_params["log_level"]
-            self.logger.setLevel(self.log_level)
-
-        # Load config file
-        self.logger.debug("Loading configuration file %s", default_config)
-        self.logger.debug("Loading configuration from %s", pathToModelDir)
-        self.load_config_file(pathToModelDir, default_config)
-        # Sets dictionary of parameters with defaults
-        self.final_params = self.cli.default_params
-        # Gets dictionary of parameters from config for this section
-        section_config = dict(self.config[section])
-        self.logger.debug("Default parameters: %s", self.cli.default_params)
-        self.logger.debug("Current section: %s", section)
-        self.logger.debug("Current section config parameters: %s", section_config)
-        self.logger.debug("Updating config")
-
-        # Overrides dictionary of defaults with config params
-        # breakpoint();
-        # from pprint import pprint
-        # pprint(self.cli.default_params)
-        for cfp in section_config:
-            if cfp in self.final_params: # TODO why we need this??
-                self.logger.info("Overriding %s default with config value of %s", cfp, section_config[cfp])
-                self.final_params[cfp] = cast_value(section_config[cfp])
-            else:
-                self.logger.warning("Config parameter %s is not defined, skipping.", cfp)
-        self.logger.debug("Current section CLI set parameters: %s", self.cli.cli_params)
-        # pprint(self.final_params)
-        # breakpoint();
-
-        # Overrides dictionary of defaults+config with CLI params
-        for clip in self.cli.cli_params:
-            self.logger.info("Overriding %s default or config with command line value of %s", clip, self.cli.cli_params[clip])
-            self.final_params[clip] = self.cli.cli_params[clip]
-        self.logger.debug("Final parameters: %s", self.final_params)
-        self.logger.debug("Final parameters: %s", self.params)
-        self.logger.debug("Final parameters set.")
-
-        # Update input and output directories
-        self.output_dir = self.final_params['output_dir']
-        self.input_dir = self.final_params['input_dir']
-        self.log_level = self.final_params['log_level']
+        self.log_level = self.cli.args.log_level
         self.logger.setLevel(self.log_level)
         self.logger.debug("Current log level is %s", self.log_level)
 
-        # Set environment variables
-        # TODO why input_dir overrides IMPROVE_DATA_DIR?
-        # NCK: this is a good question, what are we doing with this?
+        # Set log level
+        if "log_level" in self.cli.params:
+            self.logger.info("Log level set by command line, updating to %s", self.cli.params["log_level"])
+            self.log_level = self.params["log_level"]
+            self.logger.setLevel(self.log_level)
+
+
+     
+
+
+        self.logger.debug("Final parameters: %s", self.cli.cli_params)
+        self.logger.debug("Final parameters: %s", self.params)
+        self.logger.debug("Final parameters set.")
+
+        # Set supported environment variables
         os.environ["IMPROVE_DATA_DIR"] = self.input_dir
         os.environ["IMPROVE_OUTPUT_DIR"] = self.output_dir
         os.environ["IMPROVE_LOG_LEVEL"] = self.log_level
@@ -630,41 +709,33 @@ class Config:
 
         final_config_file = None
         if "param_log_file" in self.params:
-            final_config_file=self.final_params["param_log_file"]
-        self.save_parameter_file(final_config_file)
+            final_config_file=self.params["param_log_file"]
+            self.save_parameter_file(final_config_file)
 
         self.__class__ = current_class
-        return self.final_params
+        return self.params
 
 
  
 
 if __name__ == "__main__":
     cfg = Config()
-    cfg.file = "./Tests/Data/default.cfg"
-    cfg.output_dir = "./tmp"
-    cfg.load_config()
-    print(cfg.params)
-    print(cfg.dict())
-    print(cfg.param(None, 'weights', None))
-    cfg.param('Infer', 'weights', 'default.weights')
-    for section in cfg.config.items():
-        print(section)
-        for item in cfg.config.items(section[0], raw=False):
-            print(item)
-    print(cfg.param("Infer", 'weights', None))
-    print(cfg.dict('Infer'))
-    cfg.save_config("./tmp/saved.config", config=cfg.config['DEFAULT'])
+    # cfg.file = "./Tests/Data/default.cfg"
+    # cfg.output_dir = "./tmp"
+    # cfg.load_config()
+    # print(cfg.params)
+    # print(cfg.dict())
+    # print(cfg.param(None, 'weights', None))
+    # cfg.param('Infer', 'weights', 'default.weights')
+    # for section in cfg.config.items():
+    #     print(section)
+    #     for item in cfg.config.items(section[0], raw=False):
+    #         print(item)
+    # print(cfg.param("Infer", 'weights', None))
+    # print(cfg.dict('Infer'))
+    # cfg.save_config("./tmp/saved.config", config=cfg.config['DEFAULT'])
 
     common_parameters = [
-        {
-            "name": "chkpt",
-            "dest": "checkpointing",
-            "type" : bool ,
-            "default": False,
-            "help": "Flag to enable checkpointing",
-            "section": "DEFAULT"
-        },
         {
             "name": "list_of_int",
             "dest": "loint",
@@ -683,22 +754,15 @@ if __name__ == "__main__":
             "section": "DEFAULT"
         },
         {
-            "name": "list",
-            "metavar": "lOfStrings",
-            "dest": "l",
+            "name": "list_of_lists",
             "nargs" : "+",
+            "metavar": "lol",
+            "dest": "l",
+            "action": "append",
             "type" :  str,
-            "default": '100',
+            "default": [[1,2,3],[4,5,6]],
             "section": "DEFAULT"
         },
-        {
-            "name": "test_string",
-            "metavar": "lOfStrings",
-            "dest": "l",
-            "type" :  str,
-            "default": '100',
-            "section": "DEFAULT"
-        }
     ]
 
 
@@ -738,10 +802,9 @@ if __name__ == "__main__":
     )
     print(cfg.config.items('DEFAULT', raw=False))
     print(cfg.cli.args)
-    print(type(cfg.cli.parser.get_default("test")))
-    print(type(cfg.cli.parser.get_default("list_of_int")))
-    print(type(cfg.cli.args.list_of_int))
-    print(type(cfg.cli.parser.get_default("list_of_bool")))
+    print(cfg.params)
+ 
 
 
 
+    
