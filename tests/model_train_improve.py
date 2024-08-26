@@ -17,8 +17,9 @@ test_model_train_params = [
         },
         {   
             "name": "split",
-            "type": list,
-            "default": ['0'],
+            "type": int,
+            "nargs" : "+",
+            "default": [0],
         },
         {
             "name": "only_cross_study",

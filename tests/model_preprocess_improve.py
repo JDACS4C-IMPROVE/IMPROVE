@@ -17,7 +17,8 @@ test_model_preprocess_params = [
         },
         {   
             "name": "split",
-            "type": list,
+            "nargs" : "+",
+            "type": int,
             "default": ['0'],
         },
         {

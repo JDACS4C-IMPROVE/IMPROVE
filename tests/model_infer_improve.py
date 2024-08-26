@@ -17,7 +17,8 @@ test_model_infer_params = [
         },
                 {   
             "name": "split",
-            "type": list,
+            "nargs" : "+",
+            "type": str,
             "default": ['0'],
         },
         {
