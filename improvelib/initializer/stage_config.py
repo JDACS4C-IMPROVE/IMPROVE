@@ -25,7 +25,7 @@ class SectionConfig(Config):
         self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.INFO))
 
         # check usage of self.options
-        self.options = []
+        self.options = improve_basic_conf + stage_config_parameters
         self.cli.set_command_line_options(
             improve_basic_conf, 'IMPROVE options')
         self.cli.set_command_line_options(
@@ -60,13 +60,14 @@ class SectionConfig(Config):
         if additional_cli_section is None:
             additional_cli_section = 'Additional Parameters'
 
-        print("additional_definitions(stage):", additional_definitions)
+        self.logger.debug("additional_definitions(stage):", additional_definitions)
         if additional_definitions is not None:
             if isinstance(additional_definitions, str) or isinstance(additional_definitions, Path):
                 additional_definitions = self.load_parameter_definitions(
                     additional_definitions)
             self.cli.set_command_line_options(
                 additional_definitions, f'{additional_cli_section} options')
+            self.options += additional_definitions
 
         p = super().initialize_parameters(pathToModelDir=pathToModelDir,
                                           section=self.section,
