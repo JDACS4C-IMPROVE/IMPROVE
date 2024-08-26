@@ -9,6 +9,7 @@ from pathlib import Path
 from improvelib.utils import str2bool, cast_value
 from improvelib.initializer.cli import CLI
 
+BREAK=os.getenv("IMPROVE_DEV_DEBUG", None)
 
 class Config:
     """Class to handle configuration files."""
@@ -140,39 +141,41 @@ class Config:
         
         # Loop through config file and update command line defaults
         for section in self.config.sections():
-            for option in self.config.items(section):
-                print(option)
-                (key, value) = option
-                if key in self._options:
+            if self.section is None or self.section == section:
+                for option in self.config.items(section):
+                    print(option)
+                    (key, value) = option
+                    if key in self._options:
 
-                    # check if type is set and cast option[1] to python type
-                    if 'nargs' in self._options[key] and \
-                        self._options[key]['nargs'] and \
-                        self._options[key]['nargs'] not in [None, 0, 1 , "0", "1"]:
-                        breakpoint()
-                        try:
-                            value = json.loads(value)
-                        except json.JSONDecodeError:
-                            self.logger.error("Can't convert %s to list", value)
-                            self.logger.critical(json.JSONDecodeError)
-                            sys.exit(1)
-                    elif 'type' in self._options[key]:
-                        t = self._options[key]['type']
-                        if t == 'str':
-                            value = str(value)
-                        elif t == 'int':
-                            value = int(value)
-                        elif t == 'float':
-                            value = float(value)
-                        elif t == 'bool':
-                            value = str2bool(value)
-                        elif t == 'str2bool':
-                            value = str2bool(value)
-                        else:
-                            self.logger.error("Unsupported type %s", self._options[option[0]]['type'])
-                            value = str(value)
+                        # check if type is set and cast option[1] to python type
+                        if 'nargs' in self._options[key] and \
+                            self._options[key]['nargs'] and \
+                            self._options[key]['nargs'] not in [None, 0, 1 , "0", "1"]:
+                            if BREAK :
+                                breakpoint()
+                            try:
+                                value = json.loads(value)
+                            except json.JSONDecodeError:
+                                self.logger.error("Can't convert %s to list", value)
+                                self.logger.critical(json.JSONDecodeError)
+                                sys.exit(1)
+                        elif 'type' in self._options[key]:
+                            t = self._options[key]['type']
+                            if t == 'str' or t == str:
+                                value = str(value)
+                            elif t == 'int' or t == int:
+                                value = int(value)
+                            elif t == 'float' or t == float:
+                                value = float(value)
+                            elif t == 'bool' or t == bool:
+                                value = str2bool(value)
+                            elif t == 'str2bool':
+                                value = str2bool(value)
+                            else:
+                                self.logger.error("Unsupported type %s", self._options[option[0]]['type'])
+                                value = str(value)
 
-                    self.cli.parser.set_defaults(**{key: value})
+                        self.cli.parser.set_defaults(**{key: value})
 
   
         return True
@@ -622,6 +625,10 @@ class Config:
         current_class = self.__class__
         self.__class__ = Config
 
+        # Set section - DEFAULT, Preprocess, Train, Infer - maybe move to init
+        # section is neeed for reading config file
+        self.section = section
+
         # Check if default config file is provided and reachable
         if default_config:
             if pathToModelDir:
@@ -663,13 +670,13 @@ class Config:
         #     self.file = default_config
         if additional_definitions:
             self.logger.debug("Updating additional definitions with values from config file.")
-            updated_definitions = self.update_cli_definitions(definitions=additional_definitions)
+            # updated_definitions = self.update_cli_definitions(definitions=additional_definitions)
         else:
             self.logger.debug("No additional definitions provided.")
             sys.exit(0)
             updated_definitions = additional_definitions
         # Set command line options
-        self.set_command_line_options(options=updated_definitions)
+        self.set_command_line_options(options=additional_definitions)
         # Get command line options
         self.params = self.get_command_line_options()
         # self.params=self.cli.get_command_line_options()
