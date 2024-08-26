@@ -6,6 +6,7 @@ These include:
 """
 import unittest
 import sys
+import os
 from pathlib import Path
 
 # global variables
@@ -18,6 +19,8 @@ import model_infer_improve
 # set paths to test config files
 config_file_1=str(filepath) + '/default.cfg'
 config_file_2=str(filepath) + '/optional.cfg'
+
+os.environ['IMPROVE_DEBUG_LEVEL'] = "WARNING"
 
 class TestOrderPreprocessConfigs(unittest.TestCase):
     
@@ -222,7 +225,7 @@ class TestTypePreprocessConfigs(unittest.TestCase):
              
     def test_preprocess_cli_type_list(self):
         """PREPROCESS: Check type for list parameter when set on the command line."""        
-        sys.argv = ['python model_preprocess_improve.py', '--split', '[4,5]']
+        sys.argv = ['python model_preprocess_improve.py', '--split', '4' ,'5']
         preprocess_params = model_preprocess_improve.main(sys.argv[1:])
         self.assertIsInstance(preprocess_params['split'], list)
         
@@ -324,7 +327,7 @@ class TestTypeTrainConfigs(unittest.TestCase):
              
     def test_train_cli_type_list(self):
         """TRAIN: Check type for list parameter when set on the command line."""        
-        sys.argv = ['python model_train_improve.py', '--split', '[4,5]']
+        sys.argv = ['python model_train_improve.py', '--split', '4', '5' ]
         train_params = model_train_improve.main(sys.argv[1:])
         self.assertIsInstance(train_params['split'], list)
         
