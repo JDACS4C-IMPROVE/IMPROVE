@@ -95,9 +95,9 @@ class DRPTrainConfig(TrainConfig):
 
     def __init__(self):
         super().__init__()
-        # self.cli.set_command_line_options(
-        #     options=self._app_train_params,
-        #     group='Drug Response Prediction Training')
+        self.cli.set_command_line_options(
+             options=self._app_train_params,
+             group='Drug Response Prediction Training')
 
 
 class DRPInferConfig(InferConfig):
