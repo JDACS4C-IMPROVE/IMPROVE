@@ -30,7 +30,7 @@ config_lambda = Config(
             cpu_affinity="block",
             #max_workers_per_node=2, ## IS NOT SUPPORTED IN  Parsl version: 2023.06.19. CHECK HOW TO USE THIS???
             worker_debug=True,
-            available_accelerators=7,  ## CHANGE THIS AS REQUIRED BY THE MACHINE
+            available_accelerators=8,  ## CHANGE THIS AS REQUIRED BY THE MACHINE
             worker_port_range=worker_port_range,
             provider=LocalProvider(
                 init_blocks=1,
@@ -187,7 +187,7 @@ def infer(params, source_data_name, target_data_name, split): #
 
 additional_definitions = CSA.additional_definitions
 filepath = Path(__file__).resolve().parent
-cfg = DRPPreprocessConfig() # TODO submit github issue; too many logs printed; is it necessary?
+cfg = DRPPreprocessConfig() 
 params = cfg.initialize_parameters(
     pathToModelDir=filepath,
     default_config="csa_params.ini",
@@ -207,7 +207,6 @@ params = frm.build_paths(params)  # paths to raw data
 params['ml_data_dir'] = Path(params['output_dir']) / 'ml_data' 
 params['model_outdir'] = Path(params['output_dir']) / 'models'
 params['infer_dir'] = Path(params['output_dir']) / 'infer'
-#params['model_specific_outdir'] = Path(params['output_dir']) / params['model_specific_outdir'] # CHANGE THIS
 
 #Model scripts
 params['preprocess_python_script'] = f"{params['model_name']}_preprocess_improve.py"
