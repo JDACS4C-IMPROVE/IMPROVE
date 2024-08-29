@@ -7,6 +7,12 @@ git clone <MODEL_REPO>
 cd MODEL_NAME
 git checkout <BRANCH>
 ```
+**Requirements**:
+1. Model scripts must be organized as:
+    - <MODEL_NAME>_preprocess_improve.py
+    - <MODEL_NAME>_train_improve.py
+    - <MODEL_NAME>_infer_improve.py
+2. Make sure to follow the IMPROVE lib documentation to ensure the model is compliant with the IMPROVE framework
 
 ### 2. Clone IMPROVE repo
 Clone the `IMPROVE library` repository to a directory of your preference (outside of your drug response prediction (DRP) model's directory).
@@ -35,6 +41,7 @@ export PYTHONPATH=$PYTHONPATH:$<PATH_TO_IMPROVE>
 ```
 
 ### 5. Download cross study analysis data
+Download the cross study analysis data within the model directory:
 ```
 source download_csa.sh
 ```
@@ -47,6 +54,7 @@ source download_csa.sh
  - source_datasets : List of source_datasets for cross study analysis. With the current benchmark datasets this can be a subset of CCLE, gCSI, GDSCv1, GDSCv2 and CTRPv2
  - target_datasets : List of source_datasets for cross study analysis. With the current benchmark datasets this can be a subset of CCLE, gCSI, GDSCv1, GDSCv2 and CTRPv2
  - split: Splits of the source datasets for cross study analysis.
+ - hyperparameters_file: json file containing optimized hyperparameters per dataset
  - model_name: Name of the model for cross study analysis
  - epochs: Number of epochs for the model
  - y_col_name: Response variable used in the model. eg: auc
