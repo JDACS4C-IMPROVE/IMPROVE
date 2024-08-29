@@ -47,6 +47,9 @@ source download_csa.sh
 ```
 
 ### 6. To run cross study analysus using PARSL on Lambda machine:
+
+Copy all the files in this directory to your model directory. Make sure to change the 'model_name' parameter in csa_params.ini to your <MODLE_NAME>.
+
 **csa_params.ini** contains parameters necessary for the workflow. The user can change the parameters inside this configuration file.
 
  - input_dir : Location of raw data for cross study analysis. 
