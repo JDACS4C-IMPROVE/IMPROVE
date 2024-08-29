@@ -119,7 +119,6 @@ def preprocess(inputs=[]): #
         else:
             preprocess_run = ["python",
                 params['preprocess_python_script'],
-                #"--model_specific_outdir", str(params['model_specific_outdir']),
                 "--train_split_file", str(train_split_file),
                 "--val_split_file", str(val_split_file),
                 "--test_split_file", str(test_split_file),
