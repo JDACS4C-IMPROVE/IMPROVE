@@ -9,6 +9,7 @@ from typing import Sequence, Tuple, Union
 from pathlib import Path
 import logging
 import sys
+import json
 
 import csa_params_def as CSA
 import improvelib.utils as frm
@@ -132,8 +133,9 @@ def preprocess(inputs=[]): #
 
 
 @python_app 
-def train(params, source_data_name, split): 
+def train(params, hp_model, source_data_name, split): 
     import subprocess
+    hp_data = hp_model[source_data_name]
     model_dir = params['model_outdir'] / f"{source_data_name}" / f"split_{split}"
     ml_data_dir = params['ml_data_dir']/f"{source_data_name}-{params['target_datasets'][0]}"/ \
                 f"split_{split}"
@@ -149,7 +151,9 @@ def train(params, source_data_name, split):
                         "--input_dir", str(ml_data_dir),
                         "--output_dir", str(model_dir),
                         "--epochs", str(params['epochs']),  # DL-specific
-                        "--y_col_name", str(params['y_col_name'])
+                        "--y_col_name", str(params['y_col_name']),
+                        "--learning_rate", str(hp_data['learning_rate']),
+                        "--batch_size", str(hp_data['batch_size'])
                     ]
             result = subprocess.run(train_run, capture_output=True,
                                     text=True, check=True)
@@ -210,6 +214,10 @@ params['preprocess_python_script'] = f"{params['model_name']}_preprocess_improve
 params['train_python_script'] = f"{params['model_name']}_train_improve.py"
 params['infer_python_script'] = f"{params['model_name']}_infer_improve.py"
 
+#Read Hyperparameters file
+with open(params['hyperparameters_file']) as f:
+    hp = json.load(f)
+hp_model = hp[params['model_name']]
 
 ##########################################################################
 ##################### START PARSL PARALLEL EXECUTION #####################
@@ -224,7 +232,7 @@ for source_data_name in params['source_datasets']:
 ##Train execution with Parsl
 train_futures=[]
 for future_p in preprocess_futures:
-    train_futures.append(train(params, future_p.result()['source_data_name'], future_p.result()['split']))
+    train_futures.append(train(params, hp_model, future_p.result()['source_data_name'], future_p.result()['split']))
 
 ##Infer execution with Parsl
 infer_futures =[]

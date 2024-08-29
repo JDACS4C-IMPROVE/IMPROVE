@@ -40,7 +40,7 @@ source download_csa.sh
 ```
 
 ### 6. To run cross study analysus using PARSL on Lambda machine:
-csa_params.ini contains parameters necessary for the workflow. The user can change the parameters inside this configuration file.
+**csa_params.ini** contains parameters necessary for the workflow. The user can change the parameters inside this configuration file.
 
  - input_dir : Location of raw data for cross study analysis. 
  - output_dir : Location of the inference results
@@ -53,6 +53,8 @@ csa_params.ini contains parameters necessary for the workflow. The user can chan
  - use_singularity: True, if the model files are available in a singularity container
  - only_cross_study: True, if only cross study analysis is needed without within study inferences
 
+**hyperparameters.json** contains a dictionary of optimized hyperparameters for the models. The key to the dictionary is the model name, which contains another dictionary with source dataset names as keys. The two hyperparameters considered for this analysis are: batch_size and learning_rate. 
+The hyperparameters are optimized using [Supervisor](https://github.com/JDACS4C-IMPROVE/HPO).
 
  To run cross study analysis with default configuration file (csa_params.ini):
 ```
