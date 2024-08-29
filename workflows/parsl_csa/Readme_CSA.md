@@ -46,7 +46,7 @@ Download the cross study analysis data within the model directory:
 source download_csa.sh
 ```
 
-### 6. To run cross study analysus using PARSL on Lambda machine:
+### 6. To run cross study analysus using Parsl:
 
 Copy all the files in this directory to your model directory. Make sure to change the 'model_name' parameter in csa_params.ini to your <MODEL_NAME>.
 
