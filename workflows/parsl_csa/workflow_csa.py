@@ -163,7 +163,7 @@ def train(params, hp_model, source_data_name, split):
 def infer(params, source_data_name, target_data_name, split): # 
     import subprocess
     model_dir = params['model_outdir'] / f"{source_data_name}" / f"split_{split}"
-    ml_data_dir = params['ml_data_dir']/f"{source_data_name}-{params['target_datasets'][0]}"/ \
+    ml_data_dir = params['ml_data_dir']/f"{source_data_name}-{target_data_name}"/ \
                 f"split_{split}"
     infer_dir = params['infer_dir']/f"{source_data_name}-{target_data_name}"/f"split_{split}"
     if params['use_singularity']:
