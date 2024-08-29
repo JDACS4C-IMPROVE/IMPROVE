@@ -1,5 +1,5 @@
 
-# Step-by-step instructions to run cross study analysis using PARSL on Lambda machine
+# Step-by-step instructions to run cross study analysis using Parsl on Lambda
 
 ### 1. Clone the model repo
 ```
@@ -75,3 +75,6 @@ python workflow_csa.py
 ```
 python workflow_csa.py --config_file <CONFIG_FILE>
 ```
+
+### Reference
+1.	Yadu Babuji, Anna Woodard, Zhuozhao Li, Daniel S. Katz, Ben Clifford, Rohan Kumar, Luksaz Lacinski, Ryan Chard, Justin M. Wozniak, Ian Foster, Michael Wilde and Kyle Chard. "Parsl: Pervasive Parallel Programming in Python." 28th ACM International Symposium on High-Performance Parallel and Distributed Computing (HPDC). 2019. 10.1145/3307681.3325400
