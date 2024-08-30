@@ -12,7 +12,7 @@ git checkout <BRANCH>
     - <MODEL_NAME>_preprocess_improve.py
     - <MODEL_NAME>_train_improve.py
     - <MODEL_NAME>_infer_improve.py
-2. Make sure to follow the IMPROVE lib documentation to ensure the model is compliant with the IMPROVE framework
+2. Make sure to follow the IMPROVE lib [documentation](https://jdacs4c-improve.github.io/docs) to ensure the model is compliant with the IMPROVE framework
 
 ### 2. Clone IMPROVE repo
 Clone the `IMPROVE library` repository to a directory of your preference (outside of your drug response prediction (DRP) model's directory).
