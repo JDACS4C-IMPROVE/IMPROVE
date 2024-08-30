@@ -41,9 +41,41 @@ export PYTHONPATH=$PYTHONPATH:$<PATH_TO_IMPROVE>
 ```
 
 ### 5. Download cross study analysis data
-Download the cross study analysis data within the model directory:
+Download the benchmark cross study analysis data within the model directory:
 ```
 source download_csa.sh
+```
+The required benchmark data tree is shown below:
+```
+csa_data/raw_data/
+├── splits
+│   ├── CCLE_all.txt
+│   ├── CCLE_split_0_test.txt
+│   ├── CCLE_split_0_train.txt
+│   ├── CCLE_split_0_val.txt
+│   ├── CCLE_split_1_test.txt
+│   ├── CCLE_split_1_train.txt
+│   ├── CCLE_split_1_val.txt
+│   ├── ...
+│   ├── GDSCv2_split_9_test.txt
+│   ├── GDSCv2_split_9_train.txt
+│   └── GDSCv2_split_9_val.txt
+├── x_data
+│   ├── cancer_copy_number.tsv
+│   ├── cancer_discretized_copy_number.tsv
+│   ├── cancer_DNA_methylation.tsv
+│   ├── cancer_gene_expression.tsv
+│   ├── cancer_miRNA_expression.tsv
+│   ├── cancer_mutation_count.tsv
+│   ├── cancer_mutation_long_format.tsv
+│   ├── cancer_mutation.parquet
+│   ├── cancer_RPPA.tsv
+│   ├── drug_ecfp4_nbits512.tsv
+│   ├── drug_info.tsv
+│   ├── drug_mordred_descriptor.tsv
+│   └── drug_SMILES.tsv
+└── y_data
+    └── response.tsv
 ```
 
 ### 6. To run cross study analysus using Parsl:
