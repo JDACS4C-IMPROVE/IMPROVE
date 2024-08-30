@@ -97,6 +97,7 @@ Copy all the files in this directory to your model directory. Make sure to chang
  - epochs: Number of epochs for the model
  - y_col_name: Response variable used in the model. eg: auc
  - use_singularity: True, if the model files are available in a singularity container
+ - singularity_image: Singularity image file (.sif) of the model scripts (optional)
  - only_cross_study: True, if only cross study analysis is needed without within study inferences
 
 **hyperparameters.json** contains a dictionary of optimized hyperparameters for the models. The key to the dictionary is the model name, which contains another dictionary with source dataset names as keys. The two hyperparameters considered for this analysis are: batch_size and learning_rate. 
