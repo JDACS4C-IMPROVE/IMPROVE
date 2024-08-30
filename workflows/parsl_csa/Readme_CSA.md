@@ -53,7 +53,10 @@ Copy all the files in this directory to your model directory. Make sure to chang
 **csa_params.ini** contains parameters necessary for the workflow. The user can change the parameters inside this configuration file.
 
  - input_dir : Location of raw data for cross study analysis. 
- - output_dir : Location of the inference results
+ - output_dir : Location of the output. The subdirectories in the output_dir are organized as:
+    - ml_data: Contains pre-processed data.
+    - models: Contains trained models.
+    - infer: Contains inference retults
  - source_datasets : List of source_datasets for cross study analysis. With the current benchmark datasets this can be a subset of CCLE, gCSI, GDSCv1, GDSCv2 and CTRPv2
  - target_datasets : List of source_datasets for cross study analysis. With the current benchmark datasets this can be a subset of CCLE, gCSI, GDSCv1, GDSCv2 and CTRPv2
  - split: Splits of the source datasets for cross study analysis.
