@@ -459,7 +459,8 @@ def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
     params : parameter dict
     stage (str) : "train", "val", or "test"
     """
-    ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"
+    # ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"
+    ydf_fname = f"{stage}_y_data.csv"
 
     # check for ml_data_outdir and output_dir in params and use the one that is available
     # this ensures backward compatibility with previous versions of framework.py
@@ -512,14 +513,16 @@ def store_predictions_df(params: Dict,
     # print(len(y_pred))
 
     # Define column names
-    pred_col_name = params["y_col_name"] + params["pred_col_name_suffix"]
+    # pred_col_name = params["y_col_name"] + params["pred_col_name_suffix"]
+    pred_col_name = params["y_col_name"] + "_pred"
     true_col_name = params["y_col_name"] + "_true"
 
     # -----------------------------
     # Attempt to concatenate raw predictions with y dataframe (e.g., df that
     # contains cancer ids, drug ids, and the true response values)
     # TODO. f"{stage}_{params['y_data_stage_fname_suffix']}.csv"
-    ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"
+    # ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"
+    ydf_fname = f"{stage}_y_data.csv"
     # ydf_fpath = Path(params[f"{stage}_ml_data_dir"]) / ydf_fname
 
     # check for ml_data_outdir and output_dir in params and use the one that is available
@@ -533,8 +536,8 @@ def store_predictions_df(params: Dict,
             f"ERROR ! Neither '{stage}_ml_data_dir' not 'output_dir' found in params.\n")
 
     # output df fname
-    ydf_out_fname = ydf_fname.split(
-        ".")[0] + "_" + params["y_data_preds_suffix"] + ".csv"
+    ydf_out_fname = ydf_fname.split(".")[0] + "_predicted.csv"
+        # ".")[0] + "_" + params["y_data_preds_suffix"] + ".csv"
     # ydf_out_fpath = Path(params["ml_data_outdir"]) / ydf_out_fname
     ydf_out_fpath = Path(outdir) / ydf_out_fname
 
@@ -610,7 +613,8 @@ def compute_performance_scores(params: Dict,
     scores[key] = scores[params["loss"]]
 
     # fname = f"val_{params['json_scores_suffix']}.json"
-    scores_fname = f"{stage}_{params['json_scores_suffix']}.json"
+    # scores_fname = f"{stage}_{params['json_scores_suffix']}.json"
+    scores_fname = f"{stage}_scores.json"
     # scorespath = Path(params["ml_data_outdir"]) / scores_fname
     scorespath = Path(outdir) / scores_fname
 

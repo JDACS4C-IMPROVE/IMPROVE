@@ -18,7 +18,7 @@ class DRPPreprocessConfig(PreprocessConfig):
     # required:  these params must be specified for the model in the param file
     _preproc_params = [
         {"name": "y_data_files", # default expected
-        "default": "fake", #NCK, not sure why we need this but we need a default
+         "default": "fake", #NCK, not sure why we need this but we need a default
          "type": str,
          "help": "List of files that contain the y (prediction variable) data. \
                 Example: [['response.tsv']]",
@@ -31,7 +31,7 @@ class DRPPreprocessConfig(PreprocessConfig):
                 2) [['cancer_copy_number.tsv', ['Ensembl', 'Entrez']]].",
          },
         {"name": "x_data_drug_files", # required
-        "default": "fake", #NCK, not sure why we need this but we need a default
+         "default": "fake", #NCK, not sure why we need this but we need a default
          "type": str,
          "help": "List of feature files. Examples: \n\
                 1) [['drug_SMILES.tsv']] \n\
@@ -58,11 +58,11 @@ class DRPPreprocessConfig(PreprocessConfig):
         # ---------------------------------------
         # TODO y_data_suffix is currently used in utils.py (previously framework.py)
         # We plan to hard-code this in the future release and deprecate. 
-        {"name": "y_data_suffix", # default expected
-         "type": str,
-         "default": "y_data", # TODO Oleksandr: "gives error when default is not set"
-         "help": "[Dep] Suffix to compose file name for storing true y dataframe."
-         },
+        # {"name": "y_data_suffix", # default expected
+        #  "type": str,
+        #  "default": "y_data", # TODO Oleksandr: "gives error when default is not set"
+        #  "help": "[Dep] Suffix to compose file name for storing true y dataframe."
+        #  },
 
     ]
 
@@ -85,11 +85,11 @@ class DRPTrainConfig(TrainConfig):
         # ---------------------------------------
         # TODO y_data_suffix is currently used in utils.py (previously framework.py)
         # We plan to hard-code this in the future release and deprecate. 
-        {"name": "y_data_suffix", # default expected
-         "type": str,
-         "default": "y_data", # TODO Oleksandr: "gives error when default is not set"
-         "help": "[Dep] Suffix to compose file name for storing true y dataframe."
-         },
+        # {"name": "y_data_suffix", # default expected
+        #  "type": str,
+        #  "default": "y_data", # TODO Oleksandr: "gives error when default is not set"
+        #  "help": "[Dep] Suffix to compose file name for storing true y dataframe."
+        #  },
 
     ]
 
@@ -112,11 +112,11 @@ class DRPInferConfig(InferConfig):
         # ---------------------------------------
         # TODO y_data_suffix is currently used in utils.py (previously framework.py)
         # We plan to hard-code this in the future release and deprecate. 
-        {"name": "y_data_suffix", # default expected
-         "type": str,
-         "default": "y_data", # TODO Oleksandr: "gives error when default is not set"
-         "help": "[Dep] Suffix to compose file name for storing true y dataframe."
-         },
+        # {"name": "y_data_suffix", # default expected
+        #  "type": str,
+        #  "default": "y_data", # TODO Oleksandr: "gives error when default is not set"
+        #  "help": "[Dep] Suffix to compose file name for storing true y dataframe."
+        #  },
 
     ]
 

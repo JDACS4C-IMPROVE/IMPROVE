@@ -185,24 +185,24 @@ improve_train_conf = [
     # are currently used in utils.py (previously framework.py)
     # We plan to hard-code these in the future release and deprecate.
     # Defined in improve_train_conf and improve_infer_conf
-    {"name": "y_data_preds_suffix", # default expected
-     "type": str,
-     "default": "predicted",
-     "help": "[Dep] Suffix to use for file name that stores predictions."
-    },
-    {"name": "json_scores_suffix", # default expected
-     "type": str,
-     "default": "scores",
-     "help": "[Dep] Suffix to use for file name that stores scores."
-    },
-    {"name": "pred_col_name_suffix", # default expected
-     "type": str,
-     "default": "_pred",
-     "help": "[Dep] Suffix to add to a column name in the y data file to identify \
-             predictions made by the model (e.g., if y_col_name is 'auc', then \
-             a new column that stores model predictions will be added to the y \
-             data file and will be called 'auc_pred')."
-    },
+    # {"name": "y_data_preds_suffix", # default expected
+    #  "type": str,
+    #  "default": "predicted",
+    #  "help": "[Dep] Suffix to use for file name that stores predictions."
+    # },
+    # {"name": "json_scores_suffix", # default expected
+    #  "type": str,
+    #  "default": "scores",
+    #  "help": "[Dep] Suffix to use for file name that stores scores."
+    # },
+    # {"name": "pred_col_name_suffix", # default expected
+    #  "type": str,
+    #  "default": "_pred",
+    #  "help": "[Dep] Suffix to add to a column name in the y data file to identify \
+    #          predictions made by the model (e.g., if y_col_name is 'auc', then \
+    #          a new column that stores model predictions will be added to the y \
+    #          data file and will be called 'auc_pred')."
+    # },
 
 ]
 
@@ -240,24 +240,24 @@ improve_infer_conf = [
     # are currently used in utils.py (previously framework.py)
     # We plan to hard-code these in the future release and deprecate.
     # Defined in improve_train_conf and improve_infer_conf
-    {"name": "y_data_preds_suffix", # default expected
-     "type": str,
-     "default": "predicted",
-     "help": "[Dep] Suffix to use for file name that stores predictions."
-    },
-    {"name": "json_scores_suffix", # default expected
-     "type": str,
-     "default": "scores",
-     "help": "[Dep] Suffix to use for file name that stores scores."
-    },
-    {"name": "pred_col_name_suffix", # default expected
-     "type": str,
-     "default": "_pred",
-     "help": "[Dep] Suffix to add to a column name in the y data file to identify \
-             predictions made by the model (e.g., if y_col_name is 'auc', then \
-             a new column that stores model predictions will be added to the y \
-             data file and will be called 'auc_pred')."
-    },
+    # {"name": "y_data_preds_suffix", # default expected
+    #  "type": str,
+    #  "default": "predicted",
+    #  "help": "[Dep] Suffix to use for file name that stores predictions."
+    # },
+    # {"name": "json_scores_suffix", # default expected
+    #  "type": str,
+    #  "default": "scores",
+    #  "help": "[Dep] Suffix to use for file name that stores scores."
+    # },
+    # {"name": "pred_col_name_suffix", # default expected
+    #  "type": str,
+    #  "default": "_pred",
+    #  "help": "[Dep] Suffix to add to a column name in the y data file to identify \
+    #          predictions made by the model (e.g., if y_col_name is 'auc', then \
+    #          a new column that stores model predictions will be added to the y \
+    #          data file and will be called 'auc_pred')."
+    # },
     # --------------------------------------- NCK: infer is looking for these too
     {"name": "model_file_name",  # default expected
      "type": str,
