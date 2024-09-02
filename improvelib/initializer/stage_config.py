@@ -10,6 +10,7 @@ from improvelib.initializer.cli_params_def import (
     improve_train_conf,
     improve_infer_conf,
 )
+from improvelib.utils import build_paths
 
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
 logging.basicConfig(format=FORMAT)
@@ -75,6 +76,9 @@ class SectionConfig(Config):
                                           default_model=default_model,
                                           additional_definitions=self.options,
                                           required=required)
+
+        if self.section.lower() == 'preprocess':
+            p = build_paths(p)
 
         self.logger.setLevel(self.log_level)
         return p
