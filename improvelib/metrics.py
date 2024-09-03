@@ -16,7 +16,7 @@ def str2Class(str):
     return getattr(sys.modules[__name__], str)
 
 
-def compute_metrics(y_true, y_pred, metrics):
+def compute_metrics(y_true, y_pred, metric_type):
     """Compute the specified set of metrics.
 
     Parameters
@@ -34,6 +34,13 @@ def compute_metrics(y_true, y_pred, metrics):
         A dictionary of evaluated metrics.
     """
     scores = {}
+    if metric_type == "classification":
+        metrics = ["acc", "recall", "precision", "f1", "auc", "aupr"]
+    elif metric_type == "regression":
+        metrics = ["rmse", "pcc", "scc", "r2"]
+    else:
+        print("Invalid metric_type")
+        
     for mtstr in metrics:
         mapstr = mtstr
         if mapstr == "pcc":

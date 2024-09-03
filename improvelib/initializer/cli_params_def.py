@@ -180,6 +180,12 @@ improve_train_conf = [
      "help": "Iterations to wait for a validation metric to get worse before \
              stop training.",
     },
+    {"name": "metric_type", 
+     "type": str,
+     "default": "regression",
+     "help": "Metrics appropriate for given task. Options are 'regression' \
+             or 'classification'",
+    },
     # ---------------------------------------
     # TODO y_data_preds_suffix, json_scores_suffix, pred_col_name_suffix
     # are currently used in utils.py (previously framework.py)
@@ -293,6 +299,12 @@ improve_infer_conf = [
      "default": False,
      "help": "Calculate scores in the inference script (this is optional; \
              should not be required during inference).",
+    },
+    {"name": "metric_type", 
+     "type": str,
+     "default": "regression",
+     "help": "Metrics appropriate for given task. Options are 'regression' \
+             or 'classification'",
     },
 
 ]

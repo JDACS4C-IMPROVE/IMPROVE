@@ -589,7 +589,7 @@ def compute_performance_scores(params: Dict,
                                y_pred: np.array,
                                stage: str,
                                outdir: Union[Path, str],
-                               metrics: List):
+                               metric_type: str):
     """Evaluate predictions according to specified metrics.
 
     Metrics are evaluated. Scores are stored in specified path and returned.
@@ -605,7 +605,7 @@ def compute_performance_scores(params: Dict,
     :rtype: dict
     """
     # Compute multiple performance scores
-    scores = compute_metrics(y_true, y_pred, metrics)
+    scores = compute_metrics(y_true, y_pred, metric_type)
 
     # Add val_loss metric
     key = f"{stage}_loss"
@@ -631,7 +631,6 @@ def compute_performance_scores(params: Dict,
     return scores
 
 
-compute_performace_scores = compute_performance_scores  # for backwards compatibility
 
 
 def check_path_and_files(folder_name: str, file_list: List, inpath: Path) -> Path:
