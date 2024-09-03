@@ -587,15 +587,14 @@ def store_predictions_df(params: Dict,
 def compute_performance_scores(params: Dict,
                                y_true: np.array,
                                y_pred: np.array,
-                               stage: str,
-                               outdir: Union[Path, str]):
+                               stage: str):
     """Evaluate predictions according to specified metrics.
 
     Metrics are evaluated. Scores are stored in specified path and returned.
 
+    :params Dict params: Dictionary with IMPROVE parameters.
     :params array y_true: Array with ground truth values.
     :params array y_pred: Array with model predictions.
-    :params Dict outdtd: Dictionary with path to store scores.
     :params str stage: String specified if evaluation is with respect to
             validation or testing set.
 
@@ -607,14 +606,10 @@ def compute_performance_scores(params: Dict,
 
     # Add val_loss metric
     key = f"{stage}_loss"
-    # scores[key] = scores["mse"]
     scores[key] = scores[params["loss"]]
 
-    # fname = f"val_{params['json_scores_suffix']}.json"
-    # scores_fname = f"{stage}_{params['json_scores_suffix']}.json"
     scores_fname = f"{stage}_scores.json"
-    # scorespath = Path(params["ml_data_outdir"]) / scores_fname
-    scorespath = Path(outdir) / scores_fname
+    scorespath = Path(params["output_dir"]) / scores_fname
 
     with open(scorespath, "w", encoding="utf-8") as f:
         json.dump(scores, f, ensure_ascii=False, indent=4)
