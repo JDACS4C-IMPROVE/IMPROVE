@@ -115,7 +115,7 @@ def preprocess(inputs=[]): #
         print(f"test_split_file:  {test_split_file}")
         print(f"ml_data_outdir:   {params['ml_data_outdir']}")
         if params['use_singularity']:
-            print('Functionality using singularity is work in progress. Please use the Python version to call preprocess, set use_singularity=False')
+            raise Exception('Functionality using singularity is work in progress. Please use the Python version to call preprocess by setting use_singularity=False')
 
         else:
             preprocess_run = ["python",
@@ -135,7 +135,10 @@ def preprocess(inputs=[]): #
 @python_app 
 def train(params, hp_model, source_data_name, split): 
     import subprocess
-    hp_data = hp_model[source_data_name]
+    hp = hp_model[source_data_name]
+    if hp.__len__()==0:
+        raise Exception(str('Hyperparameters are not defined for ' + source_data_name))
+    
     model_dir = params['model_outdir'] / f"{source_data_name}" / f"split_{split}"
     ml_data_dir = params['ml_data_dir']/f"{source_data_name}-{params['target_datasets'][0]}"/ \
                 f"split_{split}"
@@ -144,7 +147,7 @@ def train(params, hp_model, source_data_name, split):
         print(f"ml_data_dir: {ml_data_dir}")
         print(f"model_dir:   {model_dir}")
         if params['use_singularity']:
-            print('Functionality using singularity is work in progress. Please use the Python version to call train, set use_singularity=False')
+            raise Exception('Functionality using singularity is work in progress. Please use the Python version to call train by setting use_singularity=False')
         else:
             train_run = ["python", 
                          params['train_python_script'],
@@ -152,8 +155,8 @@ def train(params, hp_model, source_data_name, split):
                         "--output_dir", str(model_dir),
                         "--epochs", str(params['epochs']),  # DL-specific
                         "--y_col_name", str(params['y_col_name']),
-                        "--learning_rate", str(hp_data['learning_rate']),
-                        "--batch_size", str(hp_data['batch_size'])
+                        "--learning_rate", str(hp['learning_rate']),
+                        "--batch_size", str(hp['batch_size'])
                     ]
             result = subprocess.run(train_run, capture_output=True,
                                     text=True, check=True)
@@ -167,7 +170,7 @@ def infer(params, source_data_name, target_data_name, split): #
                 f"split_{split}"
     infer_dir = params['infer_dir']/f"{source_data_name}-{target_data_name}"/f"split_{split}"
     if params['use_singularity']:
-        print('Functionality using singularity is work in progress. Please use the Python version to call infer, set use_singularity=False')
+        raise Exception('Functionality using singularity is work in progress. Please use the Python version to call infer by setting use_singularity=False')
 
     else:
         print("\nInfer")
