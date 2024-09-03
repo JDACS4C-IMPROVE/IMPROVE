@@ -1,8 +1,4 @@
-import os
-from pathlib import Path
 
-fdir = Path(__file__).resolve().parent
-required = None
 additional_definitions = [
     {"name": "source_datasets",
      "nargs" : "+",
@@ -34,13 +30,8 @@ additional_definitions = [
     },
     {"name": "hyperparameters_file",
      "type": str,
-     "default": 'hyperparameters.json',
+     "default": 'hyperparameters_default.json',
      "help": "json file containing optimized hyperparameters per dataset"
-    },
-    {"name": "use_hpo",
-     "type": str,
-     "default": 'False',
-     "help": "Do you want to use hyper-parameter optimized learning rate and batch size? If False, default values will be used"
     },
     {"name": "epochs",
      "type": int,

@@ -135,14 +135,10 @@ def preprocess(inputs=[]): #
 @python_app 
 def train(params, hp_model, source_data_name, split): 
     import subprocess
-    if params['use_hpo']:
-        hp = hp_model[source_data_name]
-        if hp.__len__()==0:
-            raise Exception(str('Hyperparameters are not defined for ' + source_data_name))
-    else:
-        hp = hp_model['default']
-        if hp.__len__()==0:
-            raise Exception('Default values of hyperparameters are not defined for the model')
+    hp = hp_model[source_data_name]
+    if hp.__len__()==0:
+        raise Exception(str('Hyperparameters are not defined for ' + source_data_name))
+    
     model_dir = params['model_outdir'] / f"{source_data_name}" / f"split_{split}"
     ml_data_dir = params['ml_data_dir']/f"{source_data_name}-{params['target_datasets'][0]}"/ \
                 f"split_{split}"

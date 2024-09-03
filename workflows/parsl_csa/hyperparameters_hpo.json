@@ -19,12 +19,9 @@
         "gCSI": {
             "batch_size": 32,
             "learning_rate": 0.00015145175483629418
-        },
-        "default": {
-            "batch_size": 256,
-            "learning_rate": 0.0001
         }
     },
+
     "HiDRA": {
         "CCLE": {
             "batch_size": 16,
@@ -39,8 +36,7 @@
         "gCSI": {
             "batch_size": 32,
             "learning_rate": 0.00685103425830459
-        },
-        "default":{}
+        }
     },
     "IGTD": {
         "CCLE": {
@@ -62,8 +58,7 @@
         "gCSI": {
             "batch_size": 32,
             "learning_rate": 0.0008434053110179821
-        },
-        "default":{}
+        }
     },
     "Paccmann_MCA": {
         "CCLE": {
@@ -82,8 +77,7 @@
         "gCSI": {
             "batch_size": 256,
             "learning_rate": 7.092892399034623e-05
-        },
-        "default":{}
+        }
     },
     "PathDSP": {
         "CCLE": {
@@ -102,7 +96,6 @@
         "gCSI": {
             "batch_size": 128,
             "learning_rate": 0.00024319069525915603
-        },
-        "default":{}
+        }
     }
 }
