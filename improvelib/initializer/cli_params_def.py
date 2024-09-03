@@ -296,7 +296,7 @@ improve_infer_conf = [
      # "type": bool,
      "type": str2bool,
      # "action": "store_true",
-     "default": False,
+     "default": True,
      "help": "Calculate scores in the inference script (this is optional; \
              should not be required during inference).",
     },
