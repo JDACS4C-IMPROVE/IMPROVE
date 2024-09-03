@@ -605,8 +605,8 @@ def compute_performance_scores(params: Dict,
     scores = compute_metrics(y_true, y_pred, params["metric_type"])
 
     # Add val_loss metric
-    key = f"{stage}_loss"
-    scores[key] = scores[params["loss"]]
+    #key = f"{stage}_loss"
+    #scores[key] = scores[params["loss"]]
 
     scores_fname = f"{stage}_scores.json"
     scorespath = Path(params["output_dir"]) / scores_fname

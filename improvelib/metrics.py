@@ -37,10 +37,10 @@ def compute_metrics(y_true, y_pred, metric_type):
     if metric_type == "classification":
         metrics = ["acc", "recall", "precision", "f1", "auc", "aupr"]
     elif metric_type == "regression":
-        metrics = ["rmse", "pcc", "scc", "r2"]
+        metrics = ["mse", "rmse", "pcc", "scc", "r2"]
     else:
         print("Invalid metric_type")
-        
+
     for mtstr in metrics:
         mapstr = mtstr
         if mapstr == "pcc":
