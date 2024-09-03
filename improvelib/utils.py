@@ -480,7 +480,6 @@ def store_predictions_df(params: Dict,
                          y_true: np.array,
                          y_pred: np.array,
                          stage: str,
-                         outdir: Union[Path, str],
                          round_decimals: int = 4):
     """Store predictions with accompanying data frame.
 
@@ -496,7 +495,7 @@ def store_predictions_df(params: Dict,
 
             [stage]_[params['y_data_suffix']]_
 
-    :params Dict params: Dictionary of CANDLE/IMPROVE parameters read.
+    :params Dict params: Dictionary of IMPROVE parameters.
     :params Dict indtd: Dictionary specifying paths of input data.
     :params Dict outdtd: Dictionary specifying paths for ouput data.
     :params array y_true: Ground truth.
@@ -524,22 +523,14 @@ def store_predictions_df(params: Dict,
     # ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"
     ydf_fname = f"{stage}_y_data.csv"
     # ydf_fpath = Path(params[f"{stage}_ml_data_dir"]) / ydf_fname
+    ydf_fpath = Path(params["output_dir"]) / ydf_fname
 
-    # check for ml_data_outdir and output_dir in params and use the one that is available
-    # this ensures backward compatibility with previous versions of framework.py
-    if f"{stage}_ml_data_dir" in params:
-        ydf_fpath = Path(params[f"{stage}_ml_data_dir"]) / ydf_fname
-    elif "output_dir" in params:
-        ydf_fpath = Path(params["output_dir"]) / ydf_fname
-    else:
-        raise Exception(
-            f"ERROR ! Neither '{stage}_ml_data_dir' not 'output_dir' found in params.\n")
 
     # output df fname
     ydf_out_fname = ydf_fname.split(".")[0] + "_predicted.csv"
         # ".")[0] + "_" + params["y_data_preds_suffix"] + ".csv"
     # ydf_out_fpath = Path(params["ml_data_outdir"]) / ydf_out_fname
-    ydf_out_fpath = Path(outdir) / ydf_out_fname
+    ydf_out_fpath = Path(params["output_dir"]) / ydf_out_fname
 
     # if indtd["df"] is not None:
     if ydf_fpath.exists():
