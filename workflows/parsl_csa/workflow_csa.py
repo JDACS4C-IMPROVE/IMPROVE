@@ -135,7 +135,10 @@ def preprocess(inputs=[]): #
 @python_app 
 def train(params, hp_model, source_data_name, split): 
     import subprocess
-    hp_data = hp_model[source_data_name]
+    if params['use_hpo']:
+        hp = hp_model[source_data_name]
+    else:
+        hp = hp_model['default']
     model_dir = params['model_outdir'] / f"{source_data_name}" / f"split_{split}"
     ml_data_dir = params['ml_data_dir']/f"{source_data_name}-{params['target_datasets'][0]}"/ \
                 f"split_{split}"
@@ -152,8 +155,8 @@ def train(params, hp_model, source_data_name, split):
                         "--output_dir", str(model_dir),
                         "--epochs", str(params['epochs']),  # DL-specific
                         "--y_col_name", str(params['y_col_name']),
-                        "--learning_rate", str(hp_data['learning_rate']),
-                        "--batch_size", str(hp_data['batch_size'])
+                        "--learning_rate", str(hp['learning_rate']),
+                        "--batch_size", str(hp['batch_size'])
                     ]
             result = subprocess.run(train_run, capture_output=True,
                                     text=True, check=True)

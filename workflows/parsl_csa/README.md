@@ -92,7 +92,8 @@ Copy all the files in this directory to your model directory. Make sure to chang
  - source_datasets : List of source_datasets for cross study analysis. With the current benchmark datasets this can be a subset of CCLE, gCSI, GDSCv1, GDSCv2 and CTRPv2
  - target_datasets : List of source_datasets for cross study analysis. With the current benchmark datasets this can be a subset of CCLE, gCSI, GDSCv1, GDSCv2 and CTRPv2
  - split: Splits of the source datasets for cross study analysis.
- - hyperparameters_file: json file containing optimized hyperparameters per dataset
+ - hyperparameters_file: json file containing optimized hyperparameters per dataset. Also contains default values.
+ - use_hpo: Do you want to use hyper-parameter optimized learning rate and batch size? If False, default values will be used.
  - model_name: Name of the model for cross study analysis
  - epochs: Number of epochs for the model
  - y_col_name: Response variable used in the model. eg: auc

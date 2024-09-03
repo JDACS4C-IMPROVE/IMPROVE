@@ -37,6 +37,11 @@ additional_definitions = [
      "default": 'hyperparameters.json',
      "help": "json file containing optimized hyperparameters per dataset"
     },
+    {"name": "use_hpo",
+     "type": str,
+     "default": 'False',
+     "help": "Do you want to use hyper-parameter optimized learning rate and batch size? If False, default values will be used"
+    },
     {"name": "epochs",
      "type": int,
      "default": 10,
