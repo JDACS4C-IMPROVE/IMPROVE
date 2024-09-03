@@ -588,15 +588,13 @@ def compute_performance_scores(params: Dict,
                                y_true: np.array,
                                y_pred: np.array,
                                stage: str,
-                               outdir: Union[Path, str],
-                               metric_type: str):
+                               outdir: Union[Path, str]):
     """Evaluate predictions according to specified metrics.
 
     Metrics are evaluated. Scores are stored in specified path and returned.
 
     :params array y_true: Array with ground truth values.
     :params array y_pred: Array with model predictions.
-    :params listr metrics: List of strings with metrics to evaluate.
     :params Dict outdtd: Dictionary with path to store scores.
     :params str stage: String specified if evaluation is with respect to
             validation or testing set.
@@ -605,7 +603,7 @@ def compute_performance_scores(params: Dict,
     :rtype: dict
     """
     # Compute multiple performance scores
-    scores = compute_metrics(y_true, y_pred, metric_type)
+    scores = compute_metrics(y_true, y_pred, params["metric_type"])
 
     # Add val_loss metric
     key = f"{stage}_loss"
