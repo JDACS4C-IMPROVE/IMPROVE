@@ -11,6 +11,7 @@ from improvelib.initializer.cli import CLI
 
 BREAK=os.getenv("IMPROVE_DEV_DEBUG", None)
 
+
 class Config:
     """Class to handle configuration files."""
     # ConfigError = str
@@ -172,12 +173,12 @@ class Config:
                             elif t == 'str2bool':
                                 value = str2bool(value)
                             else:
-                                self.logger.error("Unsupported type %s", self._options[option[0]]['type'])
+                                self.logger.error("Unsupported type %s",
+                                                  self._options[option[0]]['type'])
                                 value = str(value)
 
                         self.cli.parser.set_defaults(**{key: value})
 
-  
         return True
 
 
@@ -187,10 +188,12 @@ class Config:
         self._update_options()
         return True
     
+
     def get_command_line_options(self):
         """Get command line options."""
         self._update_cli_defaults()
         return self.cli.get_command_line_options()
+
 
     def load_config(self):
         """ TODO ... """
@@ -244,7 +247,8 @@ class Config:
 
     def param(self, section="DEFAULT" , key=None , value=None) -> (str,str):
         """
-        Get or set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
+        Get or set value for given option. Gets or sets value in DEFAULT section
+        if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
         
@@ -256,6 +260,7 @@ class Config:
             else:
                 error="Unknow section " + str(section)
                 self.logger.error(error)
+
         if self.config.has_option(section, key):
             value=self.config[section][key]
         else:
@@ -265,12 +270,12 @@ class Config:
 
         return (value, error)
 
+
     def get_param(self, section="DEFAULT", key=None) -> str:
         """
         Get value for given option. Gets or sets value in DEFAULT section if section is not provided. 
         Allowed section names are: Preprocess, Train and Infer
         """
-
 
         error = None
 
@@ -303,6 +308,7 @@ class Config:
 
             self.logger.debug("Key:%s\tValue:%s", key, value)
             self.config[section][key] = str(value)
+
         else:
             msg = "Can't update config, empty key"
             self.logger.error(msg)
@@ -347,6 +353,7 @@ class Config:
         """Check if all required parameters are set."""
         pass
 
+
     def _validate_parameters(self, params, required=None):
         """Validate parameters. Set types and check for required parameters."""
 
@@ -369,6 +376,7 @@ class Config:
                 else:
                     self.logger.error("Unsupported type %s", p['type'])
                     p['type'] = str
+
 
     def load_parameter_definitions(self, file, section=None):
         """
@@ -401,9 +409,11 @@ class Config:
             sys.exit(1)
             return None
 
+
     def validate_parameters(self, params, required=None):
         """Validate parameters."""
         pass
+
 
     def load_config_file(self, pathToModelDir=None, default_config=None):
         """
@@ -430,10 +440,12 @@ class Config:
                 if default_config is not None:
                     if not os.path.abspath(default_config):
                         self.logger.debug(
-                            "Not absolute path for config file. Should be relative to model directory")
+                            "Not absolute path for config file. Should be \
+                            relative to model directory")
                         self.file = pathToModelDir + default_config
                     else:
-                        self.logger.warning("Default config not releative to model directory. Using as is.")
+                        self.logger.warning("Default config not releative to \
+                                            model directory. Using as is.")
                         self.file = default_config
                         
                 else:
@@ -457,10 +469,12 @@ class Config:
         else:
             self.logger.critical("No input directory: %s", self.input_dir)
 
+
     def ini2dict(self, section=None , flat=False) -> dict:
         """
         Return a dictionary of all options in the config file. If section is provided,
-        return a dictionary of options in that section. If flat is True, return a flat dictionary without sections.
+        return a dictionary of options in that section. If flat is True, return a flat
+        dictionary without sections.
         """
 
         params = {}
@@ -492,12 +506,14 @@ class Config:
 
         return params
 
+
     def dict(self, section=None) -> dict : # rename to ini2dict ; keep dict as alias
         """
         Return a dictionary of all options in the config file. If section is provided,
         return a dictionary of options in that section
         """
         return self.ini2dict(section=section)
+
 
     # Load command line definitions from a file
     def load_cli_parameters(self, file, section=None):
@@ -527,6 +543,7 @@ class Config:
             self.logger.critical("Can't find file %s", file)
             sys.exit(1)
             return None
+
 
     # Update the default values for the command line arguments with the new defaults
     def update_defaults(self, cli_definitions=None, new_defaults=None):
@@ -689,13 +706,10 @@ class Config:
 
         # Set log level
         if "log_level" in self.cli.params:
-            self.logger.info("Log level set by command line, updating to %s", self.cli.params["log_level"])
+            self.logger.info("Log level set by command line, updating to %s",
+                             self.cli.params["log_level"])
             self.log_level = self.params["log_level"]
             self.logger.setLevel(self.log_level)
-
-
-     
-
 
         self.logger.debug("Final parameters: %s", self.cli.cli_params)
         self.logger.debug("Final parameters: %s", self.params)
@@ -722,8 +736,6 @@ class Config:
         self.__class__ = current_class
         return self.params
 
-
- 
 
 if __name__ == "__main__":
     cfg = Config()
@@ -772,7 +784,6 @@ if __name__ == "__main__":
         },
     ]
 
-
     # create path from current directory, keep everything before improvelib
     current_dir = Path(__file__).resolve().parent
     test_dir = current_dir.parents[1] / "tests"
@@ -792,16 +803,12 @@ if __name__ == "__main__":
     sys.argv.append( "--config_file" )
     sys.argv.append( str( test_dir / "data/default.cfg") )
  
-    
-
     cfg.cli.parser.add_argument('--test', metavar='TEST_COMMAND_LINE_OPTION', dest="test",
                                 nargs='+',
                                 type=int,
                                 default=[1], help="Test command line option.")
     
     # cfg.cli.parser.set_defaults(test=100)
-
-
     
     print(
         cfg.initialize_parameters(
@@ -810,8 +817,3 @@ if __name__ == "__main__":
     print(cfg.config.items('DEFAULT', raw=False))
     print(cfg.cli.args)
     print(cfg.params)
- 
-
-
-
-    
