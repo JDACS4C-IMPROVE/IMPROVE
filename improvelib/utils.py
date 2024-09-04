@@ -476,12 +476,13 @@ def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
     return None
 
 
-def store_predictions_df(params: Dict,
-                         y_true: np.array,
+def store_predictions_df(y_true: np.array,
                          y_pred: np.array,
                          stage: str,
-                         outdir: Union[Path, str],
+                         y_col_name: str,
+                         output_dir: str,
                          round_decimals: int = 4):
+
     """Store predictions with accompanying data frame.
 
     This allows to trace original data evaluated (e.g. drug and cell
@@ -496,11 +497,13 @@ def store_predictions_df(params: Dict,
 
             [stage]_[params['y_data_suffix']]_
 
-    :params Dict params: Dictionary of CANDLE/IMPROVE parameters read.
-    :params Dict indtd: Dictionary specifying paths of input data.
-    :params Dict outdtd: Dictionary specifying paths for ouput data.
     :params array y_true: Ground truth.
     :params array y_pred: Model predictions.
+    :params str stage: String specified if evaluation is with respect to
+            validation or testing set.
+    :params str y_col_name: Name of the column in the y_data predicted on.
+    :params str output_dir: Directory to write results.
+    :params int round_decimals: Number of decimals in output (default is 4).
 
     :return: Arrays with ground truth. This may have been read from an
              input data frame or from a processed PyTorch data file.
@@ -514,8 +517,8 @@ def store_predictions_df(params: Dict,
 
     # Define column names
     # pred_col_name = params["y_col_name"] + params["pred_col_name_suffix"]
-    pred_col_name = params["y_col_name"] + "_pred"
-    true_col_name = params["y_col_name"] + "_true"
+    pred_col_name = y_col_name + "_pred"
+    true_col_name = y_col_name + "_true"
 
     # -----------------------------
     # Attempt to concatenate raw predictions with y dataframe (e.g., df that
@@ -524,22 +527,14 @@ def store_predictions_df(params: Dict,
     # ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"
     ydf_fname = f"{stage}_y_data.csv"
     # ydf_fpath = Path(params[f"{stage}_ml_data_dir"]) / ydf_fname
+    ydf_fpath = Path(output_dir) / ydf_fname
 
-    # check for ml_data_outdir and output_dir in params and use the one that is available
-    # this ensures backward compatibility with previous versions of framework.py
-    if f"{stage}_ml_data_dir" in params:
-        ydf_fpath = Path(params[f"{stage}_ml_data_dir"]) / ydf_fname
-    elif "output_dir" in params:
-        ydf_fpath = Path(params["output_dir"]) / ydf_fname
-    else:
-        raise Exception(
-            f"ERROR ! Neither '{stage}_ml_data_dir' not 'output_dir' found in params.\n")
 
     # output df fname
     ydf_out_fname = ydf_fname.split(".")[0] + "_predicted.csv"
         # ".")[0] + "_" + params["y_data_preds_suffix"] + ".csv"
     # ydf_out_fpath = Path(params["ml_data_outdir"]) / ydf_out_fname
-    ydf_out_fpath = Path(outdir) / ydf_out_fname
+    ydf_out_fpath = Path(output_dir) / ydf_out_fname
 
     # if indtd["df"] is not None:
     if ydf_fpath.exists():
@@ -552,7 +547,7 @@ def store_predictions_df(params: Dict,
         # pred_df = pd.DataFrame(y_pred, columns=[pred_col_name])  # Include only predicted values
         # This includes only predicted values
         pred_df = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})
-        v1 = np.round(rsp_df[params["y_col_name"]].values.astype(np.float32),
+        v1 = np.round(rsp_df[y_col_name].values.astype(np.float32),
                       decimals=round_decimals)
         v2 = np.round(pred_df[true_col_name].values.astype(np.float32),
                       decimals=round_decimals)
@@ -560,7 +555,7 @@ def store_predictions_df(params: Dict,
         assert np.array_equal(
             v1, v2), "Loaded y data vector is not equal to the true vector"
         mm = pd.concat([rsp_df, pred_df], axis=1)
-        mm = mm.astype({params["y_col_name"]: np.float32,
+        mm = mm.astype({y_col_name: np.float32,
                         true_col_name: np.float32,
                         pred_col_name: np.float32})
         df = mm.round({true_col_name: round_decimals,
@@ -584,39 +579,35 @@ def store_predictions_df(params: Dict,
     return None
 
 
-def compute_performance_scores(params: Dict,
-                               y_true: np.array,
+def compute_performance_scores(y_true: np.array,
                                y_pred: np.array,
-                               stage: str,
-                               outdir: Union[Path, str],
-                               metrics: List):
+                               stage: str, 
+                               metric_type: str, 
+                               output_dir: str):
     """Evaluate predictions according to specified metrics.
 
     Metrics are evaluated. Scores are stored in specified path and returned.
 
+
     :params array y_true: Array with ground truth values.
     :params array y_pred: Array with model predictions.
-    :params listr metrics: List of strings with metrics to evaluate.
-    :params Dict outdtd: Dictionary with path to store scores.
     :params str stage: String specified if evaluation is with respect to
             validation or testing set.
+    :params str metric_type: Either classification or regression.
+    :params str output_dir: Directory to write results.
 
     :return: Python dictionary with metrics evaluated and corresponding scores.
     :rtype: dict
     """
     # Compute multiple performance scores
-    scores = compute_metrics(y_true, y_pred, metrics)
+    scores = compute_metrics(y_true, y_pred, metric_type)
 
     # Add val_loss metric
-    key = f"{stage}_loss"
-    # scores[key] = scores["mse"]
-    scores[key] = scores[params["loss"]]
+    #key = f"{stage}_loss"
+    #scores[key] = scores[params["loss"]]
 
-    # fname = f"val_{params['json_scores_suffix']}.json"
-    # scores_fname = f"{stage}_{params['json_scores_suffix']}.json"
     scores_fname = f"{stage}_scores.json"
-    # scorespath = Path(params["ml_data_outdir"]) / scores_fname
-    scorespath = Path(outdir) / scores_fname
+    scorespath = Path(output_dir) / scores_fname
 
     with open(scorespath, "w", encoding="utf-8") as f:
         json.dump(scores, f, ensure_ascii=False, indent=4)
@@ -628,10 +619,11 @@ def compute_performance_scores(params: Dict,
         print("Validation scores:\n\t{}".format(scores))
     elif stage == "test":
         print("Inference scores:\n\t{}".format(scores))
+    else:
+        print("Invalid stage: must be 'val' or 'test'.")
     return scores
 
 
-compute_performace_scores = compute_performance_scores  # for backwards compatibility
 
 
 def check_path_and_files(folder_name: str, file_list: List, inpath: Path) -> Path:
