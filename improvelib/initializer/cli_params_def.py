@@ -163,11 +163,11 @@ improve_train_conf = [
      "help": "Validation batch size."
     },
     # ---------------------------------------
-    #{"name": "loss",  # TODO used in compute_metrics(), but probably can be removed
-    # "type": str,
-    # "default": "mse",
-    # "help": "[Dep?] Loss metric."
-    #},
+    {"name": "loss",  # TODO used in compute_metrics(), but probably can be removed
+     "type": str,
+     "default": "mse",
+     "help": "[Dep?] Loss metric."
+    },
     {"name": "early_stop_metric",  # [Req] TODO consider moving to app or model (with patience)
      "type": str,
      "default": "mse",
@@ -276,11 +276,11 @@ improve_infer_conf = [
      # "required": True, # TODO remove default if this is required param
      "help": "[Dep?] File format to save the trained model."
     },
-    #{"name": "loss",  
-    # "type": str,
-    # "default": "mse",
-    # "help": "[Dep?] Loss metric."
-    #},
+    {"name": "loss",  
+     "type": str,
+     "default": "mse",
+     "help": "[Dep?] Loss metric."
+    },
     # ---------------------------------------
     {"name": "input_data_dir",
      "type": str,
