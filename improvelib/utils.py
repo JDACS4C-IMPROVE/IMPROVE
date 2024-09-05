@@ -394,13 +394,11 @@ def get_file_format(file_format: Union[str, None] = None):
 
 
 # def build_ml_data_name(params: Dict, stage: str, file_format: str=""):
-def build_ml_data_file_name(params: Dict, stage: str):
+def build_ml_data_file_name(data_format: str, stage: str):
     """ Returns name of the ML/DL data file. E.g., train_data.pt
-    TODO: consider renaming build_ml_data_file_name()
     Used in *preprocess*.py*, *train*.py, and *infer*.py
     """
-    # data_file_format = get_file_format(file_format=file_format)
-    data_file_format = get_file_format(file_format=params["data_format"])
+    data_file_format = get_file_format(file_format=data_format)
     ml_data_file_name = stage + "_" + "data" + data_file_format
     return ml_data_file_name
 
