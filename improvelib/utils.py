@@ -437,29 +437,19 @@ def build_model_path(model_file_name: str, model_file_format: str, model_dir: Un
 #     return model_path
 
 
-def save_stage_ydf(ydf: pd.DataFrame, params: Dict, stage: str):
+def save_stage_ydf(ydf: pd.DataFrame, stage: str, output_dir: str):
     """ Save a subset of y data samples (rows of the input dataframe).
     The "subset" refers to one of the three stages involved in developing ML
     models, including: "train", "val", or "test".
 
     ydf : dataframe with y data samples
-    params : parameter dict
     stage (str) : "train", "val", or "test"
+    output_dir str: Directory to save to.
     """
-    # ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"
     ydf_fname = f"{stage}_y_data.csv"
-
-    # check for ml_data_outdir and output_dir in params and use the one that is available
-    # this ensures backward compatibility with previous versions of framework.py
-    if "ml_data_outdir" in params:
-        ydf_fpath = Path(params["ml_data_outdir"]) / ydf_fname
-    elif "output_dir" in params:
-        ydf_fpath = Path(params["output_dir"]) / ydf_fname
-    else:
-        raise Exception(
-            "ERROR ! Neither 'ml_data_outdir' not 'output_dir' found in params.\n")
-
+    ydf_fpath = Path(output_dir) / ydf_fname
     ydf.to_csv(ydf_fpath, index=False)
+
     return None
 
 
