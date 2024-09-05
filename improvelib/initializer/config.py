@@ -632,7 +632,6 @@ class Config:
                               pathToModelDir,
                               section='DEFAULT',
                               default_config=None,  # located in ModelDir
-                              default_model=None,
                               additional_definitions=None,
                               required=None,):
         """Initialize parameters from command line and config file."""
