@@ -50,7 +50,6 @@ class SectionConfig(Config):
     def initialize_parameters(self,
                               pathToModelDir,
                               default_config='default.cfg',
-                              default_model=None,
                               additional_cli_section=None,
                               additional_definitions=None,
                               required=None):
@@ -73,7 +72,6 @@ class SectionConfig(Config):
         p = super().initialize_parameters(pathToModelDir=pathToModelDir,
                                           section=self.section,
                                           default_config=default_config,
-                                          default_model=default_model,
                                           additional_definitions=self.options,
                                           required=required)
 
