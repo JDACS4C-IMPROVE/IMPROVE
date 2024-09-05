@@ -18,6 +18,7 @@ def splits_generator():
 def csa_postprocess(res_dir_path,
                     model_name: str,
                     y_col_name: str,
+                    metric_type: str="regression",
                     round_digits: int=3,
                     outdir: str="./",
                     verbose: bool=False):
@@ -64,7 +65,7 @@ def csa_postprocess(res_dir_path,
 
     preds_file_name = "test_y_data_predicted.csv"
     # scores_file_name = "test_scores.json"
-    metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]  
+    # metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]  
 
     sep = ','
     scores_fpath = outdir / "all_scores.csv"
@@ -90,7 +91,8 @@ def csa_postprocess(res_dir_path,
                 # Compute scores
                 y_true = preds[f"{y_col_name}_true"].values
                 y_pred = preds[f"{y_col_name}_pred"].values
-                sc = compute_metrics(y_true, y_pred, metrics_list)
+                # sc = compute_metrics(y_true, y_pred, metrics_list)
+                sc = compute_metrics(y_true, y_pred, metric_type=metric_type)
 
                 split = int(split_dir.name.split("split_")[1])
                 jj[split] = sc
