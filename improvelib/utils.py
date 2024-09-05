@@ -403,33 +403,22 @@ def build_ml_data_file_name(data_format: str, stage: str):
     return ml_data_file_name
 
 
-def build_model_path(params: Dict, model_dir: Union[Path, str]):
+def build_model_path(model_file_name: str, model_file_format: str, model_dir: Union[Path, str]):
     """ Build path to save the trained model.
     Used in *train*.py and *infer*.py
 
     Args:
-        params (dict): dict of IMPROVE/CANDLE parameters and parsed values.
+        model_file_name str: Name of model file.
+        model_file_format: Type of file for model (e.g. '.pt').
         model_dir (Path or str): dir path to save the model
 
     Returns:
         pathlib.Path: returns the build model dir path
     """
-    model_file_format = get_file_format(
-        file_format=params["model_file_format"])
+    standard_model_file_format = get_file_format(
+        file_format=model_file_format)
     model_path = Path(model_dir) / \
-        (params["model_file_name"] + model_file_format)
-
-    # # check for model_outdir and output_dir in params and use the one that is available
-    # # this ensures backward compatibility with previous versions of framework.py
-    # model_file_format = get_file_format(file_format=params["model_file_format"])
-    # if "model_outdir" is params:
-    #     model_dir = Path(model_dir)
-    # elif "output_dir" in params:
-    #     model_dir = Path(params["output_dir"])
-    # else:
-    #     raise Exception(
-    #         "ERROR ! Neither 'ml_data_outdir' not 'output_dir' found in params.\n")
-    # model_path = model_dir / (params["model_file_name"] + model_file_format)
+        (model_file_name + standard_model_file_format)
 
     return model_path
 
