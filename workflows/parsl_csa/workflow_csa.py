@@ -194,10 +194,7 @@ cfg = DRPPreprocessConfig()
 params = cfg.initialize_parameters(
     pathToModelDir=filepath,
     default_config="csa_params.ini",
-    default_model=None,
-    additional_cli_section=None,
-    additional_definitions=additional_definitions,
-    required=None
+    additional_definitions=additional_definitions
 )
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
