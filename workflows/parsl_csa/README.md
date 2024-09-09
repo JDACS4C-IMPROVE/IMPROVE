@@ -119,9 +119,9 @@ python workflow_csa.py --config_file <CONFIG_FILE>
 
 #### With singularity container:
 In csa_params.ini: < br / >
-    - Set use_singularity = True < br / >
-    - singularity_image = <NAME_OF_YOUR_SINGULARITY_CONTAINER> < br / >
-    - Change other parameters if needed < br / >
+    - Set use_singularity = True  
+    - singularity_image = <NAME_OF_YOUR_SINGULARITY_CONTAINER>  
+    - Change other parameters if needed  
 
 To run cross study analysis with default configuration file (csa_params.ini):
 ```
