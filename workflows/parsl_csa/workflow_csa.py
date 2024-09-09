@@ -15,6 +15,15 @@ import csa_params_def as CSA
 import improvelib.utils as frm
 from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
 
+# Initialize parameters for CSA
+additional_definitions = CSA.additional_definitions
+filepath = Path(__file__).resolve().parent
+cfg = DRPPreprocessConfig() 
+params = cfg.initialize_parameters(
+    pathToModelDir=filepath,
+    default_config="csa_params.ini",
+    additional_definitions=additional_definitions
+)
 
 ##### CONFIG FOR LAMBDA ######
 #available_accelerators: Union[int, Sequence[str]] = 8
@@ -30,7 +39,7 @@ config_lambda = Config(
             cpu_affinity="block",
             #max_workers_per_node=2, ## IS NOT SUPPORTED IN  Parsl version: 2023.06.19. CHECK HOW TO USE THIS???
             worker_debug=True,
-            available_accelerators=8,  ## CHANGE THIS AS REQUIRED BY THE MACHINE
+            available_accelerators=params['available_accelerators'], 
             worker_port_range=worker_port_range,
             provider=LocalProvider(
                 init_blocks=1,
@@ -115,8 +124,17 @@ def preprocess(inputs=[]): #
         print(f"test_split_file:  {test_split_file}")
         print(f"ml_data_outdir:   {params['ml_data_outdir']}")
         if params['use_singularity']:
-            raise Exception('Functionality using singularity is work in progress. Please use the Python version to call preprocess by setting use_singularity=False')
-
+            preprocess_run = ["singularity", "exec", "--nv",
+                params['singularity_image'], "preprocess.sh",
+                str("--train_split_file " + str(train_split_file)),
+                str("--val_split_file " + str(val_split_file)),
+                str("--test_split_file " + str(test_split_file)),
+                str("--input_dir " + params['input_dir']),
+                str("--output_dir " + str(ml_data_dir)),
+                str("--y_col_name " + str(params['y_col_name']))
+            ]
+            result = subprocess.run(preprocess_run, capture_output=True,
+                                    text=True, check=True)
         else:
             preprocess_run = ["python",
                 params['preprocess_python_script'],
@@ -147,10 +165,20 @@ def train(params, hp_model, source_data_name, split):
         print(f"ml_data_dir: {ml_data_dir}")
         print(f"model_dir:   {model_dir}")
         if params['use_singularity']:
-            raise Exception('Functionality using singularity is work in progress. Please use the Python version to call train by setting use_singularity=False')
+            train_run = ["singularity", "exec", "--nv",
+                params['singularity_image'], "train.sh",
+                str("--input_dir " + str(ml_data_dir)),
+                str("--output_dir " + str(model_dir)),
+                str("--epochs " + str(params['epochs'])),
+                str("--y_col_name " + str(params['y_col_name'])),
+                str("--learning_rate " + str(hp['learning_rate'])),
+                str("--batch_size " + str(hp['batch_size']))
+            ]
+            result = subprocess.run(train_run, capture_output=True,
+                                    text=True, check=True)
         else:
             train_run = ["python", 
-                         params['train_python_script'],
+                        params['train_python_script'],
                         "--input_dir", str(ml_data_dir),
                         "--output_dir", str(model_dir),
                         "--epochs", str(params['epochs']),  # DL-specific
@@ -170,8 +198,15 @@ def infer(params, source_data_name, target_data_name, split): #
                 f"split_{split}"
     infer_dir = params['infer_dir']/f"{source_data_name}-{target_data_name}"/f"split_{split}"
     if params['use_singularity']:
-        raise Exception('Functionality using singularity is work in progress. Please use the Python version to call infer by setting use_singularity=False')
-
+        infer_run = ["singularity", "exec", "--nv",
+                params['singularity_image'], "infer.sh",
+                str("--input_data_dir " + str(ml_data_dir)),
+                str("--input_model_dir " + str(model_dir)),
+                str("--output_dir " + str(infer_dir)),
+                str("--y_col_name " + str(params['y_col_name']))
+        ]
+        result = subprocess.run(infer_run, capture_output=True,
+                                    text=True, check=True)
     else:
         print("\nInfer")
         infer_run = ["python", params['infer_python_script'],
@@ -187,15 +222,6 @@ def infer(params, source_data_name, target_data_name, split): #
 ###############################
 ####### CSA PARAMETERS ########
 ###############################
-
-additional_definitions = CSA.additional_definitions
-filepath = Path(__file__).resolve().parent
-cfg = DRPPreprocessConfig() 
-params = cfg.initialize_parameters(
-    pathToModelDir=filepath,
-    default_config="csa_params.ini",
-    additional_definitions=additional_definitions
-)
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 fdir = Path(__file__).resolve().parent
