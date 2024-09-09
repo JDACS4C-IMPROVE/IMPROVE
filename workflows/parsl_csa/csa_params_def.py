@@ -38,6 +38,12 @@ additional_definitions = [
      "default": 10,
      "help": "Number of epochs"
     },
+    {"name": "available_accelerators",
+     "nargs" : "+",
+     "type": str,
+     "default": ["0", "1"],
+     "help": "GPU IDs to assign jobs"
+    },
     {"name": "use_singularity",
      "type": bool,
      "default": True,
