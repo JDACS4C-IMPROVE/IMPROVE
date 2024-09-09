@@ -118,7 +118,7 @@ python workflow_csa.py --config_file <CONFIG_FILE>
 ```
 
 #### With singularity container:
-In csa_params.ini: < br / >
+In csa_params.ini:  
     - Set use_singularity = True  
     - singularity_image = <NAME_OF_YOUR_SINGULARITY_CONTAINER>  
     - Change other parameters if needed  
