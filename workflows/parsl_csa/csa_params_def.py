@@ -42,7 +42,7 @@ additional_definitions = [
      "nargs" : "+",
      "type": str,
      "default": ["0", "1"],
-     "help": "target_datasets for cross study analysis"
+     "help": "GPU IDs to assign jobs"
     },
     {"name": "use_singularity",
      "type": bool,
