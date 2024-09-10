@@ -8,7 +8,7 @@ from pathlib import Path
 
 from improvelib.utils import str2bool, cast_value
 from improvelib.initializer.cli import CLI
-import improvelib.config as base
+import improvelib.config.base as base
 
 BREAK=os.getenv("IMPROVE_DEV_DEBUG", None)
 
@@ -48,9 +48,9 @@ class Config(base.Config):
         )
 
         sog.add_argument(
-            '-pc', '--parsel_config',
+            '-pc', '--parsl_config_file',
             metavar='FILE',
-            dest="parsel_config",
+            dest="parsl_config_file",
             type=str,
             default=None,
             help="List of GPU IDs to use."
@@ -59,7 +59,6 @@ class Config(base.Config):
 
         if not "CUDA_VISIBLE_DEVICES" in os.environ:
             os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 
 
     def initialize_parameters(self,
@@ -80,6 +79,8 @@ class Config(base.Config):
                                     additional_definitions=self._options,
                                     )
 
+        self.gpu_ids = self.cli.args.gpu_ids
+        self.parsl_config_file = self.cli.args.parsl_config_file
         
 
 if __name__ == "__main__":
