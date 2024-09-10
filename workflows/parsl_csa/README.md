@@ -24,12 +24,11 @@ git checkout develop
 ```
 
 ### 3. Install Dependencies
-Activate the model conda environment
+Create and activate the conda environment (Not the model environment) to support Parsl and all other dependencies for IMPROVE
+```
+conda env create -f parsl_env.yml
+```
 
-Install Parsl (2023.6.19):
-```
-pip install parsl 
-```
 If you face an error during execution you may have to do this for Parsl:
 ```
 export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libffi.so.7
@@ -94,6 +93,7 @@ csa_data/raw_data/
     - hyperparameters_hpo.json : Contains hyperparameters optimized separately on all source datasets.
     - hyperparameters_default.json : Contains default values of the hyperparameters for the model.
  - model_name: Name of the model for cross study analysis
+ - model_environment: Name of your model conda environment
  - epochs: Number of epochs for the model
  - available_accelerators: List of GPU ids to launch the jobs. The required format is: ["id1","id2"]. For example, if you want to choose GPUs 0 and 1 set available_accelerators = ["0","1"]
  - y_col_name: Response variable used in the model. eg: auc
@@ -106,7 +106,9 @@ The hyperparameters are optimized using [Supervisor](https://github.com/JDACS4C-
 
 #### Without singularity container:
 
-Copy all the files in this directory to your model directory. Make sure to change the 'model_name' parameter in csa_params.ini to your <MODEL_NAME>.
+Copy all the files in this directory to your model directory.  
+Make sure to change the 'model_name' parameter in csa_params.ini to your <MODEL_NAME>.  
+Change the 'model_environment' variable to the name of your model conda environment.
 
 To run cross study analysis with default configuration file (csa_params.ini):
 ```
