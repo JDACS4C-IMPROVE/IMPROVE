@@ -28,6 +28,11 @@ additional_definitions = [
      "default": 'graphdrp', ## Change the default to LGBM??
      "help": "Name of the deep learning model"
     },
+    {"name": "model_environment",
+     "type": str,
+     "default": '', ## Change the default to LGBM??
+     "help": "Name of your model conda environment"
+    },
     {"name": "hyperparameters_file",
      "type": str,
      "default": 'hyperparameters_default.json',

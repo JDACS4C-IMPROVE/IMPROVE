@@ -136,7 +136,7 @@ def preprocess(inputs=[]): #
             result = subprocess.run(preprocess_run, capture_output=True,
                                     text=True, check=True)
         else:
-            preprocess_run = ["python",
+            preprocess_run = ["bash", "execute_in_conda.sh",params['model_environment'], 
                 params['preprocess_python_script'],
                 "--train_split_file", str(train_split_file),
                 "--val_split_file", str(val_split_file),
@@ -177,7 +177,7 @@ def train(params, hp_model, source_data_name, split):
             result = subprocess.run(train_run, capture_output=True,
                                     text=True, check=True)
         else:
-            train_run = ["python", 
+            train_run = ["bash", "execute_in_conda.sh",params['model_environment'], 
                         params['train_python_script'],
                         "--input_dir", str(ml_data_dir),
                         "--output_dir", str(model_dir),
@@ -185,7 +185,7 @@ def train(params, hp_model, source_data_name, split):
                         "--y_col_name", str(params['y_col_name']),
                         "--learning_rate", str(hp['learning_rate']),
                         "--batch_size", str(hp['batch_size'])
-                    ]
+            ]
             result = subprocess.run(train_run, capture_output=True,
                                     text=True, check=True)
     return {'source_data_name':source_data_name, 'split':split}
@@ -209,12 +209,13 @@ def infer(params, source_data_name, target_data_name, split): #
                                     text=True, check=True)
     else:
         print("\nInfer")
-        infer_run = ["python", params['infer_python_script'],
+        infer_run = ["bash", "execute_in_conda.sh",params['model_environment'], 
+                params['infer_python_script'],
                 "--input_data_dir", str(ml_data_dir),
                 "--input_model_dir", str(model_dir),
                 "--output_dir", str(infer_dir),
                 "--y_col_name", str(params['y_col_name'])
-        ]
+            ]
         result = subprocess.run(infer_run, capture_output=True,
                                 text=True, check=True)
     return True
