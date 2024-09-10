@@ -129,7 +129,7 @@ In csa_params.ini:
     - singularity_image = <NAME_OF_YOUR_SINGULARITY_CONTAINER>  
     - Change other parameters if needed  
 
-To run cross study analysis with default configuration file (csa_params.ini):
+To run cross study analysis with default configuration file (csa_params.ini):  
 Preprocess the raw data:
 ```
 python workflow_preprocess.py
