@@ -108,7 +108,7 @@ The hyperparameters are optimized using [Supervisor](https://github.com/JDACS4C-
 
 Copy all the files in this directory to your model directory.  
 Make sure to change the 'model_name' parameter in csa_params.ini to your <MODEL_NAME>.  
-Change the 'model_environment' variable to the name of your conda environment.
+Change the 'model_environment' variable to the name of your model conda environment.
 
 To run cross study analysis with default configuration file (csa_params.ini):
 ```
