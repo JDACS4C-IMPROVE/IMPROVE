@@ -1,0 +1,61 @@
+
+- name: "list_of_int"
+  dest: "loint"
+  help: "Need help to display default value"
+  nargs: "+"
+  type: int
+  default: [100]
+  section: "DEFAULT"
+- name: "list_of_str"
+  dest: "lostr"
+  help: "Need help to display default value"
+  nargs: "+"
+  type: str
+  default: ["default"]
+  section: "DEFAULT"
+- name: "list_of_float"
+  dest: "lofloat"
+  help: "Need help to display default value"
+  nargs: "+"
+  type: float
+  default: [1.0]
+  section: "DEFAULT"
+- name: "list_of_bool"
+  dest: "lobool"
+  help: "Need help to display default value"
+  nargs: "+"
+  type: bool
+  default: [True]
+  section: "DEFAULT"
+- name: "list_of_str_with_choices"
+  dest: "lostrch"
+  help: "Need help to display default value"
+  nargs: "+"
+  type: str
+  choices: ["a", "b", "c"]
+  default: ["a"]
+  section: "DEFAULT"
+- name: "list_of_int_with_choices"
+  dest: "lointch"
+  help: "Need help to display default value"
+  nargs: "+"
+  type: int
+  choices: [1, 2, 3]
+  default: [1]
+  section: "DEFAULT"  
+- name: "list_of_float_with_choices"
+  dest: "lofloatch"
+  help: "Need help to display default value"
+  nargs: "+"
+  type: float
+  choices: [1.0, 2.0, 3.0]
+  default: [1.0]
+  section: "GLOBAL"
+- name: "list_of_bool_with_choices"
+  dest: "loboolch"
+  help: "Need help to display default value"
+  nargs: "+"
+  type: bool
+  choices: [True, False]
+  default: [True]
+  section: "GLOBAL"
