@@ -110,6 +110,10 @@ Copy all the files in this directory to your model directory.
 Make sure to change the 'model_name' parameter in csa_params.ini to your <MODEL_NAME>.  
 Change the 'model_environment' variable to the name of your model conda environment.
 
+Preprocess the raw data:
+```
+python workflow_preprocess.py
+```
 To run cross study analysis with default configuration file (csa_params.ini):
 ```
 python workflow_csa.py
@@ -125,7 +129,11 @@ In csa_params.ini:
     - singularity_image = <NAME_OF_YOUR_SINGULARITY_CONTAINER>  
     - Change other parameters if needed  
 
-To run cross study analysis with default configuration file (csa_params.ini):
+Preprocess the raw data:
+```
+python workflow_preprocess.py
+```
+To run cross study analysis with default configuration file (csa_params.ini):  
 ```
 python workflow_csa.py
 ```
