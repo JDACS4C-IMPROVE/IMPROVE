@@ -114,6 +114,7 @@ def infer(params, source_data_name, target_data_name, split): #
                 str("--input_data_dir " + str(ml_data_dir)),
                 str("--input_model_dir " + str(model_dir)),
                 str("--output_dir " + str(infer_dir)),
+                str("--calc_infer_scores "+ "true"),
                 str("--y_col_name " + str(params['y_col_name']))
         ]
         result = subprocess.run(infer_run, capture_output=True,
@@ -125,6 +126,7 @@ def infer(params, source_data_name, target_data_name, split): #
                 "--input_data_dir", str(ml_data_dir),
                 "--input_model_dir", str(model_dir),
                 "--output_dir", str(infer_dir),
+                "--calc_infer_scores", "true",
                 "--y_col_name", str(params['y_col_name'])
             ]
         result = subprocess.run(infer_run, capture_output=True,
