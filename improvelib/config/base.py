@@ -202,9 +202,19 @@ class Config:
         """ TODO ... """
         if self.file and os.path.isfile(self.file):
             self.logger.info("Loading config from %s", self.file)
-            self.config.read(self.file)
+            # if ini file
+            if self.file.endswith('.ini'):
+                self.config.read(self.file)
+            # if yaml file
+            elif self.file.endswith('.yaml') or self.file.endswith('.yml'):
+                with open(self.file, 'r') as f:
+                    self.config = yaml.safe_load(f)
+            # if json file
+            elif self.file.endswith('.json'):
+                with open(self.file, 'r') as f:
+                    self.config = json.load(f)
         else:
-            self.logger.error("Can't load config from %s", str(self.file))
+            self.logger.error("Not a file %s", str(self.file))
             self.config['DEFAULT'] = {}
 
 
