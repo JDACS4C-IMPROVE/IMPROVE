@@ -1,46 +1,27 @@
-#!/usr/bin/env python
-
-# File: csa.py
-# Created: 2024-09-011
-
-
-
-import os
-import logging
-import sys
-import json
-import subprocess
-
 import parsl
 from parsl import python_app
+import subprocess
 from parsl.config import Config
 from parsl.executors import HighThroughputExecutor
 from parsl.providers import LocalProvider
 from time import time
 from typing import Sequence, Tuple, Union
 from pathlib import Path
+import logging
+import sys
+import json
 
 import csa_params_def as CSA
 import improvelib.utils as frm
-import improvelib.config.csa as csa
+from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
 
 
-### CSA logger
-FORMAT = "[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s] %(levelname)s: %(message)s"
-FORMAT = "%(levelname)s %(name)s %(asctime)s %(filename)s->%(funcName)s()[%(lineno)s] : %(message)s"
-logging.basicConfig(format=FORMAT, level=os.getenv("IMPROVE_LOG_LEVEL", logging.INFO))
-# FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
-# logging.basicConfig(format=FORMAT)
-logger = logging.getLogger(__name__)
-
-filepath = Path(__file__).resolve().parent
-
-
-### Parsl default configuration
+##### CONFIG FOR LAMBDA ######
+#available_accelerators: Union[int, Sequence[str]] = 8
 worker_port_range: Tuple[int, int] = (10000, 20000)
 retries: int = 1
 
-parsl_config_default = Config(
+config_lambda = Config(
     retries=retries,
     executors=[
         HighThroughputExecutor(
@@ -60,6 +41,12 @@ parsl_config_default = Config(
     strategy='simple',
 )
 
+parsl.clear()
+parsl.load(config_lambda)
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+fdir = Path(__file__).resolve().parent
+logger = logging.getLogger(f'Start workflow')
 
 ##############################################################################
 ################################ PARSL APPS ##################################
@@ -197,198 +184,63 @@ def infer(params, source_data_name, target_data_name, split): #
                                 text=True, check=True)
     return True
 
+###############################
+####### CSA PARAMETERS ########
+###############################
 
+additional_definitions = CSA.additional_definitions
+filepath = Path(__file__).resolve().parent
+cfg = DRPPreprocessConfig() 
+params = cfg.initialize_parameters(
+    pathToModelDir=filepath,
+    default_config="csa_params.ini",
+    default_model=None,
+    additional_cli_section=None,
+    additional_definitions=additional_definitions,
+    required=None
+)
 
-def main_wf():
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+fdir = Path(__file__).resolve().parent
+y_col_name = params['y_col_name']
+logger = logging.getLogger(f"{params['model_name']}")
+params = frm.build_paths(params)  # paths to raw data
 
-    ###############################
-    ####### CSA PARAMETERS ########
-    ###############################
+#Output directories for preprocess, train and infer
+params['ml_data_dir'] = Path(params['output_dir']) / 'ml_data' 
+params['model_outdir'] = Path(params['output_dir']) / 'models'
+params['infer_dir'] = Path(params['output_dir']) / 'infer'
 
-    additional_definitions = CSA.additional_definitions
-    filepath = Path(__file__).resolve().parent
-    # cfg = csa.Config() 
-    # params = cfg.initialize_parameters(
-    #     pathToModelDir=filepath,
-    #     default_config="csa_params.ini",
-    #     default_model=None,
-    #     additional_cli_section=None,
-    #     additional_definitions=additional_definitions,
-    #     required=None
-    # )
+#Model scripts
+params['preprocess_python_script'] = f"{params['model_name']}_preprocess_improve.py"
+params['train_python_script'] = f"{params['model_name']}_train_improve.py"
+params['infer_python_script'] = f"{params['model_name']}_infer_improve.py"
 
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-    fdir = Path(__file__).resolve().parent
-    y_col_name = params['y_col_name']
-    logger = logging.getLogger(f"{params['model_name']}")
-    params = frm.build_paths(params)  # paths to raw data
+#Read Hyperparameters file
+with open(params['hyperparameters_file']) as f:
+    hp = json.load(f)
+hp_model = hp[params['model_name']]
 
-    #Output directories for preprocess, train and infer
-    params['ml_data_dir'] = Path(params['output_dir']) / 'ml_data' 
-    params['model_outdir'] = Path(params['output_dir']) / 'models'
-    params['infer_dir'] = Path(params['output_dir']) / 'infer'
+##########################################################################
+##################### START PARSL PARALLEL EXECUTION #####################
+##########################################################################
 
-    #Model scripts
-    params['preprocess_python_script'] = f"{params['model_name']}_preprocess_improve.py"
-    params['train_python_script'] = f"{params['model_name']}_train_improve.py"
-    params['infer_python_script'] = f"{params['model_name']}_infer_improve.py"
+##Preprocess execution with Parsl
+preprocess_futures=[]
+for source_data_name in params['source_datasets']:
+    for split in params['split']:
+            preprocess_futures.append(preprocess(inputs=[params, source_data_name, split])) 
 
-    #Read Hyperparameters file
-    with open(params['hyperparameters_file']) as f:
-        hp = json.load(f)
-    hp_model = hp[params['model_name']]
+##Train execution with Parsl
+train_futures=[]
+for future_p in preprocess_futures:
+    train_futures.append(train(params, hp_model, future_p.result()['source_data_name'], future_p.result()['split']))
 
-    ##########################################################################
-    ##################### START PARSL PARALLEL EXECUTION #####################
-    ##########################################################################
+##Infer execution with Parsl
+infer_futures =[]
+for future_t in train_futures:
+    for target_data_name in params['target_datasets']:
+        infer_futures.append(infer(params, future_t.result()['source_data_name'], target_data_name, future_t.result()['split']))
 
-    ##Preprocess execution with Parsl
-    preprocess_futures=[]
-    for source_data_name in params['source_datasets']:
-        for split in params['split']:
-                preprocess_futures.append(preprocess(inputs=[params, source_data_name, split])) 
-
-    ##Train execution with Parsl
-    train_futures=[]
-    for future_p in preprocess_futures:
-        train_futures.append(train(params, hp_model, future_p.result()['source_data_name'], future_p.result()['split']))
-
-    ##Infer execution with Parsl
-    infer_futures =[]
-    for future_t in train_futures:
-        for target_data_name in params['target_datasets']:
-            infer_futures.append(infer(params, future_t.result()['source_data_name'], target_data_name, future_t.result()['split']))
-
-    for future_i in infer_futures:
-        print(future_i.result())
-
-
-def workflow(cfg, output_dirs , params):
-    logger.debug("Starting the workflow")
-
-    ##########################################################################
-    ##################### START PARSL PARALLEL EXECUTION #####################
-    ##########################################################################
-
-    fdir = Path(__file__).resolve().parent
-    y_col_name = params['y_col_name']
-    # logger = logging.getLogger(f"{params['model_name']}")
-    params = frm.build_paths(params)  # paths to raw data
-
-
-    for model in params['workflow']:
-        logger.debug(f"Checking workflow for model: {model}")
-        if model == params['model_name'] or params['model_name'] == 'all':
-            logger.debug(f"Running workflow for model: {model}")
-            hp_model = params['workflow'][model]
-            
-             #Output directories for preprocess, train and infer
-            params['ml_data_dir'] = Path(params['output_dir']) / 'ml_data' 
-            params['model_outdir'] = Path(params['output_dir']) / 'models'
-            params['infer_dir'] = Path(params['output_dir']) / 'infer'
-
-            #Model scripts
-            params['preprocess_python_script'] = f"{params['model_name']}_preprocess_improve.py"
-            params['train_python_script'] = f"{params['model_name']}_train_improve.py"
-            params['infer_python_script'] = f"{params['model_name']}_infer_improve.py"
-
-            ##Preprocess execution with Parsl
-            preprocess_futures=[]
-            for source_data_name in params['source_datasets']:
-                for split in params['split']:
-                        preprocess_futures.append(preprocess(inputs=[params, source_data_name, split])) 
-
-            ##Train execution with Parsl
-            train_futures=[]
-            for future_p in preprocess_futures:
-                train_futures.append(train(params, hp_model, future_p.result()['source_data_name'], future_p.result()['split']))
-
-            ##Infer execution with Parsl
-            infer_futures =[]
-            for future_t in train_futures:
-                for target_data_name in params['target_datasets']:
-                    infer_futures.append(infer(params, future_t.result()['source_data_name'], target_data_name, future_t.result()['split']))
-
-            for future_i in infer_futures:
-                print(future_i.result())
-    
-
-def setup_output_dir(cfg):
-
-    logger.debug("Setting up output directories")
-    base = Path(cfg.output_dir)
-
-    directories = {}
-
-    return directories
-
-def local_parameters(cfg):
-    logger.debug("Setting up local parameters")
-    params = cfg.params
-
-      #Read Hyperparameters file
-    with open(params['hyperparameters_file']) as f:
-        params['workflow'] = json.load(f)
-   
-
-
-    return params
-
-def initialize_parsl(cfg):
-
-    logger.debug("Initializing Parsl")
-    # Set parsl config to none and check later if it is provided
-    parsl_config = None
-
-    if cfg.parsl_config:
-        logger.debug(cfg.parsl_config)
-        parsl_config = cfg.parsl_config
-    else:
-        parsl_config = parsl_config_default
-        logger.debug("Parsl configuration file is not provided using default configuration from this script")
-    
-    if parsl_config is None:
-        logger.error("Parsl configuration is not provided")
-        sys.exit(1)
-
-    parsl.clear()
-    parsl.load(parsl_config)
-
-   
-
-
-
-
-def main(cfg):
-    logger.debug("Main function")
-    # Setup parsl
-    initialize_parsl(cfg)
-    
-    # keep this for now, supports current implementation
-    params = local_parameters(cfg)
-    
-    # setup output directories for experiment
-    output_dirs = setup_output_dir(cfg)
-
-    # run the workflow
-    workflow(cfg, output_dirs, params)
-
-
-    
-
-    # main_wf()
-
-
-if __name__ == "__main__":
-    logger.info("Starting the CSA workflow")
-
-    # Initialize the configuration
-    cfg = csa.Config()
-    cfg.initialize_parameters(
-        additional_definitions=CSA.additional_definitions,
-    )
-    # Update the log level with the one provided in the configuration
-    logger.setLevel(cfg.log_level)
-
-    # Run the main function
-    main(cfg)
+for future_i in infer_futures:
+    print(future_i.result())

@@ -1,0 +1,67 @@
+{
+    "graphdrp": {
+        "CCLE": {
+            "batch_size": 256,
+            "learning_rate": 0.0001
+        },
+        "CTRPv2": {
+            "batch_size": 256,
+            "learning_rate": 0.0001
+        },
+        "GDSCv1": {
+            "batch_size": 256,
+            "learning_rate": 0.0001
+        },
+        "GDSCv2": {
+            "batch_size": 256,
+            "learning_rate": 0.0001
+        },
+        "gCSI": {
+            "batch_size": 256,
+            "learning_rate": 0.0001
+        }
+    },
+    "HiDRA": {
+        "CCLE": {},
+        "CTRPv2": {},
+        "GDSCv1": {},
+        "GDSCv2": {},
+        "gCSI": {}  
+    },
+    "IGTD": {
+        "CCLE": {},
+        "CTRPv2": {},
+        "GDSCv1": {},
+        "GDSCv2": {},
+        "gCSI": {}  
+    },
+    "Paccmann_MCA": {
+        "CCLE": {
+            "batch_size": 32,
+            "learning_rate": 0.0001
+        },
+        "CTRPv2": {
+            "batch_size": 32,
+            "learning_rate": 0.0001
+        },
+        "GDSCv1": {
+            "batch_size": 32,
+            "learning_rate": 0.0001
+        },
+        "GDSCv2": {
+            "batch_size": 32,
+            "learning_rate": 0.0001
+        },
+        "gCSI": {
+            "batch_size": 32,
+            "learning_rate": 0.0001
+        }
+    },
+    "PathDSP": {
+        "CCLE": {},
+        "CTRPv2": {},
+        "GDSCv1": {},
+        "GDSCv2": {},
+        "gCSI": {}  
+    }
+}
