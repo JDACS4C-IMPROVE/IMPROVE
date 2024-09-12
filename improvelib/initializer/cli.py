@@ -77,7 +77,7 @@ class CLI:
             dest="config_file", 
             type=str,
             default=None,
-            help="Config file in INI format."
+            help="Config file in INI format. Supports all command line options. Values from the command line will overwrite values from the config file."
         )
 
 
