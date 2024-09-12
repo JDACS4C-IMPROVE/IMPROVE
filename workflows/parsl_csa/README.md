@@ -24,12 +24,11 @@ git checkout develop
 ```
 
 ### 3. Install Dependencies
-Activate the model conda environment
+Create and activate the conda environment (Not the model environment) to support Parsl and all other dependencies for IMPROVE
+```
+conda env create -f parsl_env.yml
+```
 
-Install Parsl (2023.6.19):
-```
-pip install parsl 
-```
 If you face an error during execution you may have to do this for Parsl:
 ```
 export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libffi.so.7
@@ -78,10 +77,8 @@ csa_data/raw_data/
     └── response.tsv
 ```
 
-### 6. To run cross study analysus using Parsl:
-
-Copy all the files in this directory to your model directory. Make sure to change the 'model_name' parameter in csa_params.ini to your <MODEL_NAME>.
-
+### 6. To run cross study analysis using Parsl:
+**Configuration file**:
 **csa_params.ini** contains parameters necessary for the workflow. The user can change the parameters inside this configuration file.
 
  - input_dir : Location of raw data for cross study analysis. 
@@ -96,7 +93,9 @@ Copy all the files in this directory to your model directory. Make sure to chang
     - hyperparameters_hpo.json : Contains hyperparameters optimized separately on all source datasets.
     - hyperparameters_default.json : Contains default values of the hyperparameters for the model.
  - model_name: Name of the model for cross study analysis
+ - model_environment: Name of your model conda environment
  - epochs: Number of epochs for the model
+ - available_accelerators: List of GPU ids to launch the jobs. The required format is: ["id1","id2"]. For example, if you want to choose GPUs 0 and 1 set available_accelerators = ["0","1"]
  - y_col_name: Response variable used in the model. eg: auc
  - use_singularity: True, if the model files are available in a singularity container
  - singularity_image: Singularity image file (.sif) of the model scripts (optional)
@@ -105,7 +104,17 @@ Copy all the files in this directory to your model directory. Make sure to chang
 **hyperparameters.json** contains a dictionary of optimized hyperparameters for the models. The key to the dictionary is the model name, which contains another dictionary with source dataset names as keys. The two hyperparameters considered for this analysis are: batch_size and learning_rate. 
 The hyperparameters are optimized using [Supervisor](https://github.com/JDACS4C-IMPROVE/HPO).
 
- To run cross study analysis with default configuration file (csa_params.ini):
+#### Without singularity container:
+
+Copy all the files in this directory to your model directory.  
+Make sure to change the 'model_name' parameter in csa_params.ini to your <MODEL_NAME>.  
+Change the 'model_environment' variable to the name of your model conda environment.
+
+Preprocess the raw data:
+```
+python workflow_preprocess.py
+```
+To run cross study analysis with default configuration file (csa_params.ini):
 ```
 python workflow_csa.py
 ```
@@ -113,6 +122,26 @@ python workflow_csa.py
 ```
 python workflow_csa.py --config_file <CONFIG_FILE>
 ```
+
+#### With singularity container:
+In csa_params.ini:  
+    - Set use_singularity = True  
+    - singularity_image = <NAME_OF_YOUR_SINGULARITY_CONTAINER>  
+    - Change other parameters if needed  
+
+Preprocess the raw data:
+```
+python workflow_preprocess.py
+```
+To run cross study analysis with default configuration file (csa_params.ini):  
+```
+python workflow_csa.py
+```
+To run cross study analysis with a different configuration file:
+```
+python workflow_csa.py --config_file <CONFIG_FILE>
+```
+
 
 ### Reference
 1.	Yadu Babuji, Anna Woodard, Zhuozhao Li, Daniel S. Katz, Ben Clifford, Rohan Kumar, Luksaz Lacinski, Ryan Chard, Justin M. Wozniak, Ian Foster, Michael Wilde and Kyle Chard. "Parsl: Pervasive Parallel Programming in Python." 28th ACM International Symposium on High-Performance Parallel and Distributed Computing (HPDC). 2019. 10.1145/3307681.3325400

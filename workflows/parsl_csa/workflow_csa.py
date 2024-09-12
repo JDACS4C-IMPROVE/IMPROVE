@@ -15,6 +15,15 @@ import csa_params_def as CSA
 import improvelib.utils as frm
 from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
 
+# Initialize parameters for CSA
+additional_definitions = CSA.additional_definitions
+filepath = Path(__file__).resolve().parent
+cfg = DRPPreprocessConfig() 
+params = cfg.initialize_parameters(
+    pathToModelDir=filepath,
+    default_config="csa_params.ini",
+    additional_definitions=additional_definitions
+)
 
 ##### CONFIG FOR LAMBDA ######
 #available_accelerators: Union[int, Sequence[str]] = 8
@@ -30,7 +39,7 @@ config_lambda = Config(
             cpu_affinity="block",
             #max_workers_per_node=2, ## IS NOT SUPPORTED IN  Parsl version: 2023.06.19. CHECK HOW TO USE THIS???
             worker_debug=True,
-            available_accelerators=8,  ## CHANGE THIS AS REQUIRED BY THE MACHINE
+            available_accelerators=params['available_accelerators'], 
             worker_port_range=worker_port_range,
             provider=LocalProvider(
                 init_blocks=1,
@@ -52,86 +61,6 @@ logger = logging.getLogger(f'Start workflow')
 ################################ PARSL APPS ##################################
 ##############################################################################
 
-@python_app  
-def preprocess(inputs=[]): # 
-    import warnings
-    import subprocess
-    import improvelib.utils as frm
-    def build_split_fname(source_data_name, split, phase):
-        """ Build split file name. If file does not exist continue """
-        if split=='all':
-            return f"{source_data_name}_{split}.txt"
-        return f"{source_data_name}_split_{split}_{phase}.txt"
-    params=inputs[0]
-    source_data_name=inputs[1]
-    split=inputs[2]
-
-    split_nums=params['split']
-    # Get the split file paths
-    if len(split_nums) == 0:
-        # Get all splits
-        split_files = list((params['splits_path']).glob(f"{source_data_name}_split_*.txt"))
-        split_nums = [str(s).split("split_")[1].split("_")[0] for s in split_files]
-        split_nums = sorted(set(split_nums))
-    else:
-        split_files = []
-        for s in split_nums:
-            split_files.extend(list((params['splits_path']).glob(f"{source_data_name}_split_{s}_*.txt")))
-    files_joined = [str(s) for s in split_files]
-
-    print(f"Split id {split} out of {len(split_nums)} splits.")
-    # Check that train, val, and test are available. Otherwise, continue to the next split.
-    for phase in ["train", "val", "test"]:
-        fname = build_split_fname(source_data_name, split, phase)
-        if fname not in "\t".join(files_joined):
-            warnings.warn(f"\nThe {phase} split file {fname} is missing (continue to next split)")
-            continue
-
-    for target_data_name in params['target_datasets']:
-        ml_data_dir = params['ml_data_dir']/f"{source_data_name}-{target_data_name}"/ \
-                f"split_{split}"
-        if ml_data_dir.exists() is True:
-            continue
-        if params['only_cross_study'] and (source_data_name == target_data_name):
-            continue # only cross-study
-        print(f"\nSource data: {source_data_name}")
-        print(f"Target data: {target_data_name}")
-
-        params['ml_data_outdir'] = params['ml_data_dir']/f"{source_data_name}-{target_data_name}"/f"split_{split}"
-        frm.create_outdir(outdir=params["ml_data_outdir"])
-        if source_data_name == target_data_name:
-            # If source and target are the same, then infer on the test split
-            test_split_file = f"{source_data_name}_split_{split}_test.txt"
-        else:
-            # If source and target are different, then infer on the entire target dataset
-            test_split_file = f"{target_data_name}_all.txt"
-
-        # Preprocess  data
-        print("\nPreprocessing")
-        train_split_file = f"{source_data_name}_split_{split}_train.txt"
-        val_split_file = f"{source_data_name}_split_{split}_val.txt"
-        print(f"train_split_file: {train_split_file}")
-        print(f"val_split_file:   {val_split_file}")
-        print(f"test_split_file:  {test_split_file}")
-        print(f"ml_data_outdir:   {params['ml_data_outdir']}")
-        if params['use_singularity']:
-            raise Exception('Functionality using singularity is work in progress. Please use the Python version to call preprocess by setting use_singularity=False')
-
-        else:
-            preprocess_run = ["python",
-                params['preprocess_python_script'],
-                "--train_split_file", str(train_split_file),
-                "--val_split_file", str(val_split_file),
-                "--test_split_file", str(test_split_file),
-                "--input_dir", params['input_dir'], 
-                "--output_dir", str(ml_data_dir),
-                "--y_col_name", str(params['y_col_name'])
-            ]
-            result = subprocess.run(preprocess_run, capture_output=True,
-                                    text=True, check=True)
-    return {'source_data_name':source_data_name, 'split':split}
-
-
 @python_app 
 def train(params, hp_model, source_data_name, split): 
     import subprocess
@@ -147,17 +76,27 @@ def train(params, hp_model, source_data_name, split):
         print(f"ml_data_dir: {ml_data_dir}")
         print(f"model_dir:   {model_dir}")
         if params['use_singularity']:
-            raise Exception('Functionality using singularity is work in progress. Please use the Python version to call train by setting use_singularity=False')
+            train_run = ["singularity", "exec", "--nv",
+                params['singularity_image'], "train.sh",
+                str("--input_dir " + str(ml_data_dir)),
+                str("--output_dir " + str(model_dir)),
+                str("--epochs " + str(params['epochs'])),
+                str("--y_col_name " + str(params['y_col_name'])),
+                str("--learning_rate " + str(hp['learning_rate'])),
+                str("--batch_size " + str(hp['batch_size']))
+            ]
+            result = subprocess.run(train_run, capture_output=True,
+                                    text=True, check=True)
         else:
-            train_run = ["python", 
-                         params['train_python_script'],
+            train_run = ["bash", "execute_in_conda.sh",params['model_environment'], 
+                        params['train_python_script'],
                         "--input_dir", str(ml_data_dir),
                         "--output_dir", str(model_dir),
                         "--epochs", str(params['epochs']),  # DL-specific
                         "--y_col_name", str(params['y_col_name']),
                         "--learning_rate", str(hp['learning_rate']),
                         "--batch_size", str(hp['batch_size'])
-                    ]
+            ]
             result = subprocess.run(train_run, capture_output=True,
                                     text=True, check=True)
     return {'source_data_name':source_data_name, 'split':split}
@@ -170,16 +109,26 @@ def infer(params, source_data_name, target_data_name, split): #
                 f"split_{split}"
     infer_dir = params['infer_dir']/f"{source_data_name}-{target_data_name}"/f"split_{split}"
     if params['use_singularity']:
-        raise Exception('Functionality using singularity is work in progress. Please use the Python version to call infer by setting use_singularity=False')
-
+        infer_run = ["singularity", "exec", "--nv",
+                params['singularity_image'], "infer.sh",
+                str("--input_data_dir " + str(ml_data_dir)),
+                str("--input_model_dir " + str(model_dir)),
+                str("--output_dir " + str(infer_dir)),
+                str("--calc_infer_scores "+ "true"),
+                str("--y_col_name " + str(params['y_col_name']))
+        ]
+        result = subprocess.run(infer_run, capture_output=True,
+                                    text=True, check=True)
     else:
         print("\nInfer")
-        infer_run = ["python", params['infer_python_script'],
+        infer_run = ["bash", "execute_in_conda.sh",params['model_environment'], 
+                params['infer_python_script'],
                 "--input_data_dir", str(ml_data_dir),
                 "--input_model_dir", str(model_dir),
                 "--output_dir", str(infer_dir),
+                "--calc_infer_scores", "true",
                 "--y_col_name", str(params['y_col_name'])
-        ]
+            ]
         result = subprocess.run(infer_run, capture_output=True,
                                 text=True, check=True)
     return True
@@ -187,18 +136,6 @@ def infer(params, source_data_name, target_data_name, split): #
 ###############################
 ####### CSA PARAMETERS ########
 ###############################
-
-additional_definitions = CSA.additional_definitions
-filepath = Path(__file__).resolve().parent
-cfg = DRPPreprocessConfig() 
-params = cfg.initialize_parameters(
-    pathToModelDir=filepath,
-    default_config="csa_params.ini",
-    default_model=None,
-    additional_cli_section=None,
-    additional_definitions=additional_definitions,
-    required=None
-)
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 fdir = Path(__file__).resolve().parent
@@ -212,7 +149,6 @@ params['model_outdir'] = Path(params['output_dir']) / 'models'
 params['infer_dir'] = Path(params['output_dir']) / 'infer'
 
 #Model scripts
-params['preprocess_python_script'] = f"{params['model_name']}_preprocess_improve.py"
 params['train_python_script'] = f"{params['model_name']}_train_improve.py"
 params['infer_python_script'] = f"{params['model_name']}_infer_improve.py"
 
@@ -225,16 +161,11 @@ hp_model = hp[params['model_name']]
 ##################### START PARSL PARALLEL EXECUTION #####################
 ##########################################################################
 
-##Preprocess execution with Parsl
-preprocess_futures=[]
-for source_data_name in params['source_datasets']:
-    for split in params['split']:
-            preprocess_futures.append(preprocess(inputs=[params, source_data_name, split])) 
-
 ##Train execution with Parsl
 train_futures=[]
-for future_p in preprocess_futures:
-    train_futures.append(train(params, hp_model, future_p.result()['source_data_name'], future_p.result()['split']))
+for source_data_name in params['source_datasets']:
+    for split in params['split']:
+        train_futures.append(train(params, hp_model, source_data_name, split))
 
 ##Infer execution with Parsl
 infer_futures =[]
