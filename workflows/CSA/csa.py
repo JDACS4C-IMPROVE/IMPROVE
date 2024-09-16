@@ -65,8 +65,8 @@ parsl_config_default = Config(
 ################################ PARSL APPS ##################################
 ##############################################################################
 
-@python_app  
-def preprocess(inputs=[]): # 
+@bash_app  
+def preprocess(inputs=[] , stdout=parsl.AUTO_LOGNAME , stderr=parsl.AUTO_LOGNAME): # 
     import warnings
     import subprocess
     import improvelib.utils as frm
@@ -275,11 +275,11 @@ def workflow(cfg, output_dirs , params):
     params = frm.build_paths(params)  # paths to raw data
 
 
-    for model in params['workflow']:
-        logger.debug(f"Checking workflow for model: {model}")
-        if model == params['model_name'] or params['model_name'] == 'all':
-            logger.debug(f"Running workflow for model: {model}")
-            hp_model = params['workflow'][model]
+    for model_name in params['workflow']:
+        logger.debug(f"Checking workflow for model: {model_name}")
+        if model_name == params['model_name'] or params['model_name'] == 'all':
+            logger.debug(f"Running workflow for model: {model_name}")
+            hp_model = params['workflow'][model_name]
             
              #Output directories for preprocess, train and infer
             params['ml_data_dir'] = Path(params['output_dir']) / 'ml_data' 
