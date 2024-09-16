@@ -29,8 +29,17 @@ class Config(base.Config):
         # This is the group with title 'Standard Options'
         logger.setLevel(self.log_level)
 
+        # Set the section to CSA
         self.section = 'CSA'
 
+        # CSA specific attributes
+        self.gpu_ids = None
+        self.models = None
+        self.models_params = None
+        self.defaults = {}
+        self.args = None # placeholder for args from argparse
+
+        # Set command line options
         sog = None
         for group in self.cli.parser._action_groups:
             if group.title == 'Standard Options':
@@ -52,9 +61,9 @@ class Config(base.Config):
         )
 
         sog.add_argument(
-            '-model_params', '--model_params', '--hyperparameters_file',
+            '--model_params', '--hyperparameters_file',
             metavar='FILE',
-            dest="model_params_per_dataset",
+            dest="hyperparameters_file",
             type=str,
             default=None,
             help="This file contains the dataset specific hyperparameters for the model."
@@ -140,7 +149,7 @@ class Config(base.Config):
             help="Runtime config for parsl as a python module. Config is in parsl_config variable."
         )
 
-        conda_or_singularity = sog.add_mutually_exclusive_group(required=True)
+        # conda_or_singularity = sog.add_mutually_exclusive_group(required=True)
 
 
         sog.add_argument(
@@ -193,10 +202,30 @@ class Config(base.Config):
 
         self.gpu_ids = self.cli.args.gpu_ids
         self.parsl_config_file = self.cli.args.parsl_config_file
+        self.singularuty = self.cli.args.singularity
+        self.container = self.cli.args.container
+        self.conda_env = self.cli.args.conda_env
+        self.model_name = self.cli.args.model_name
+        self.model_dir = self.cli.args.model_dir
+        self.defaults['epochs'] = self.cli.args.epochs
+        self.defaults['batch_size'] = self.cli.args.batch_size
+        self.defaults['learning_rate'] = self.cli.args.learning_rate
+        self.cross_study_only = self.cli.args.cross_study_only
+        self.source_datasets = self.cli.args.source_datasets
+        self.target_datasets = self.cli.args.target_datasets
+        
+
+        self.args = self.cli.args
 
         if self.parsl_config_file:
             self._load_parsl_config()
-
+        
+        if self.cli.args.hyperparameters_file:
+            self.model_params_per_dataset = self.cli.args.hyperparameters_file
+            self._load_model_params()
+        else:
+            logger.error("Model parameters file not specified.")
+            sys.exit(1)
         
 
     def _load_parsl_config(self):
@@ -239,6 +268,26 @@ class Config(base.Config):
         else:
             logger.error("Unknown file format for parsl_config_file")
             sys.exit(1)
+
+    # Load model parameters from the model_params_per_dataset file
+    def _load_model_params(self):
+        if not self.model_params_per_dataset:
+            logger.error("Model parameters file not specified.")
+            sys.exit(1)
+
+        if not os.path.exists(self.model_params_per_dataset):
+            logger.error(f"Model parameters file {self.model_params_per_dataset} not found.")
+            sys.exit(1)
+
+        with open(self.model_params_per_dataset, 'r') as f:
+            self.models_params = yaml.safe_load(f)
+
+        if self.models is None:
+            self.models = self.models_params.keys()
+        else:
+            # add the models to the models_params
+            for model in self.models:
+                self.models.append(model)
 
 
 if __name__ == "__main__":
