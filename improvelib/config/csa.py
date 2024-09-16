@@ -52,12 +52,83 @@ class Config(base.Config):
         )
 
         sog.add_argument(
-            '-wfc', '--workflow_config_file',
+            '-model_params', '--model_params', '--hyperparameters_file',
             metavar='FILE',
-            dest="workflow_config_file",
+            dest="model_params_per_dataset",
             type=str,
             default=None,
-            help="This file contains the workflow configuration with source and target datasets and model hyperparameters. The file is in YAML or json format."
+            help="This file contains the dataset specific hyperparameters for the model."
+        )
+
+        sog.add_argument(
+            '-e', '--epochs',
+            metavar='EPOCHS',
+            dest="epochs",
+            type=int,
+            default=1,
+            help="Number of epochs to train. DEPRIECATED: Specify in model_params_per_dataset instead."
+        )
+
+        sog.add_argument(
+            '-b', '--batch_size',
+            metavar='BATCH_SIZE',
+            dest="batch_size",
+            type=int,
+            help="Batch size for training. DEPRIECATED: Specify in model_params_per_dataset instead."
+        )
+
+        sog.add_argument(
+            '-lr', '--learning_rate',
+            metavar='LEARNING_RATE',
+            dest="learning_rate",
+            type=float,
+            help="Learning rate for training. DEPRIECATED: Specify in model_params_per_dataset instead."
+        )
+
+        sog.add_argument(
+            '-x', '--cross_study_only',
+            dest="cross_study_only",
+            action="store_true",
+            default=False,
+            help="Flag for cross-study only."
+        )
+
+        sog.add_argument(
+            '-model', '--model_name',
+            metavar='MODEL_NAME',
+            dest="model_name",
+            type=str,
+            default=None,
+            help="Model name to use. Better path to model directory."
+        )
+
+        sog.add_argument(
+            '-m', '--model_dir',
+            metavar='MODEL_DIR',
+            dest="model_dir",
+            type=str,
+            default=None,
+            help="Path to model directory."
+        )
+
+        sog.add_argument(
+            '--source_dataset', '--source_datasets',
+            metavar='DATASET',
+            dest="source_datasets",
+            nargs='+',
+            type=str,
+            default=None,
+            help="Source dataset for the workflow."
+        )
+
+        sog.add_argument(
+            '--target_dataset', '--target_datasets',
+            metavar='DATASET',
+            dest="target_datasets",
+            nargs='+',
+            type=str,
+            default=None,
+            help="Target dataset for the workflow."
         )
 
         sog.add_argument(
@@ -68,6 +139,34 @@ class Config(base.Config):
             default=None,
             help="Runtime config for parsl as a python module. Config is in parsl_config variable."
         )
+
+        conda_or_singularity = sog.add_mutually_exclusive_group(required=True)
+
+
+        sog.add_argument(
+            '-s', '--singularity',
+            dest="singularity",
+            action="store_true",
+            default=False,
+            help="Use singularity container for execution."
+        )
+
+        sog.add_argument(
+            '-c', '--container',
+            dest="container",
+            type=str,
+            default=None,
+            help="URI to container image to use for execution, e.g. file:///absolute/path/to/container.sif."
+        )
+
+        sog.add_argument(
+            '--conda_env',
+            dest="conda_env",
+            type=str,
+            default=None,
+            help="Conda environment to use for execution."
+        )
+
 
 
         if not "CUDA_VISIBLE_DEVICES" in os.environ:
