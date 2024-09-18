@@ -1,17 +1,24 @@
 import sys
 import json
 import os
-import parsl
-from parsl import bash_app
-import subprocess
-from parsl.config import Config
-from parsl.executors import HighThroughputExecutor
-from parsl.providers import LocalProvider
 from time import time
 from typing import Sequence, Tuple, Union
 from pathlib import Path
 import logging
 import shutil
+
+import parsl
+from parsl import bash_app
+from parsl.app.app import python_app
+import parsl.concurrent
+from parsl.config import Config
+import parsl.config
+from parsl.executors import HighThroughputExecutor
+from parsl.providers import LocalProvider
+from parsl.data_provider.files import File
+# from parsl.data_provider.staging import Staging
+
+
 
 
 import csa_params_def as CSA
@@ -23,31 +30,119 @@ logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", "INFO"))
 
 
 @bash_app
-def preprocess(input_file: str, output_file: str, script: str, stdout: str, stderr: str , 
-               inputs: Sequence[str] = [], 
-               outputs: Sequence[str] = []) -> str:
+def preprocess( 
+    input_dir = None,
+    output_dir = None,
+    train_file = None, 
+    val_file = None,
+    test_file = None,
+    column_name = None,
+    conda_env = None,
+    script = None,
+    
+    stderr = "stderr.txt",
+    stdout = "stdout.txt",
+    inputs = [],
+    outputs = [], # File(os.path.join(os.getcwd(), 'my_stdout*'))
+    ):
     """Preprocess the input file using the script."""
-    return f"{script} {input_file} {output_file} > {stdout} 2> {stderr}"
+    
+
+    # Prefix and activate the conda environment
+    if conda_env:
+        script = f"conda_path=$(dirname $(dirname $(which conda))); source $conda_path/bin/activate {conda_env} ; {script}"
+
+    # Create the command line interface for preprocessing
+    cli = [ script,
+        outputs[0].filepath, outputs[1].filepath, outputs[2].filepath, 
+        "--train_split_file" , train_file,
+        "--val_split_file" , val_file,
+        "--test_split_file" , test_file,
+        "--input_dir" , input_dir,
+        "--output_dir" , output_dir,
+        "--y_col_name" , column_name
+    ]
+
+    call = " ".join(cli)
+
+    logger.debug(f"Preprocessing command: {call}")
+    return call
+    # return f"cd {output_dir} ; {script} {input_dir} {output_dir} | tee my_stdout.txt"
 
 # Create preprocess output relative to the input directory for the workflow
 def preprocess_config(
         input_dir = None, 
         output_dir = None, 
         model = "", 
-        dataset = "", 
+        dataset = "",
+        target_dataset = "",
+        source_dataset = "",
+        split = "", 
         model_dir = None,
         ) :
     """Create dataset specifc config."""
 
-    input_dir = Path(input_dir)
-    output_dir = Path(output_dir)
-    model_dir = Path(model_dir) if model_dir else None
+    # Output dir is under output_dir/stage/model/source-target-dataset/split
 
-    output_dir = output_dir / model / dataset
+    if not input_dir:
+        raise FileNotFoundError("Input directory is not specified.")
+    if not output_dir:
+        output_dir = input_dir
+
+    # constant for the stage
+    stage = "preprocess"
+
+    # Check if the source and target datasets are specified
+    if not source_dataset or not target_dataset:
+        raise ValueError("Source and target datasets are not specified.")
+
+    # Create directory paths
+    pp_output_dir = os.path.join( output_dir , stage , model , "-".join([source_dataset, target_dataset]) , split)
+    pp_input_dir = os.path.join( input_dir ) 
+
+    # Create the output directory
+    if not os.path.exists(pp_output_dir):
+        logger.debug(f"Creating output directory: {pp_output_dir}")
+        os.makedirs(pp_output_dir, exist_ok=True)
+    if not os.path.exists(pp_input_dir):
+        logger.debug(f"Creating input directory: {pp_input_dir}")
+        os.makedirs(pp_input_dir, exist_ok=True)
+
+    if source_dataset == target_dataset:
+            # If source and target are the same, then infer on the test split
+            test_split_file = f"{source_dataset}_split_{split}_test.txt"
+    else:
+            # If source and target are different, then infer on the entire target dataset
+            test_split_file = f"{target_dataset}_all.txt"
+
+    # Preprocess  data
+    inputs = { 
+        "files": {
+            "train" : f"{source_dataset}_split_{split}_train.txt",
+            "val" : f"{source_dataset}_split_{split}_val.txt",
+            "test" : test_split_file},
+        "input_dir" : pp_input_dir,
+        "output_dir" : pp_output_dir,
+        "stdout" : os.path.join(pp_output_dir , "stdout.txt"),
+        "stderr" : os.path.join(pp_output_dir , "stderr.txt")
+        }
+       
+
+    return (inputs, pp_input_dir, pp_output_dir , os.path.join( pp_output_dir ,  "stderr.txt")  , os.path.join( pp_output_dir , "stdout.txt"))
+
+
+def _check_executable(script: str = None, 
+                      model_dir: str = None , 
+                      model_name: str = None , 
+                      conda_env: str = None):
+    """Check if the script is an executable."""
+    # Check if script is in the model directory or search path
+    model_dir = Path(model_dir) if model_dir else None
 
     if not model_dir:
         script = "preprocess.sh"
     else:
+        model_dir = Path(model_dir)
         script = model_dir / "preprocess.sh"
 
     # Check if the script is in search path
@@ -70,11 +165,11 @@ def preprocess_config(
     else:
         raise FileNotFoundError(f"Script {script} does not exist.")
     
+    # Make absolute path
+    script = os.path.abspath(script)
+
     logger.debug(f"Preprocessing script: {script}")
-
-    return (input_dir, output_dir , script )
-
-
+    return script
 
 def workflow(config: csa.Config,
              model_config: dict = None, 
@@ -84,6 +179,8 @@ def workflow(config: csa.Config,
 
     models = None
 
+    
+
     print(f"config: {config}")
 
     # Check if the model is specified in the configuration file and assign it to the models variable
@@ -92,25 +189,112 @@ def workflow(config: csa.Config,
         models = model_config # This is a dictionary of models
     else:
         models = {model_config["model"]}
+
+    if "splits" not in config.__dict__:
+        raise ValueError("Splits are not specified in the configuration file.")
+    
+    script = _check_executable(model_dir = config.model_dir, model_name = model_name)
   
     # Iterate over the models
+
+    preprocess_futures = []
+
     for model in models:
         if model == model_name or model_name == "all":
-            for dataset in models[model]:
-                logger.info(f"Preprocessing dataset {dataset} for {model}")
-                (pp_input_dir, pp_output_dir , script) = preprocess_config(input_dir, 
-                                                                           output_dir, 
-                                                                           model, dataset, 
-                                                                           model_dir=config.model_dir)
-                preprocess(input_dir = pp_input_dir,
-                           output_dir = pp_output_dir,
-                           script = script,
-                           env = config.conda_env,)
+            for source in config.source_datasets:
+                for target in config.target_datasets:
+                    for split in config.splits:
+                        print(output_dir)
+                        print(os.getcwd())
+                        logger.info(f"Preprocessing dataset {source} for {model} and {split}")
+                        (options, pp_input_dir, pp_output_dir , stdout_file , stderr_file ) = preprocess_config(input_dir=input_dir,
+                                                                           output_dir=output_dir, 
+                                                                           model=model,
+                                                                           source_dataset=source, 
+                                                                           target_dataset=target,
+                                                                           split=split)
+                        logger.debug(f"Preprocessing with {script} for {source} and {target} in {split}")
+                        future = preprocess(
+                            input_dir = options["input_dir"],
+                            output_dir = options["output_dir"],
+                            train_file = options["files"]["train"],
+                            val_file = options["files"]["val"],
+                            test_file = options["files"]["test"],
+                            column_name = config.y_col_name,
+                            script = script,
+                            conda_env = config.conda_env,
+                            inputs = [options["input_dir"]],
+                            outputs = [
+                                File(options["output_dir"]),
+                                File(options["files"]["train"]),
+                                File(options["files"]["val"]),
+                                File(options["files"]["test"]),
+                            ],
+                            stderr = os.path.join(config.output_dir, "stderr.txt"),
+                            stdout = os.path.join(config.output_dir, "stdout.txt"),
+                            )
+                        preprocess_futures.append(future)
+                       
         else:
             logger.debug(f"Skipping model {model}")
             continue
 
+    # Wait for all the futures to complete
+    logger.info("Waiting for all the preprocessing tasks to complete.")
+    for future in preprocess_futures:
+        # print(future.__dict__)
+        print(future.outputs)
+        print(future.stderr)
+        print(future.result())
+
+    for future in preprocess_futures:
+        for data in future.outputs:
+            if data.done():
+                # print(data.result().url)
+                # print(data.filepath)
+                # print(data.file_obj)
+                if os.path.isfile(data.filepath):
+                    print(f"{data.tid} is done.")
+                    print(f"Name {data.filename} is a file.")
+                elif os.path.isdir(data.filepath):
+                    print(f"{data.tid} is done.")
+                    print(f"Name {data.filename} is a directory.")
+                else:
+                    print(f"Data {data.tid} is neither file nor directory.")
+            else:
+                print(f"Data {data.tid} is not done.")    
+    
+
+
     logger.info("Workflow completed.")
+    return
+
+
+def init_parsl(config: parsl.config.Config):
+    """Initialize the Parsl configuration."""
+
+    # Check if the Parsl configuration is specified
+    if config is None:
+        logger.error("Parsl configuration is not specified.")
+        raise ValueError("Parsl configuration is not specified.")
+    
+    
+    # Disable logging for Parsl
+    config.initialize_logging = False
+    
+    # Load the Parsl configuration
+    logger.info("Initializing Parsl configuration.")
+    parsl.clear()
+    parsl.load(config)
+    logger.info("Parsl configuration initialized.")
+    return
+
+def shutdown_parsl():
+    """Shutdown the Parsl configuration."""
+    logger.info("Shutting down Parsl configuration.")
+    parsl.dfk().cleanup()
+    parsl.clear()
+    logger.info("Parsl configuration shutdown.")
     return
 
 def main(config: csa.Config):
@@ -118,13 +302,14 @@ def main(config: csa.Config):
     logger.info("Starting preprocessing workflow.")
     model_config = config.models_params
 
-
-    workflow(config=config,
-             model_config=config.models_params, 
-             model_name=config.model_name,
-             input_dir=config.input_dir,
-             output_dir=config.output_dir,
-            )   
+    init_parsl(config.parsl_config)
+    results = workflow(config=config,
+                        model_config=config.models_params, 
+                        model_name=config.model_name,
+                        input_dir=config.input_dir,
+                        output_dir=config.output_dir,
+                        )
+    shutdown_parsl()   
             
     
     logger.info("Preprocessing workflow completed.")
