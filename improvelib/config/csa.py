@@ -37,6 +37,9 @@ class Config(base.Config):
         self.models = None
         self.models_params = None
         self.defaults = {}
+        self.parsl_config = None # Parsl config
+        self.splits = None
+        self.y_col_name = "auc"
         self.args = None # placeholder for args from argparse
 
         # Set command line options
@@ -141,6 +144,25 @@ class Config(base.Config):
         )
 
         sog.add_argument(
+            '-split', '--split',
+            metavar='SPLITS',
+            dest="split",
+            nargs='+',
+            type=int,
+            default=[0],
+            help="Number of splits for the workflow."
+        )
+
+        sog.add_argument(
+            '-y', '--y_col_name',
+            metavar='Y_COL_NAME',
+            dest="y_col_name",
+            type=str,
+            default="auc",
+            help="Name of the column to use as the target variable."
+        )
+
+        sog.add_argument(
             '-pc', '--parsl_config_file',
             metavar='FILE',
             dest="parsl_config_file",
@@ -213,7 +235,10 @@ class Config(base.Config):
         self.cross_study_only = self.cli.args.cross_study_only
         self.source_datasets = self.cli.args.source_datasets
         self.target_datasets = self.cli.args.target_datasets
+        self.splits = self.cli.args.split
+        self.y_col_name = self.cli.args.y_col_name
         
+
 
         self.args = self.cli.args
 
