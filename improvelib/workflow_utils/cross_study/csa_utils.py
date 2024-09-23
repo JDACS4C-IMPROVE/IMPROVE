@@ -1,4 +1,4 @@
-""" Postprocessing results from Cross-Study Analysis (CSA) runs. """
+""" Post-processing results from Cross-Study Analysis (CSA) runs. """
 
 import os
 import pandas as pd
@@ -6,7 +6,6 @@ from sklearn.metrics import r2_score, mean_absolute_error
 from scipy.stats import pearsonr, spearmanr, sem
 from typing import Optional
 
-# from improve.metrics import compute_metrics
 from improvelib.metrics import compute_metrics
 
 
@@ -30,7 +29,7 @@ def apply_decimal_to_dataframe(df: pd.DataFrame, decimal_places: int=4):
 
     for col in df.select_dtypes(include='number').columns:
         try:
-            # Round the values to the specified number of decimal places
+            # Round values to the specified number of decimal places
             df[col] = df[col].round(decimal_places)
         except Exception as e:
             print(f"Error formatting column '{col}': {e}")
@@ -49,8 +48,8 @@ def csa_postprocess(res_dir_path,
 
     Args:
         res_dir_path: full path to the cross-study results dir
-        model_name: name of the model (e.g., GraphDRP, IGTD)
-        y_col_name: prediction variable
+        model_name (str): name of the model (e.g., GraphDRP, IGTD)
+        y_col_name (str): prediction variable
         outdir: full path to save the csa post-processing results
 
     Return:
@@ -59,7 +58,6 @@ def csa_postprocess(res_dir_path,
     infer_dir_name = "infer"
     infer_dir_path = res_dir_path/infer_dir_name
     dirs = sorted(list(infer_dir_path.glob("*-*"))); print(dirs)
-    # print(split_files)
 
     os.makedirs(outdir, exist_ok=True)
 
@@ -85,7 +83,6 @@ def csa_postprocess(res_dir_path,
     # ====================
 
     preds_file_name = "test_y_data_predicted.csv"
-    # metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]  
 
     sep = ','
     scores_fpath = outdir / "all_scores.csv"
@@ -109,7 +106,6 @@ def csa_postprocess(res_dir_path,
             jj = {}  # dict (key: split id, value: dict of scores)
 
             for split_dir in split_dirs:
-                # Load preds
                 preds_file_path = split_dir / preds_file_name
                 try:
                     preds = pd.read_csv(preds_file_path, sep=sep)
@@ -117,7 +113,6 @@ def csa_postprocess(res_dir_path,
                     # Compute scores
                     y_true = preds[f"{y_col_name}_true"].values
                     y_pred = preds[f"{y_col_name}_pred"].values
-                    # sc = compute_metrics(y_true, y_pred, metrics_list)
                     sc = compute_metrics(y_true, y_pred, metric_type=metric_type)
 
                     split = int(split_dir.name.split("split_")[1])
@@ -150,8 +145,6 @@ def csa_postprocess(res_dir_path,
         del dfs
 
         if len(missing_pred_files) > 0:
-            # res_dir_name = res_dir_path.name
-            # with open(f"{outdir}/{res_dir_name}.missing_pred_files.txt", "w") as f:
             with open(f"{outdir}/missing_pred_files.txt", "w") as f:
                 for line in missing_pred_files:
                     line = 'infer' + str(line).split('infer')[1]
@@ -191,7 +184,6 @@ def csa_postprocess(res_dir_path,
     # print(f"src: {src}; trg: {trg}; met: {met}; std:  {scores[(scores.met==met) & (scores.src==src) & (scores.trg==trg)].value.std()}")
 
     # Generate densed csa table
-    # breakpoint()
     df_on = scores[scores.src == scores.trg].reset_index()
     on_mean = df_on.groupby(["met"])["value"].mean().reset_index().rename(columns={"value": "mean"})
     on_std = df_on.groupby(["met"])["value"].std().reset_index().rename(columns={"value": "std"})
@@ -211,7 +203,6 @@ def csa_postprocess(res_dir_path,
         print(f"Off-diag std: \n{off_std}")
 
     # Combine dfs
-    # breakpoint()
     df = pd.concat([on, off], axis=0).sort_values("met")
     df.to_csv(outdir / "densed_csa_table.csv", index=False)
     print(f"Densed CSA table:\n{df}")
