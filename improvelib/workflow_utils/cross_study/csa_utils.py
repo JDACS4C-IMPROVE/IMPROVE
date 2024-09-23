@@ -15,11 +15,34 @@ def splits_generator():
     return None
 
 
+def apply_decimal_to_dataframe(df: pd.DataFrame, decimal_places: int=4):
+    """
+    Applies a specified number of decimal places to all numeric columns in a
+    DataFrame, handling potential errors.
+
+    Args:
+        df (pd.DataFrame): DataFrame to modify
+        decimal_places (int): The desired number of decimal places
+
+    Returns:
+        modified DataFrame with the specified decimal format applied where possible
+    """
+
+    for col in df.select_dtypes(include='number').columns:
+        try:
+            # Round the values to the specified number of decimal places
+            df[col] = df[col].round(decimal_places)
+        except Exception as e:
+            print(f"Error formatting column '{col}': {e}")
+
+    return df
+
+
 def csa_postprocess(res_dir_path,
                     model_name: str,
                     y_col_name: str,
                     metric_type: str="regression",
-                    round_digits: int=3,
+                    decimal_places: int=4,
                     outdir: str="./",
                     verbose: bool=False):
     """ Generates cross-study analysis tables and a figure.
@@ -35,12 +58,10 @@ def csa_postprocess(res_dir_path,
     """
     infer_dir_name = "infer"
     infer_dir_path = res_dir_path/infer_dir_name
-    dirs = list(infer_dir_path.glob("*-*")); print(dirs)
+    dirs = sorted(list(infer_dir_path.glob("*-*"))); print(dirs)
     # print(split_files)
 
     os.makedirs(outdir, exist_ok=True)
-
-    data_sources = ["ccle", "ctrp", "gcsi", "gdsc1", "gdsc2"] # TODO extract this from res_dir
 
     def calc_mae(y_true, y_pred):
         return sklearn.metrics.mean_absolute_error(y_true=y_true, y_pred=y_pred)
@@ -64,14 +85,18 @@ def csa_postprocess(res_dir_path,
     # ====================
 
     preds_file_name = "test_y_data_predicted.csv"
-    # scores_file_name = "test_scores.json"
     # metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]  
 
     sep = ','
     scores_fpath = outdir / "all_scores.csv"
-    if scores_fpath.exists():
+
+    missing_pred_files = []
+
+    # Check if data was already aggregated
+    if scores_fpath.exists(): 
         print("Load scores")
         scores = pd.read_csv(scores_fpath, sep=sep)
+
     else:
         print("Calc scores")
         dfs = []
@@ -79,25 +104,36 @@ def csa_postprocess(res_dir_path,
             print("Experiment:", dir_path)
             src = str(dir_path.name).split("-")[0]
             trg = str(dir_path.name).split("-")[1]
-            split_dirs = list((dir_path).glob(f"split_*"))
+            split_dirs = sorted(list((dir_path).glob(f"split_*")))
 
             jj = {}  # dict (key: split id, value: dict of scores)
 
             for split_dir in split_dirs:
                 # Load preds
                 preds_file_path = split_dir / preds_file_name
-                preds = pd.read_csv(preds_file_path, sep=sep)
+                try:
+                    preds = pd.read_csv(preds_file_path, sep=sep)
 
-                # Compute scores
-                y_true = preds[f"{y_col_name}_true"].values
-                y_pred = preds[f"{y_col_name}_pred"].values
-                # sc = compute_metrics(y_true, y_pred, metrics_list)
-                sc = compute_metrics(y_true, y_pred, metric_type=metric_type)
+                    # Compute scores
+                    y_true = preds[f"{y_col_name}_true"].values
+                    y_pred = preds[f"{y_col_name}_pred"].values
+                    # sc = compute_metrics(y_true, y_pred, metrics_list)
+                    sc = compute_metrics(y_true, y_pred, metric_type=metric_type)
 
-                split = int(split_dir.name.split("split_")[1])
-                jj[split] = sc
-                # df = pd.DataFrame(jj)
-                # df = df.T.reset_index().rename(columns={"index": "split"})
+                    split = int(split_dir.name.split("split_")[1])
+                    jj[split] = sc
+                    # df = pd.DataFrame(jj)
+                    # df = df.T.reset_index().rename(columns={"index": "split"})
+
+                    # Clean
+                    del preds, y_true, y_pred, sc, split
+
+                except FileNotFoundError:
+                    print(f"Error: File not found! {preds_file_path}")
+                    missing_pred_files.append(preds_file_path)
+
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
 
             # Convert dict to df, and aggregate dfs
             df = pd.DataFrame(jj)
@@ -105,12 +141,21 @@ def csa_postprocess(res_dir_path,
             df.columns = ['met', 'split', 'value']
             df['src'] = src
             df['trg'] = trg
-            dfs.append(df)
+            if df.empty is False:
+                dfs.append(df)
 
         # Concat dfs and save
         scores = pd.concat(dfs, axis=0)
         scores.to_csv(outdir / "all_scores.csv", index=False)
         del dfs
+
+        if len(missing_pred_files) > 0:
+            # res_dir_name = res_dir_path.name
+            # with open(f"{outdir}/{res_dir_name}.missing_pred_files.txt", "w") as f:
+            with open(f"{outdir}/missing_pred_files.txt", "w") as f:
+                for line in missing_pred_files:
+                    line = 'infer' + str(line).split('infer')[1]
+                    f.write(line + "\n")
 
     # Average across splits
     sc_mean = scores.groupby(["met", "src", "trg"])["value"].mean().reset_index()
@@ -126,6 +171,7 @@ def csa_postprocess(res_dir_path,
         # Mean
         mean = df.groupby(["src", "trg"])["value"].mean()
         mean = mean.unstack()
+        mean = apply_decimal_to_dataframe(mean, decimal_places)
         mean.to_csv(outdir / f"{met}_mean_csa_table.csv", index=True)
         print(f"{met} mean:\n{mean}")
         mean_tb[met] = mean
@@ -172,9 +218,12 @@ def csa_postprocess(res_dir_path,
     return scores
 
 
-def plot_color_coded_csa_table(df: pd.DataFrame, filepath: str="./", title: str=None):
+def plot_color_coded_csa_table(df: pd.DataFrame,
+                               filepath: str="./",
+                               title: str=None):
     """
-    Creates a color-coded table with shades of red and green based on the values and saves it as a figure.
+    Creates a color-coded table with shades of red and green based on the
+    values and saves it as a figure.
 
     Args:
         data (dict): Dictionary containing the data for the table.
