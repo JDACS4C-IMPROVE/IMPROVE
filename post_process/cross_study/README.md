@@ -23,7 +23,7 @@ export PYTHONPATH=$PYTHONPATH:$IMPROVE_LIB_PATH
 ```
 
 ### 3. Determine the results path and run post-processing
-Here we assume the CSA results are located at IMPROVE/post_process/csa/LGBM/run.csa.small
+Here we assume the CSA results are located at `IMPROVE/post_process/csa/LGBM/run.csa.small`
 
 ```
 python post_process/csa/csa_postproc.py --res_dir post_process/csa/LGBM/run.csa.small --model_name LGBM --y_col_name auc
