@@ -4,7 +4,7 @@ Copy all three files (csa_bruteforce_params.ini, csa_bruteforce_params_def.py, c
 
 ### These should be changed in csa_bruteforce_params.ini:
 
-`model_name` set to your model name.
+`model_name` set to your model name (this should have the same capitalization pattern as your model scripts, e.g. deepttc for deepttc_preprocess_improve.py, etc).
 
 `epochs` set to max epochs appropriate for your model, or a low number for testing.
 
