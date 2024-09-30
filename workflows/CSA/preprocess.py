@@ -54,7 +54,7 @@ def preprocess(
 
     # Create the command line interface for preprocessing
     cli = [ script,
-        outputs[0].filepath, outputs[1].filepath, outputs[2].filepath, 
+        outputs[0].filepath, outputs[1].filepath, outputs[2].filepath, outputs[3].filepath,
         "--train_split_file" , train_file,
         "--val_split_file" , val_file,
         "--test_split_file" , test_file,
@@ -200,8 +200,11 @@ def workflow(config: csa.Config,
     preprocess_futures = []
 
     for model in models:
+        logger.debug(f"Checking model {model}")
         if model == model_name or model_name == "all":
+            logger.debug(f"Preprocessing for model {model}")
             for source in config.source_datasets:
+                logger.info(f"Preprocessing dataset {source} for {model}")
                 for target in config.target_datasets:
                     for split in config.splits:
                         print(output_dir)
@@ -226,9 +229,9 @@ def workflow(config: csa.Config,
                             inputs = [options["input_dir"]],
                             outputs = [
                                 File(options["output_dir"]),
-                                File(options["files"]["train"]),
-                                File(options["files"]["val"]),
-                                File(options["files"]["test"]),
+                                File("/".join([options["output_dir"], options["files"]["train"]])),
+                                File("/".join([options["output_dir"], options["files"]["val"]])),
+                                File("/".join([options["output_dir"],options["files"]["test"]])),
                             ],
                             stderr = os.path.join(config.output_dir, "stderr.txt"),
                             stdout = os.path.join(config.output_dir, "stdout.txt"),
@@ -281,6 +284,7 @@ def init_parsl(config: parsl.config.Config):
     
     # Disable logging for Parsl
     config.initialize_logging = False
+    config.usage_tracking = True
     
     # Load the Parsl configuration
     logger.info("Initializing Parsl configuration.")
@@ -309,6 +313,7 @@ def main(config: csa.Config):
                         input_dir=config.input_dir,
                         output_dir=config.output_dir,
                         )
+    print(config.parsl_config.get_usage_information())
     shutdown_parsl()   
             
     
