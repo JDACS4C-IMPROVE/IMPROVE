@@ -415,9 +415,13 @@ def build_model_path(model_file_name: str, model_file_format: str, model_dir: Un
     Returns:
         pathlib.Path: returns the build model dir path
     """
-    standard_model_file_format = get_file_format(
+    if model_file_format == "None":
+        model_path = Path(model_dir) / \
+        (model_file_name)
+    else:
+        standard_model_file_format = get_file_format(
         file_format=model_file_format)
-    model_path = Path(model_dir) / \
+        model_path = Path(model_dir) / \
         (model_file_name + standard_model_file_format)
 
     return model_path
