@@ -1,8 +1,9 @@
 """ Basic definitions for IMPROVE framework. """
 
-import os
 import argparse
 import json
+import os
+import time
 from pathlib import Path
 # use NewType becuase TypeAlias is available from python 3.10
 from typing import List, Set, Union, NewType, Dict, Optional
@@ -11,6 +12,37 @@ import numpy as np
 import pandas as pd
 
 from .metrics import compute_metrics
+
+
+class Timer:
+    """ Measure time. """
+    def __init__(self):
+        self.start = time.time()
+
+    def timer_end(self):
+        self.end = time.time()
+        self.time_diff = self.end - self.start
+        self.hours = int(self.time_diff // 3600)
+        self.minutes = int((self.time_diff % 3600) // 60)
+        self.seconds = self.time_diff % 60
+        self.time_diff_dict = {'hours': self.hours,
+                               'minutes': self.minutes,
+                               'seconds': self.seconds}
+
+    def display_timer(self, print_fn=print):
+        self.timer_end()
+        tt = self.time_diff_dict
+        print(f"Elapsed Time: {self.hours:02}:{self.minutes:02}:{self.seconds:05}")
+        return self.time_diff_dict
+
+    def save_timer(self, dir_to_save,
+                   extra_dict: Optional[Dict]=None):
+        """ Save runtime to file. """
+        if isinstance(extra_dict, dict):
+            self.time_diff_dict.update(extra_dict)
+        with open(Path(dir_to_save) / 'runtime.json', 'w') as json_file:
+            json.dump(self.time_diff_dict, json_file, indent=4)
+        return True
 
 
 def str2bool(v: str) -> bool:
