@@ -14,6 +14,23 @@ import pandas as pd
 from .metrics import compute_metrics
 
 
+def save_subprocess_stdout(
+    result,
+    log_dir: Union[str, Path]='.',
+    log_filename: Optional[str]='logs.txt'):
+    """ Save the captured output from subprocess python package.
+    Args:
+        result: captured output from subprocess python package.
+            E.g. result = subprocess.run(...)
+        log_dir (str or Path): dir to save the logs
+        log_filename (str): file name to save the logs
+    """
+    result_file_name_stdout = log_dir / log_filename
+    with open(result_file_name_stdout, 'w') as file:
+        file.write(result.stdout)
+    return True
+
+
 class Timer:
     """ Measure time. """
     def __init__(self):
