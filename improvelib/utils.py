@@ -35,12 +35,14 @@ class Timer:
         print(f"Elapsed Time: {self.hours:02}:{self.minutes:02}:{self.seconds:05}")
         return self.time_diff_dict
 
-    def save_timer(self, dir_to_save,
+    def save_timer(self,
+                   dir_to_save: Union[str, Path]='.',
+                   filename: str='runtime.json',
                    extra_dict: Optional[Dict]=None):
         """ Save runtime to file. """
         if isinstance(extra_dict, dict):
             self.time_diff_dict.update(extra_dict)
-        with open(Path(dir_to_save) / 'runtime.json', 'w') as json_file:
+        with open(Path(dir_to_save) / filename, 'w') as json_file:
             json.dump(self.time_diff_dict, json_file, indent=4)
         return True
 
