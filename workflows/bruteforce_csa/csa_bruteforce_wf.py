@@ -1,10 +1,9 @@
-""" Python implementation of cross-study analysis workflow """
+""" Bruteforce implementation of cross-study analysis workflow """
 
-
+import json
 import os
 import subprocess
 import warnings
-from time import time
 from pathlib import Path
 
 import pandas as pd
@@ -18,35 +17,25 @@ from improvelib.applications.drug_response_prediction.config import DRPPreproces
 # from improvelib.applications.drug_response_prediction.config import DRPInferConfig
 import improvelib.utils as frm
 from csa_bruteforce_params_def import csa_bruteforce_params
+from improvelib.utils import Timer
 
 
 def build_split_fname(source: str, split: int, phase: str):
     """ Build split file name. If file does not exist continue """
     return f"{source_data_name}_split_{split}_{phase}.txt"
 
-def save_captured_output(result, process, MAIN_LOG_DIR, source_data_name, target_data_name, split):
-    result_file_name_stdout = MAIN_LOG_DIR / f"{source_data_name}-{target_data_name}-{split}-{process}-log.txt"
+
+def save_captured_output(result,
+                         process,
+                         MAIN_LOG_DIR,
+                         source_data_name,
+                         target_data_name,
+                         split):
+    result_file_name_stdout = MAIN_LOG_DIR / \
+        f"{source_data_name}-{target_data_name}-{split}-{process}-log.txt"
     with open(result_file_name_stdout, 'w') as file:
         file.write(result.stdout)
-
-
-
-
-class Timer:
-    """ Measure time. """
-    def __init__(self):
-        self.start = time()
-
-    def timer_end(self):
-        self.end = time()
-        return self.end - self.start
-
-    def display_timer(self, print_fn=print):
-        time_diff = self.timer_end()
-        if (time_diff) // 3600 > 0:
-            print_fn("Runtime: {:.1f} hrs".format( (time_diff)/3600) )
-        else:
-            print_fn("Runtime: {:.1f} mins".format( (time_diff)/60) )
+    return True
 
 
 filepath = Path(__file__).resolve().parent
@@ -54,12 +43,12 @@ filepath = Path(__file__).resolve().parent
 print_fn = print
 print_fn(f"File path: {filepath}")
 
+
 # ===============================================================
 ###  CSA settings
 # ===============================================================
 
-
-cfg = DRPPreprocessConfig() # TODO submit github issue; too many logs printed; is it necessary?
+cfg = DRPPreprocessConfig()
 params = cfg.initialize_parameters(
     pathToModelDir=filepath,
     default_config="csa_bruteforce_params.ini",
@@ -73,29 +62,25 @@ model_name = params["model_name"]
 preprocess_python_script = f'{model_name}_preprocess_improve.py'
 train_python_script = f'{model_name}_train_improve.py'
 infer_python_script = f'{model_name}_infer_improve.py'
-print("Created script names")
-# Specify dirs
+print("Created script names.")
 
+# Specify dirs
 y_col_name = params['y_col_name']
-# maindir = Path(f"./{y_col_name}")
-# maindir = Path(f"./0_{y_col_name}_improvelib") # main output dir
 MAIN_CSA_OUTDIR = Path(params["csa_outdir"]) # main output dir
-# Note! ML data and trained model should be saved to the same dir for inference script
 MAIN_ML_DATA_DIR = MAIN_CSA_OUTDIR / 'ml_data' # output_dir_pp, input_dir_train, input_dir_infer
 MAIN_MODEL_DIR = MAIN_CSA_OUTDIR / 'models' # output_dir_train, input_dir_infer
 MAIN_INFER_DIR = MAIN_CSA_OUTDIR / 'infer' # output_dir infer
 MAIN_LOG_DIR = MAIN_CSA_OUTDIR / 'logs'
 frm.create_outdir(MAIN_LOG_DIR)
-print("Created directory names")
-print("MAIN_CSA_OUTDIR: ", MAIN_CSA_OUTDIR)
+print("Created directory names.")
+print("MAIN_CSA_OUTDIR:  ", MAIN_CSA_OUTDIR)
 print("MAIN_ML_DATA_DIR: ", MAIN_ML_DATA_DIR)
-print("MAIN_MODEL_DIR: ", MAIN_MODEL_DIR)
-print("MAIN_INFER_DIR: ", MAIN_INFER_DIR)
-print("MAIN_LOG_DIR: ", MAIN_LOG_DIR)
+print("MAIN_MODEL_DIR:   ", MAIN_MODEL_DIR)
+print("MAIN_INFER_DIR:   ", MAIN_INFER_DIR)
+print("MAIN_LOG_DIR:     ", MAIN_LOG_DIR)
 # Note! Here input_dir is the location of benchmark data
-# TODO Should we set input_dir (and output_dir) for each models scrit?
 splits_dir = Path(params['input_dir']) / params['splits_dir']
-print("Created splits path")
+print("Created splits path.")
 print("splits_dir: ", splits_dir)
 
 source_datasets = params["source_datasets"]
@@ -117,7 +102,7 @@ timer = Timer()
 print_fn(f"\nsource_datasets: {source_datasets}")
 print_fn(f"target_datasets: {target_datasets}")
 print_fn(f"split_nums:      {split_nums}")
-# breakpoint()
+
 for source_data_name in source_datasets:
 
     # Get the split file paths
@@ -145,7 +130,8 @@ for source_data_name in source_datasets:
         for phase in ["train", "val", "test"]:
             fname = build_split_fname(source_data_name, split, phase)
             if fname not in "\t".join(files_joined):
-                warnings.warn(f"\nThe {phase} split file {fname} is missing (continue to next split)")
+                warnings.warn(f"\nThe {phase} split file {fname} is missing \
+                              (continue to next split)")
                 continue
 
         for target_data_name in target_datasets:
@@ -154,11 +140,11 @@ for source_data_name in source_datasets:
             print_fn(f"\nSource data: {source_data_name}")
             print_fn(f"Target data: {target_data_name}")
 
-            ml_data_dir = MAIN_ML_DATA_DIR / f"{source_data_name}-{target_data_name}" / \
-                f"split_{split}"
+            ml_data_dir = MAIN_ML_DATA_DIR / \
+                f"{source_data_name}-{target_data_name}" / f"split_{split}"
             model_dir = MAIN_MODEL_DIR / f"{source_data_name}" / f"split_{split}"
-            infer_dir = MAIN_INFER_DIR / f"{source_data_name}-{target_data_name}" / \
-                f"split_{split}" # AP
+            infer_dir = MAIN_INFER_DIR / \
+                f"{source_data_name}-{target_data_name}" / f"split_{split}"
 
             if source_data_name == target_data_name:
                 # If source and target are the same, then infer on the test split
@@ -169,7 +155,6 @@ for source_data_name in source_datasets:
 
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # p1 (none): Preprocess train data
-            # train_split_files = list((ig.splits_dir).glob(f"{source_data_name}_split_0_train*.txt"))  # placeholder for LC
             timer_preprocess = Timer()
             print_fn("\nPreprocessing")
             train_split_file = f"{source_data_name}_split_{split}_train.txt"
@@ -185,10 +170,18 @@ for source_data_name in source_datasets:
                   "--output_dir", str(ml_data_dir),
                   "--y_col_name", str(y_col_name)
             ]
-            result = subprocess.run(preprocess_run, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines=True)
+            result = subprocess.run(preprocess_run,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    universal_newlines=True)
             print(f"returncode = {result.returncode}")
-            save_captured_output(result, "preprocess", MAIN_LOG_DIR, source_data_name, target_data_name, split)
-            timer_preprocess.display_timer(print_fn)
+            save_captured_output(result, "preprocess", MAIN_LOG_DIR,
+                                 source_data_name, target_data_name, split)
+            tt = timer_preprocess.display_timer(print_fn)
+            extra_dict = {"source_data": source_data_name,
+                          "target_data": target_data_name,
+                          "split": split}
+            timer_preprocess.save_timer(ml_data_dir, extra_dict=extra_dict)
 
             # p2 (p1): Train model
             # Train a single model for a given [source, split] pair
@@ -213,10 +206,16 @@ for source_data_name in source_datasets:
                         "--epochs", str(epochs),  # DL-specific
                         "--y_col_name", y_col_name
                     ]
-                result = subprocess.run(train_run, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines=True)
+                result = subprocess.run(train_run,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT,
+                                        universal_newlines=True)
                 print(f"returncode = {result.returncode}")
-                save_captured_output(result, "train", MAIN_LOG_DIR, source_data_name, "none", split)
-                timer_train.display_timer(print_fn)
+                save_captured_output(result, "train", MAIN_LOG_DIR,
+                                     source_data_name, "none", split)
+                tt = timer_train.display_timer(print_fn)
+                extra_dict = {"source_data": source_data_name, "split": split}
+                timer_train.save_timer(model_dir, extra_dict=extra_dict)
 
             # Infer
             # p3 (p1, p2): Inference
@@ -239,12 +238,22 @@ for source_data_name in source_datasets:
                     "--y_col_name", y_col_name,
                     "--calc_infer_scores", "true"
                 ]
-            result = subprocess.run(infer_run, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines=True)
+            result = subprocess.run(infer_run,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    universal_newlines=True)
             print(f"returncode = {result.returncode}")
-            save_captured_output(result, "infer", MAIN_LOG_DIR, source_data_name, target_data_name, split)
-            timer_infer.display_timer(print_fn)
+            save_captured_output(result, "infer", MAIN_LOG_DIR,
+                                 source_data_name, target_data_name, split)
+            tt = timer_infer.display_timer(print_fn)
+            extra_dict = {"source_data": source_data_name,
+                          "target_data": target_data_name,
+                          "split": split}
+            timer_infer.save_timer(infer_dir, extra_dict=extra_dict)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-timer.display_timer(print_fn)
+tt = timer.display_timer(print_fn)
+timer.save_timer(MAIN_CSA_OUTDIR)
 print_fn('Finished full cross-study run.')
+
