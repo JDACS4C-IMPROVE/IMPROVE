@@ -50,7 +50,7 @@ def preprocess(
 
     # Prefix and activate the conda environment
     if conda_env:
-        script = f"conda_path=$(dirname $(dirname $(which conda))); source $conda_path/bin/activate {conda_env} ; {script}"
+        script = f"START=$(date +%s) ; conda_path=$(dirname $(dirname $(which conda))); source $conda_path/bin/activate {conda_env} ; {script} ; STOP=$(date +%s) ; echo 'Duration:\t'$((STOP-START)) 'seconds'"
 
     # Create the command line interface for preprocessing
     cli = [ script,
@@ -229,9 +229,11 @@ def workflow(config: csa.Config,
                                 File("/".join([options["input_dir"], "splits" , options["files"]["test"]])),],
                             outputs = [
                                 File(options["output_dir"]),
+                                File(os.path.join(options["output_dir"], "stderr.txt")),
+                                File(os.path.join(options["output_dir"], "stdout.txt"))
                             ],
-                            stderr = os.path.join(config.output_dir, "stderr.txt"),
-                            stdout = os.path.join(config.output_dir, "stdout.txt"),
+                            stderr = os.path.join(options["output_dir"], "stderr.txt"),
+                            stdout = os.path.join(options["output_dir"], "stdout.txt"),
                             )
                         preprocess_futures.append(future)
                        
