@@ -313,7 +313,7 @@ def main(config: csa.Config):
                         input_dir=config.input_dir,
                         output_dir=config.output_dir,
                         )
-    print(config.parsl_config.get_usage_information())
+    # print(config.parsl_config.get_usage_information())
     shutdown_parsl()   
             
     
