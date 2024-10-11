@@ -176,4 +176,4 @@ for future_t in train_futures:
 for future_i in infer_futures:
     print(future_i.result())
 
-parsl.clear()
+parsl.dfk.cleanup()
