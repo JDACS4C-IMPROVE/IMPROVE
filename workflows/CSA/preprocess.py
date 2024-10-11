@@ -50,7 +50,7 @@ def preprocess(
 
     # Prefix and activate the conda environment
     if conda_env:
-        script = f"START=$(date +%s) ; echo Start:\t$START; conda_path=$(dirname $(dirname $(which conda))); source $conda_path/bin/activate {conda_env} ; {script} ; STOP=$(date +%s) ; echo 'Duration:\t'$((STOP-START)) 'seconds' ; sleep 1"
+        script = f"START=$(date +%s) ; echo Start:\t$START; conda_path=$(dirname $(dirname $(which conda))); source $conda_path/bin/activate {conda_env} ; {script}"
 
     # Create the command line interface for preprocessing
     cli = [ script,
@@ -64,6 +64,9 @@ def preprocess(
 
     call = " ".join(cli)
 
+    SUFFIX=' ; STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1'
+    call = call + SUFFIX
+    
     logger.debug(f"Preprocessing command: {call}")
     return call
     # return f"cd {output_dir} ; {script} {input_dir} {output_dir} | tee my_stdout.txt"
