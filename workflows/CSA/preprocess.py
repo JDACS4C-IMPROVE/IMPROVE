@@ -50,7 +50,7 @@ def preprocess(
 
     # Prefix and activate the conda environment
     if conda_env:
-        script = f"START=$(date +%s) ; echo Start:\t$START; conda_path=$(dirname $(dirname $(which conda))); source $conda_path/bin/activate {conda_env} ; {script} ; STOP=$(date +%s) ; echo 'Duration:\t'$((STOP-START)) 'seconds'"
+        script = f"START=$(date +%s) ; echo Start:\t$START; conda_path=$(dirname $(dirname $(which conda))); source $conda_path/bin/activate {conda_env} ; {script} ; STOP=$(date +%s) ; echo 'Duration:\t'$((STOP-START)) 'seconds' ; sleep 1"
 
     # Create the command line interface for preprocessing
     cli = [ script,
