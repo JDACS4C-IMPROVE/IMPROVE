@@ -164,9 +164,6 @@ def _check_executable(script: str = None,
             raise FileNotFoundError(f"Script {script} is not a bash or python script.")
     else:
         raise FileNotFoundError(f"Script {script} does not exist.")
-    
-    # Make absolute path
-    script = os.path.abspath(script)
 
     logger.debug(f"Preprocessing script: {script}")
     return script
