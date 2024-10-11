@@ -66,7 +66,7 @@ def preprocess(
 
     SUFFIX=' ; STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1'
     call = call + SUFFIX
-    
+
     logger.debug(f"Preprocessing command: {call}")
     return call
     # return f"cd {output_dir} ; {script} {input_dir} {output_dir} | tee my_stdout.txt"
@@ -132,6 +132,44 @@ def preprocess_config(
 
     return (inputs, pp_input_dir, pp_output_dir , os.path.join( pp_output_dir ,  "stderr.txt")  , os.path.join( pp_output_dir , "stdout.txt"))
 
+@bash_app
+def train( 
+    script: str = None, 
+    input_dir: str = None, 
+    output_dir: str = None, 
+    epochs: int = 1, 
+    column_name: str = None, 
+    learning_rate: float = 0.001, 
+    batch_size: int = 32 , 
+    conda_env: str = None,
+    stdout: str = "stdout.txt", 
+    stderr: str = "stderr.txt", 
+    inputs: Sequence[File] = [], 
+    outputs: Sequence[File] = [] ):    
+    """Train the model."""
+    call= "echo 'Training the model'"
+
+    prefix = f"START=$(date +%s) ; echo Start:\t$START ; "
+
+    if conda_env:
+        conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} ; "
+    else:
+        conda = ""
+        
+    suffix = "STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
+
+    cli = [ script, 
+           "--input_dir" , input_dir,
+           "--output_dir" , output_dir,
+           "--epochs" , epochs,
+           "--y_col_name" , column_name,
+           "--learning_rate" , learning_rate,
+           "--batch_size" , batch_size
+           ]
+
+    call = echo + " ".join(cli)
+
+    return call
 
 def _check_executable(script: str = None, 
                       model_dir: str = None , 
