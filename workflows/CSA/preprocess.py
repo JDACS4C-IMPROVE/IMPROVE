@@ -54,7 +54,6 @@ def preprocess(
 
     # Create the command line interface for preprocessing
     cli = [ script,
-        outputs[0].filepath, outputs[1].filepath, outputs[2].filepath, outputs[3].filepath,
         "--train_split_file" , train_file,
         "--val_split_file" , val_file,
         "--test_split_file" , test_file,
