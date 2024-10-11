@@ -222,7 +222,11 @@ def workflow(config: csa.Config,
                             column_name = config.y_col_name,
                             script = script,
                             conda_env = config.conda_env,
-                            inputs = [options["input_dir"]],
+                            inputs = [
+                                File(options["input_dir"]),
+                                File("/".join([options["input_dir"], "splits" , options["files"]["train"]])),
+                                File("/".join([options["input_dir"], "splits" , options["files"]["val"]])),
+                                File("/".join([options["input_dir"], "splits" , options["files"]["test"]])),],
                             outputs = [
                                 File(options["output_dir"]),
                                 File("/".join([options["output_dir"], options["files"]["train"]])),
