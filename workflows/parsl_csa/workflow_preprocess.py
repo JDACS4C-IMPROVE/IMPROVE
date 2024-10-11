@@ -178,4 +178,4 @@ for source_data_name in params['source_datasets']:
 for future_p in preprocess_futures:
     print(future_p.result())
 
-parsl.clear()
+parsl.dfk().cleanup()
