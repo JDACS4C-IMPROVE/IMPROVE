@@ -4,7 +4,7 @@ from parsl.executors.threads import ThreadPoolExecutor
 parsl_config = Config(
     executors=[
         ThreadPoolExecutor(
-            max_threads=8,
+            max_threads=40,
             label='local_threads'
         )
     ]
