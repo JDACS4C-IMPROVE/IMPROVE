@@ -35,7 +35,7 @@ class Config(base.Config):
         # CSA specific attributes
         self.gpu_ids = None
         self.models = None
-        self.models_params = None
+        self.model_params = None
         self.defaults = {}
         self.parsl_config = None # Parsl config
         self.splits = None
@@ -64,7 +64,7 @@ class Config(base.Config):
         )
 
         sog.add_argument(
-            '--model_params', '--hyperparameters_file',
+            '--model_params_file', '--hyperparameters_file',
             metavar='FILE',
             dest="hyperparameters_file",
             type=str,
@@ -237,6 +237,7 @@ class Config(base.Config):
         self.target_datasets = self.cli.args.target_datasets
         self.splits = self.cli.args.split
         self.y_col_name = self.cli.args.y_col_name
+        self.epochs = self.cli.args.epochs
         
 
 
@@ -305,10 +306,10 @@ class Config(base.Config):
             sys.exit(1)
 
         with open(self.model_params_per_dataset, 'r') as f:
-            self.models_params = yaml.safe_load(f)
+            self.model_params = yaml.safe_load(f)
 
         if self.models is None:
-            self.models = self.models_params.keys()
+            self.models = self.model_params.keys()
         else:
             # add the models to the models_params
             for model in self.models:
