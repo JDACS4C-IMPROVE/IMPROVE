@@ -277,6 +277,7 @@ def workflow(config: csa.Config,
                             stderr = os.path.join(options["output_dir"], "stderr.txt"),
                             stdout = os.path.join(options["output_dir"], "stdout.txt"),
                             )
+                        logger.deubg(f"Preprocessing task {future.tid} submitted: {model} {source} {target} {split}")
                         preprocess_futures.append(future)
                        
         else:
