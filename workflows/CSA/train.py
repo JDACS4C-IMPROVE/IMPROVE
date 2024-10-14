@@ -29,50 +29,60 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", "INFO"))
 
 
+
 @bash_app
-def preprocess( 
-    input_dir = None,
-    output_dir = None,
-    train_file = None, 
-    val_file = None,
-    test_file = None,
-    column_name = None,
-    conda_env = None,
-    script = None,
-    
-    stderr = "stderr.txt",
-    stdout = "stdout.txt",
-    inputs = [],
-    outputs = [], # File(os.path.join(os.getcwd(), 'my_stdout*'))
-    ):
-    """Preprocess the input file using the script."""
-    
+def train( 
+    script: str = None, 
+    input_dir: str = None, 
+    output_dir: str = None, 
+    epochs: int = 100, 
+    column_name: str = None, 
+    learning_rate: float = 0.001, 
+    batch_size: int = 32 , 
+    conda_env: str = None,
+    stdout: str = "stdout.txt", 
+    stderr: str = "stderr.txt", 
+    inputs: Sequence[File] = [], 
+    outputs: Sequence[File] = [] ):    
+    """Train the model."""
+    call= "echo 'Training the model'"
 
-    # Prefix and activate the conda environment
+    prefix = f"START=$(date +%s) ; echo Start:\t$START ; "
+
     if conda_env:
-        script = f"START=$(date +%s) ; echo Start:\t$START; conda_path=$(dirname $(dirname $(which conda))); source $conda_path/bin/activate {conda_env} ; {script}"
+        conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} ; "
+    else:
+        conda = ""
 
-    # Create the command line interface for preprocessing
-    cli = [ script,
-        "--train_split_file" , train_file,
-        "--val_split_file" , val_file,
-        "--test_split_file" , test_file,
-        "--input_dir" , input_dir,
-        "--output_dir" , output_dir,
-        "--y_col_name" , column_name
-    ]
+    suffix = "STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
 
-    call = " ".join(cli)
 
-    SUFFIX=' ; STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1'
-    call = call + SUFFIX
+
+    cli = [ "time",
+           str(script), 
+           "--input_dir" , input_dir,
+           "--output_dir" , output_dir,
+        #    "--epochs" , epochs,
+        #    "--y_col_name" , column_name,
+        #    "--learning_rate" , learning_rate,
+        #    "--batch_size" , batch_size
+           ]
     
-    logger.debug(f"Preprocessing command: {call}")
-    return call
-    # return f"cd {output_dir} ; {script} {input_dir} {output_dir} | tee my_stdout.txt"
+    cli.append(f"--epochs {epochs}") if epochs else None
+    cli.append(f"--y_col_name {column_name}") if column_name else None
+    cli.append(f"--learning_rate {learning_rate}") if learning_rate else None
+    cli.append(f"--batch_size {batch_size}") if batch_size else None
 
-# Create preprocess output relative to the input directory for the workflow
-def preprocess_config(
+
+    call = ";".join([prefix, conda, " ".join(cli), suffix])
+
+    
+
+    return call
+
+
+# Create training output relative to the input directory for the workflow
+def train_config(
         input_dir = None, 
         output_dir = None, 
         model = "", 
@@ -92,45 +102,39 @@ def preprocess_config(
         output_dir = input_dir
 
     # constant for the stage
-    stage = "preprocess"
+    stage = "train"
 
     # Check if the source and target datasets are specified
     if not source_dataset or not target_dataset:
         raise ValueError("Source and target datasets are not specified.")
 
     # Create directory paths
-    pp_output_dir = os.path.join( output_dir , stage , model , "-".join([source_dataset, target_dataset]) , split)
-    pp_input_dir = os.path.join( input_dir ) 
+    train_output_dir = os.path.join( output_dir , stage , model , source_dataset , split)
+
+    # should come from future / output of preprocess
+    train_input_dir = os.path.join( input_dir , "preprocess" , model , "-".join([source_dataset, target_dataset]) , split)
 
     # Create the output directory
-    if not os.path.exists(pp_output_dir):
-        logger.debug(f"Creating output directory: {pp_output_dir}")
-        os.makedirs(pp_output_dir, exist_ok=True)
-    if not os.path.exists(pp_input_dir):
-        logger.debug(f"Creating input directory: {pp_input_dir}")
-        os.makedirs(pp_input_dir, exist_ok=True)
+    if not os.path.exists(train_output_dir):
+        logger.debug(f"Creating output directory: {train_output_dir}")
+        os.makedirs(train_output_dir, exist_ok=True)
+    if not os.path.exists(train_input_dir):
+        logger.error(f"Missing input directory: {train_input_dir}")
+        raise FileNotFoundError(f"Missing input directory: {train_input_dir}")
+    
 
-    if source_dataset == target_dataset:
-            # If source and target are the same, then infer on the test split
-            test_split_file = f"{source_dataset}_split_{split}_test.txt"
-    else:
-            # If source and target are different, then infer on the entire target dataset
-            test_split_file = f"{target_dataset}_all.txt"
-
-    # Preprocess  data
+    # Train input  data
     inputs = { 
         "files": {
-            "train" : f"{source_dataset}_split_{split}_train.txt",
-            "val" : f"{source_dataset}_split_{split}_val.txt",
-            "test" : test_split_file},
-        "input_dir" : pp_input_dir,
-        "output_dir" : pp_output_dir,
-        "stdout" : os.path.join(pp_output_dir , "stdout.txt"),
-        "stderr" : os.path.join(pp_output_dir , "stderr.txt")
+            },
+        "input_dir" : train_input_dir,
+        "output_dir" : train_output_dir,
+        "stdout" : os.path.join(train_output_dir , "stdout.txt"),
+        "stderr" : os.path.join(train_output_dir , "stderr.txt")
         }
        
 
-    return (inputs, pp_input_dir, pp_output_dir , os.path.join( pp_output_dir ,  "stderr.txt")  , os.path.join( pp_output_dir , "stdout.txt"))
+    return inputs
 
 
 def _check_executable(script: str = None, 
@@ -142,10 +146,10 @@ def _check_executable(script: str = None,
     model_dir = Path(model_dir) if model_dir else None
 
     if not model_dir:
-        script = "preprocess.sh"
+        script = "train.sh"
     else:
         model_dir = Path(model_dir)
-        script = model_dir / "preprocess.sh"
+        script = model_dir / "train.sh"
 
     # Check if the script is in search path
     if shutil.which(script):
@@ -167,7 +171,7 @@ def _check_executable(script: str = None,
     else:
         raise FileNotFoundError(f"Script {script} does not exist.")
 
-    logger.debug(f"Preprocessing script: {script}")
+    logger.debug(f"Training script: {script}")
     return script
 
 def workflow(config: csa.Config,
@@ -184,7 +188,7 @@ def workflow(config: csa.Config,
 
     # Check if the model is specified in the configuration file and assign it to the models variable
     if "model" not in model_config:
-        logger.warning("Model not specified in the hyperparameter configuration file.")
+        logger.warning(f"Model not specified in the hyperparameters configuration file: {config.cli.args.hyperparameters_file}.")
         models = model_config # This is a dictionary of models
     else:
         models = {model_config["model"]}
@@ -197,62 +201,72 @@ def workflow(config: csa.Config,
     # Iterate over the models
 
     preprocess_futures = []
+    train_futures = []
+    infer_futures = []
 
     for model in models:
         logger.debug(f"Checking model {model}")
         if model == model_name or model_name == "all":
-            logger.debug(f"Preprocessing for model {model}")
+            logger.debug(f"Training for model {model}")
             for source in config.source_datasets:
-                logger.info(f"Preprocessing dataset {source} for {model}")
-                for target in config.target_datasets:
-                    for split in config.splits:
-                        print(output_dir)
-                        print(os.getcwd())
-                        logger.info(f"Preprocessing dataset {source} for {model} and {split}")
-                        (options, pp_input_dir, pp_output_dir , stdout_file , stderr_file ) = preprocess_config(input_dir=input_dir,
-                                                                           output_dir=output_dir, 
-                                                                           model=model,
-                                                                           source_dataset=source, 
-                                                                           target_dataset=target,
-                                                                           split=split)
-                        logger.debug(f"Preprocessing with {script} for {source} and {target} in {split}")
-                        future = preprocess(
-                            input_dir = options["input_dir"],
-                            output_dir = options["output_dir"],
-                            train_file = options["files"]["train"],
-                            val_file = options["files"]["val"],
-                            test_file = options["files"]["test"],
-                            column_name = config.y_col_name,
-                            script = script,
-                            conda_env = config.conda_env,
-                            inputs = [
-                                File(options["input_dir"]),
-                                File("/".join([options["input_dir"], "splits" , options["files"]["train"]])),
-                                File("/".join([options["input_dir"], "splits" , options["files"]["val"]])),
-                                File("/".join([options["input_dir"], "splits" , options["files"]["test"]])),],
-                            outputs = [
-                                File(options["output_dir"]),
-                                File(os.path.join(options["output_dir"], "stderr.txt")),
-                                File(os.path.join(options["output_dir"], "stdout.txt"))
+                logger.info(f"Training dataset {source} for {model}")
+                # need only one target dataset for trainig for now ; train file is source dataset specific and identical for all target datasets
+                target = config.target_datasets[0]
+                for split in config.splits:
+                    print(output_dir)
+                    print(os.getcwd())
+                    logger.info(f"Trainig {model} on dataset {source} and {split}")
+
+                    if model in model_config and source in model_config[model]:
+                        logger.debug(f"Model {model} and source {source} found in the configuration.")
+                    else:
+                        logger.error(f"Model {model} and source {source} not found in the configuration.")
+                        raise ValueError(f"Model {model} and source {source} not found in the configuration.")
+
+                    options = train_config(
+                        input_dir=output_dir, # input_dir is the output of the preprocess
+                        output_dir=output_dir, 
+                        model=model,
+                        source_dataset=source, 
+                        target_dataset=target,
+                        split=split)
+                    
+                    logger.debug(f"Training with {script} for {source} and {split}")
+                    future = train(
+                        input_dir = options["input_dir"],
+                        output_dir = options["output_dir"],
+                        epochs = config.epochs,
+                        learning_rate = model_config[model][source]['learning_rate'] if 'learning_rate' in model_config[model][source] else None,
+                        batch_size = model_config[model][source]['batch_size'] if 'batch_size' in model_config[model][source] else None,
+                        column_name = config.y_col_name,
+                        script = script,
+                        conda_env = config.conda_env,
+                        inputs = [
+                            File(options["input_dir"]),
                             ],
-                            stderr = os.path.join(options["output_dir"], "stderr.txt"),
-                            stdout = os.path.join(options["output_dir"], "stdout.txt"),
-                            )
-                        preprocess_futures.append(future)
+                        outputs = [
+                            File(options["output_dir"]),
+                            File(options["stderr"]),
+                            File(options["stdout"]),
+                        ],
+                        stderr = options["stderr"],
+                        stdout = options["stdout"],
+                        )
+                    train_futures.append(future)
                        
         else:
             logger.debug(f"Skipping model {model}")
             continue
 
     # Wait for all the futures to complete
-    logger.info("Waiting for all the preprocessing tasks to complete.")
-    for future in preprocess_futures:
+    logger.info("Waiting for training tasks to complete.")
+    for future in train_futures:
         # print(future.__dict__)
         print(future.outputs)
         print(future.stderr)
         print(future.result())
 
-    for future in preprocess_futures:
+    for future in train_futures:
         for data in future.outputs:
             if data.done():
                 # print(data.result().url)
@@ -304,13 +318,16 @@ def shutdown_parsl():
     return
 
 def main(config: csa.Config):
-    """Main function for the preprocessing workflow."""
-    logger.info("Starting preprocessing workflow.")
-    model_config = config.models_params
+    """Main function for the training workflow."""
+    logger.info("Starting training workflow.")
+    model_config = config.model_params
 
+
+    print(model_config)
+   
     init_parsl(config.parsl_config)
     results = workflow(config=config,
-                        model_config=config.models_params, 
+                        model_config=config.model_params, 
                         model_name=config.model_name,
                         input_dir=config.input_dir,
                         output_dir=config.output_dir,
@@ -319,7 +336,7 @@ def main(config: csa.Config):
     shutdown_parsl()   
             
     
-    logger.info("Preprocessing workflow completed.")
+    logger.info("Training workflow completed.")
 
 
 if __name__ == "__main__":
