@@ -22,11 +22,26 @@
         }
     },
     "HiDRA": {
-        "CCLE": {},
-        "CTRPv2": {},
-        "GDSCv1": {},
-        "GDSCv2": {},
-        "gCSI": {}  
+        "CCLE": {
+            "batch_size" : 32 ,
+            "learning_rate" : 0.001
+        },
+        "CTRPv2": {
+            "batch_size" : 32 ,
+            "learning_rate" : 0.001
+        },
+        "GDSCv1": {
+            "batch_size" : 32 ,
+            "learning_rate" : 0.001
+        },
+        "GDSCv2": {
+            "batch_size" : 32 ,
+            "learning_rate" : 0.001
+        },
+        "gCSI": {
+            "batch_size" : 32 ,
+            "learning_rate" : 0.001
+        }  
     },
     "IGTD": {
         "CCLE": {},

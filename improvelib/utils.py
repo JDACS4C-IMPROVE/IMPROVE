@@ -1,8 +1,9 @@
 """ Basic definitions for IMPROVE framework. """
 
-import os
 import argparse
 import json
+import os
+import time
 from pathlib import Path
 # use NewType becuase TypeAlias is available from python 3.10
 from typing import List, Set, Union, NewType, Dict, Optional
@@ -11,6 +12,56 @@ import numpy as np
 import pandas as pd
 
 from .metrics import compute_metrics
+
+
+def save_subprocess_stdout(
+    result,
+    log_dir: Union[str, Path]='.',
+    log_filename: Optional[str]='logs.txt'):
+    """ Save the captured output from subprocess python package.
+    Args:
+        result: captured output from subprocess python package.
+            E.g. result = subprocess.run(...)
+        log_dir (str or Path): dir to save the logs
+        log_filename (str): file name to save the logs
+    """
+    result_file_name_stdout = log_dir / log_filename
+    with open(result_file_name_stdout, 'w') as file:
+        file.write(result.stdout)
+    return True
+
+
+class Timer:
+    """ Measure time. """
+    def __init__(self):
+        self.start = time.time()
+
+    def timer_end(self):
+        self.end = time.time()
+        self.time_diff = self.end - self.start
+        self.hours = int(self.time_diff // 3600)
+        self.minutes = int((self.time_diff % 3600) // 60)
+        self.seconds = self.time_diff % 60
+        self.time_diff_dict = {'hours': self.hours,
+                               'minutes': self.minutes,
+                               'seconds': self.seconds}
+
+    def display_timer(self, print_fn=print):
+        self.timer_end()
+        tt = self.time_diff_dict
+        print(f"Elapsed Time: {self.hours:02}:{self.minutes:02}:{self.seconds:05}")
+        return self.time_diff_dict
+
+    def save_timer(self,
+                   dir_to_save: Union[str, Path]='.',
+                   filename: str='runtime.json',
+                   extra_dict: Optional[Dict]=None):
+        """ Save runtime to file. """
+        if isinstance(extra_dict, dict):
+            self.time_diff_dict.update(extra_dict)
+        with open(Path(dir_to_save) / filename, 'w') as json_file:
+            json.dump(self.time_diff_dict, json_file, indent=4)
+        return True
 
 
 def str2bool(v: str) -> bool:
@@ -415,9 +466,13 @@ def build_model_path(model_file_name: str, model_file_format: str, model_dir: Un
     Returns:
         pathlib.Path: returns the build model dir path
     """
-    standard_model_file_format = get_file_format(
+    if model_file_format == "None":
+        model_path = Path(model_dir) / \
+        (model_file_name)
+    else:
+        standard_model_file_format = get_file_format(
         file_format=model_file_format)
-    model_path = Path(model_dir) / \
+        model_path = Path(model_dir) / \
         (model_file_name + standard_model_file_format)
 
     return model_path
@@ -442,9 +497,10 @@ def save_stage_ydf(ydf: pd.DataFrame, stage: str, output_dir: str):
     The "subset" refers to one of the three stages involved in developing ML
     models, including: "train", "val", or "test".
 
-    ydf : dataframe with y data samples
-    stage (str) : "train", "val", or "test"
-    output_dir str: Directory to save to.
+    Args:
+        ydf (pd.DataFrame): dataframe with y data samples
+        stage (str) : "train", "val", or "test"
+        output_dir str: Directory to save to.
     """
     ydf_fname = f"{stage}_y_data.csv"
     ydf_fpath = Path(output_dir) / ydf_fname
@@ -453,106 +509,86 @@ def save_stage_ydf(ydf: pd.DataFrame, stage: str, output_dir: str):
     return None
 
 
-def store_predictions_df(y_true: np.array,
-                         y_pred: np.array,
-                         stage: str,
+def store_predictions_df(y_pred: np.array,
                          y_col_name: str,
+                         stage: str,
                          output_dir: str,
-                         round_decimals: int = 4):
+                         input_dir: Optional[str] = None,
+                         y_true: Optional[np.array] = None,
+                         round_decimals: int = 4) -> None:
 
-    """Store predictions with accompanying data frame.
+    """ Save predictions with accompanying dataframe.
 
     This allows to trace original data evaluated (e.g. drug and cell
-    combinations) if corresponding data frame is available, in which case
-    the whole structure as well as the model predictions are stored. If
-    the data frame is not available, only ground truth (read from the
-    PyTorch processed data) and model predictions are stored. The ground
-    truth available (from data frame or PyTorch data) is returned for
-    further evaluations.
+    paris) if corresponding dataframe is available, in which case the
+    whole structure as well as the model predictions are stored. If the
+    dataframe is not available, only ground truth and model predictions are
+    stored.
 
-    ap: construct output file name as follows:
-
-            [stage]_[params['y_data_suffix']]_
-
-    :params array y_true: Ground truth.
-    :params array y_pred: Model predictions.
-    :params str stage: String specified if evaluation is with respect to
-            validation or testing set.
-    :params str y_col_name: Name of the column in the y_data predicted on.
-    :params str output_dir: Directory to write results.
-    :params int round_decimals: Number of decimals in output (default is 4).
-
-    :return: Arrays with ground truth. This may have been read from an
-             input data frame or from a processed PyTorch data file.
-    :rtype: np.array
+    Args:
+        y_pred (array): Model predictions
+        y_col_name (str): Name of the column in the y_data predicted on
+        stage (str): specify if evaluation is with respect to val or test set
+        output_dir (str): Directory to write results
+        y_true (array): Ground truth
+        input_dir (str): Directory where df with ground truth with metadata is stored
+        round_decimals (int): Number of decimals in output
     """
-    # Check dimensions
-    assert len(y_true) == len(
-        y_pred), f"length of y_true ({len(y_true)}) and y_pred ({len(y_pred)}) don't match"
-    # print(len(y_true))
-    # print(len(y_pred))
+    cast_ydata = np.float32
 
-    # Define column names
-    # pred_col_name = params["y_col_name"] + params["pred_col_name_suffix"]
-    pred_col_name = y_col_name + "_pred"
-    true_col_name = y_col_name + "_true"
+    # Put predictions in a df
+    pred_col_name = y_col_name + "_pred" # define colname for predicted values
+    pred_df = pd.DataFrame({pred_col_name: y_pred}) # create df
+    pred_df = pred_df.astype({pred_col_name: cast_ydata}) # cast
+    pred_df = pred_df.round({pred_col_name: round_decimals}) # round decimal
 
-    # -----------------------------
-    # Attempt to concatenate raw predictions with y dataframe (e.g., df that
-    # contains cancer ids, drug ids, and the true response values)
-    # TODO. f"{stage}_{params['y_data_stage_fname_suffix']}.csv"
-    # ydf_fname = f"{stage}_{params['y_data_suffix']}.csv"
-    ydf_fname = f"{stage}_y_data.csv"
-    # ydf_fpath = Path(params[f"{stage}_ml_data_dir"]) / ydf_fname
-    ydf_fpath = Path(output_dir) / ydf_fname
+    # Add ground truth values if available to the pred_df
+    if y_true is not None:
+        # Check that y_true and y_pred dims match
+        assert len(y_true) == len(y_pred), f"length mismatch of y_true \
+            ({len(y_true)}) and y_pred ({len(y_pred)})"
 
+        true_col_name = y_col_name + "_true"
+        pred_df.insert(0, true_col_name, y_true, allow_duplicates=True) # add col to df
+        pred_df = pred_df.astype({true_col_name: cast_ydata}) # cast
+        pred_df = pred_df.round({true_col_name: round_decimals}) # round decimal
 
-    # output df fname
-    ydf_out_fname = ydf_fname.split(".")[0] + "_predicted.csv"
-        # ".")[0] + "_" + params["y_data_preds_suffix"] + ".csv"
-    # ydf_out_fpath = Path(params["ml_data_outdir"]) / ydf_out_fname
-    ydf_out_fpath = Path(output_dir) / ydf_out_fname
+    # ydf refers to a file that can contain metadata of ydata and possibly the
+    # ground truth values (e.g., metadata df that contains cancer ids, drug
+    # ids, and the true response values)
+    ydf_fname = f"{stage}_y_data.csv" # name of ydf if it exists
+    ydf_out_fname = ydf_fname.split(".")[0] + "_predicted.csv" # fname for output ydf
+    ydf_out_fpath = Path(output_dir) / ydf_out_fname # path for output ydf
 
-    # if indtd["df"] is not None:
-    if ydf_fpath.exists():
+    # Attempt to concatenate raw predictions with y dataframe (e.g., metadata
+    # df that contains cancer ids, drug ids, and the true response values)
+    # Check if ydf exists
+    if (input_dir is not None) and (Path(input_dir) / ydf_fname).exists():
+        ydf_fpath = Path(input_dir) / ydf_fname
         rsp_df = pd.read_csv(ydf_fpath)
+        rsp_df = rsp_df.astype({y_col_name: cast_ydata}) # cast
+        rsp_df = rsp_df.round({y_col_name: round_decimals}) # round decimal
 
-        # Check dimensions
-        assert len(
-            y_true) == rsp_df.shape[0], f"length of y_true ({len(y_true)}) and the loaded file ({ydf_fpath} --> {rsp_df.shape[0]}) don't match"
+        # Check if ground truth is available ydf
+        if y_true is not None:
+            # Check that ydf and ground truth dims match
+            assert len(y_true) == rsp_df.shape[0], f"length mismatch of y_true \
+                ({len(y_true)}) and loaded ydf ({ydf_fpath} ==> {rsp_df.shape[0]})"
 
-        # pred_df = pd.DataFrame(y_pred, columns=[pred_col_name])  # Include only predicted values
-        # This includes only predicted values
-        pred_df = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})
-        v1 = np.round(rsp_df[y_col_name].values.astype(np.float32),
-                      decimals=round_decimals)
-        v2 = np.round(pred_df[true_col_name].values.astype(np.float32),
-                      decimals=round_decimals)
-        # breakpoint()
-        assert np.array_equal(
-            v1, v2), "Loaded y data vector is not equal to the true vector"
-        mm = pd.concat([rsp_df, pred_df], axis=1)
-        mm = mm.astype({y_col_name: np.float32,
-                        true_col_name: np.float32,
-                        pred_col_name: np.float32})
-        df = mm.round({true_col_name: round_decimals,
-                       pred_col_name: round_decimals})
-        df.to_csv(ydf_out_fpath, index=False)  # Save predictions dataframe
-        # y_true_return = rsp_df[params["y_col_name"]].values # Read from data frame
+            if y_col_name in rsp_df.columns:
+                v1 = rsp_df[y_col_name].values
+                v2 = pred_df[true_col_name].values
+                # Check that values of ground truth in ydf and y_true actually match
+                assert np.array_equal(v1, v2), "Loaded y data array is not \
+                    equal to the true array"
+
+        df = pd.concat([rsp_df, pred_df], axis=1)
 
     else:
-        # Save only ground truth and predictions since did not load the corresponding dataframe
-        # This includes true and predicted values
-        df = pd.DataFrame({true_col_name: y_true, pred_col_name: y_pred})
-        mm = df
-        mm = mm.astype({true_col_name: np.float32,
-                        pred_col_name: np.float32})
-        df = mm.round({true_col_name: round_decimals,
-                       pred_col_name: round_decimals})
-        df.to_csv(ydf_out_fpath, index=False)
-        # y_true_return = y_true
+        df = pred_df.copy()
 
-    # return y_true_return
+    df.to_csv(ydf_out_fpath, index=False)  # Save predictions df
+
     return None
 
 
@@ -599,8 +635,6 @@ def compute_performance_scores(y_true: np.array,
     else:
         print("Invalid stage: must be 'val' or 'test'.")
     return scores
-
-
 
 
 def check_path_and_files(folder_name: str, file_list: List, inpath: Path) -> Path:
