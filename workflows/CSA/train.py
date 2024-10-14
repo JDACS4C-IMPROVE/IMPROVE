@@ -74,7 +74,7 @@ def train(
     cli.append(f"--batch_size {batch_size}") if batch_size else None
 
 
-    call = ";".join([prefix, conda, " ".join(cli), suffix])
+    call = " ;".join([prefix, conda, " ".join(cli), suffix])
 
     
 
