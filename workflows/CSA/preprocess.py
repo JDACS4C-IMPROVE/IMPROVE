@@ -53,7 +53,8 @@ def preprocess(
         script = f"START=$(date +%s) ; echo Start:\t$START; conda_path=$(dirname $(dirname $(which conda))); source $conda_path/bin/activate {conda_env} ; {script}"
 
     # Create the command line interface for preprocessing
-    cli = [ script,
+    cli = [ "time",
+           script,
         "--train_split_file" , train_file,
         "--val_split_file" , val_file,
         "--test_split_file" , test_file,
@@ -155,7 +156,7 @@ def train(
         conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} ; "
     else:
         conda = ""
-        
+
     suffix = "STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
 
     cli = [ script, 
