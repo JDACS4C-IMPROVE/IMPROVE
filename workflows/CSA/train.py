@@ -47,12 +47,12 @@ def train(
     """Train the model."""
     call= "echo 'Training the model'"
 
-    prefix = f"START=$(date +%s) ; echo Start:\t$START ; "
+    prefix = f"START=$(date +%s) ; echo Start:\t$START "
 
     if conda_env:
         conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} "
     else:
-        conda = ""
+        conda = "echo no conda env provided"
 
     suffix = "STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
 
