@@ -50,7 +50,7 @@ def train(
     prefix = f"START=$(date +%s) ; echo Start:\t$START ; "
 
     if conda_env:
-        conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} ; "
+        conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} "
     else:
         conda = ""
 
