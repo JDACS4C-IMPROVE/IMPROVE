@@ -147,7 +147,7 @@ class Config:
         for section in self.config.sections():
             if self.section is None or self.section == section:
                 for option in self.config.items(section):
-                    print(option)
+                    self.logger.debug(f"Found {option} in ini file")
                     (key, value) = option
                     if key in self._options:
 
