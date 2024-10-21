@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 from typing import Sequence, Tuple, Union
 
@@ -12,6 +13,8 @@ from parsl.providers import LocalProvider
 
 import csa_params_def as CSA
 from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+
+start_full_wf = time.time()
 
 # Initialize parameters for CSA
 additional_definitions = CSA.additional_definitions
@@ -233,3 +236,17 @@ for future_i in infer_futures:
     print(future_i.result())
 
 parsl.dfk().cleanup()
+
+# Timer
+time_diff = time.time() - start_full_wf
+hours = int(time_diff // 3600)
+minutes = int((time_diff % 3600) // 60)
+seconds = time_diff % 60
+time_diff_dict = {'hours': hours,
+                  'minutes': minutes,
+                  'seconds': seconds}
+dir_to_save = params['output_dir']
+filename = 'train_infer_runtime.json'
+with open(Path(dir_to_save) / filename, 'w') as json_file:
+    json.dump(time_diff_dict, json_file, indent=4)
+
