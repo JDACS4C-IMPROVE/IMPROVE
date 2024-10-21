@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 from typing import Sequence, Tuple, Union
 
@@ -12,6 +13,8 @@ from parsl.providers import LocalProvider
 
 import csa_params_def as CSA
 from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+
+start_full_wf = time.time()
 
 # Initialize parameters for CSA
 additional_definitions = CSA.additional_definitions
@@ -187,17 +190,17 @@ fdir = Path(__file__).resolve().parent
 y_col_name = params['y_col_name']
 logger = logging.getLogger(f"{params['model_name']}")
 
-#Output directories for preprocess, train and infer
+# Output directories for preprocess, train and infer
 params['ml_data_dir'] = Path(params['output_dir']) / 'ml_data' 
 
-#Model scripts
+# Model scripts
 params['preprocess_python_script'] = f"{params['model_name']}_preprocess_improve.py"
 
 ##########################################################################
 ##################### START PARSL PARALLEL EXECUTION #####################
 ##########################################################################
 
-##Preprocess execution with Parsl
+## Preprocess execution with Parsl
 preprocess_futures = []
 for source_data_name in params['source_datasets']:
     for split in params['split']:
@@ -209,3 +212,17 @@ for future_p in preprocess_futures:
     print(future_p.result())
 
 parsl.dfk().cleanup()
+
+# Timer
+time_diff = time.time() - start_full_wf
+hours = int(time_diff // 3600)
+minutes = int((time_diff % 3600) // 60)
+seconds = time_diff % 60
+time_diff_dict = {'hours': hours,
+                  'minutes': minutes,
+                  'seconds': seconds}
+dir_to_save = params['output_dir']
+filename = 'preprocess_runtime.json'
+with open(Path(dir_to_save) / filename, 'w') as json_file:
+    json.dump(time_diff_dict, json_file, indent=4)
+
