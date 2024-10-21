@@ -1,10 +1,14 @@
 """ Post-processing results from Cross-Study Analysis (CSA) runs. """
 
+import json
 import os
+import warnings
+from pathlib import Path
+from typing import Optional, Union
+
 import pandas as pd
 from sklearn.metrics import r2_score, mean_absolute_error
 from scipy.stats import pearsonr, spearmanr, sem
-from typing import Optional
 
 from improvelib.metrics import compute_metrics
 
@@ -57,7 +61,7 @@ def csa_postprocess(res_dir_path,
     """
     infer_dir_name = "infer"
     infer_dir_path = res_dir_path/infer_dir_name
-    dirs = sorted(list(infer_dir_path.glob("*-*"))); print(dirs)
+    dirs = sorted(list(infer_dir_path.glob("*-*")));  # print(dirs)
 
     os.makedirs(outdir, exist_ok=True)
 
@@ -141,6 +145,7 @@ def csa_postprocess(res_dir_path,
 
         # Concat dfs and save
         scores = pd.concat(dfs, axis=0)
+        scores['model'] = model_name
         scores.to_csv(outdir / "all_scores.csv", index=False)
         del dfs
 
@@ -160,6 +165,7 @@ def csa_postprocess(res_dir_path,
     for met in scores.met.unique():
         df = scores[scores.met == met]
         # df = df.sort_values(["src", "trg", "met", "split"])
+        df['model'] = model_name
         df.to_csv(outdir / f"{met}_scores.csv", index=True)
         # Mean
         mean = df.groupby(["src", "trg"])["value"].mean()
@@ -204,9 +210,63 @@ def csa_postprocess(res_dir_path,
 
     # Combine dfs
     df = pd.concat([on, off], axis=0).sort_values("met")
+    df['model'] = model_name
     df.to_csv(outdir / "densed_csa_table.csv", index=False)
     print(f"Densed CSA table:\n{df}")
     return scores
+
+
+def runtime_analysis(res_dir_path: Union[str, Path],
+                     stage_dir_name: str,
+                     model_name: str,
+                     res_fname: str='runtime.json',
+                     decimal_places: int=4,
+                     verbose: bool=False) -> Union[pd.DataFrame, None]:
+    """
+    Args:
+        res_dir_path (str or Path): output dir containing all the csa results
+            (e.g., improve_output, parsl_exp)
+        stage_dir_name (str): dir containing specific stage results (e.g.,
+            ml_data, models, infer)
+        res_fname (str): file name containing raw runtime results
+
+    Returns:
+        pd.DataFrame (aggregated results) or None (if results are not available)
+    """
+    stage_dir_path = Path(res_dir_path) / stage_dir_name
+    stage_dirs = sorted(list(stage_dir_path.glob("*")))
+
+    missing_files = []
+    jj = []
+
+    for dir_path in stage_dirs:  # stage_dirs: CCLE-CCLE, CCLE-CTRPv2, ...
+        dir_name = str(dir_path.name).split("-")
+        src = dir_name[0]
+        trg = dir_name[1] if len(dir_name) > 1 else 'NA'
+
+        split_dirs = sorted(list((dir_path).glob(f"split_*")))
+
+        for split_dir in split_dirs:  # split_dirs: split_0, split_1
+            runtime_file_path = split_dir / res_fname  # TODO: runtime.json, ...
+            try:
+                with open(runtime_file_path, 'r') as file:
+                    rr = json.load(file)
+                rr['src'] = src
+                rr['trg'] = trg
+                split = int(split_dir.name.split("split_")[1])
+                rr['split'] = split
+                jj.append(rr)
+            except FileNotFoundError:
+                warnings.warn(f"File not found! {runtime_file_path}", UserWarning)
+                missing_files.append(runtime_file_path)
+
+    df = None
+    if len(jj) > 0:
+        df = pd.DataFrame(jj)
+        df = df.replace(to_replace='NA', value=None)
+        df['tot_mins'] = df['hours'] * 60 + df['minutes']
+        df['model'] = model_name
+    return df
 
 
 def plot_color_coded_csa_table(df: pd.DataFrame,
