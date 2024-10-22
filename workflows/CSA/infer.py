@@ -150,7 +150,8 @@ def infer(
           "--y_col_name" , y_col_name
      ]
 
-    call = " ;".join([prefix, conda, " ".join(cli), suffix])
+    # create a list of strings from cli
+    call = " ;".join([prefix, conda, " ".join([ str(i) for i in cli]), suffix])
 
     logger.debug(f"Inference command: {call}")
     print(call)
