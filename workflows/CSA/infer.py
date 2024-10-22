@@ -371,9 +371,6 @@ def main(config: csa.Config):
 if __name__ == "__main__":
     # Initialize the CLI
 
-    print(    make_call(["echo", "Hello", "World"], "IMPROVE"))
-    sys.exit(0)
-
     config = csa.Config()
     
     params = config.initialize_parameters()
