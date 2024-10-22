@@ -315,7 +315,7 @@ def workflow(config: csa.Config,
                 else:
                     print(f"Data {data.tid} is neither file nor directory.")
             else:
-                print(f"Data {data.tid} is not done.")    
+                print(f"Data {data.tid} - {data.filename}  is not done.")    
     
 
 
