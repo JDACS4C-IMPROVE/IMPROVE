@@ -2,7 +2,7 @@ import os
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(os.environ( "IMPROVE_LOG_LEVEL" , logging.INFO))
+logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", "INFO"))
 
 
 prefix = f"START=$(date +%s) ; echo Start:\t$START "
