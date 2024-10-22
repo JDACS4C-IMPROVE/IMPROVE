@@ -214,8 +214,8 @@ def infer_config(
         "input_dir" : step_input_dir,
         "output_dir" : step_output_dir,
         "model_dir" : trained_model_dir,
-        "stdout" : os.path.join(output_dir , "stdout.txt"),
-        "stderr" : os.path.join(output_dir , "stderr.txt")
+        "stdout" : os.path.join(step_output_dir , "stdout.txt"),
+        "stderr" : os.path.join(step_output_dir , "stderr.txt")
         }
        
 
