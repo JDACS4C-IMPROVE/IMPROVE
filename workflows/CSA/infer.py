@@ -277,7 +277,7 @@ def workflow(config: csa.Config,
                             stderr = os.path.join(options["output_dir"], "stderr.txt"),
                             stdout = os.path.join(options["output_dir"], "stdout.txt"),
                             )
-                        logger.deubg(f"Preprocessing task {future.tid} submitted: {model} {source} {target} {split}")
+                        logger.debug(f"Preprocessing task {future.tid} submitted: {model} {source} {target} {split}")
                         preprocess_futures.append(future)
                        
         else:
@@ -346,11 +346,11 @@ def shutdown_parsl():
 def main(config: csa.Config):
     """Main function for the preprocessing workflow."""
     logger.info("Starting preprocessing workflow.")
-    model_config = config.models_params
+    model_config = config.model_params
 
     init_parsl(config.parsl_config)
     results = workflow(config=config,
-                        model_config=config.models_params, 
+                        model_config=config.model_params, 
                         model_name=config.model_name,
                         input_dir=config.input_dir,
                         output_dir=config.output_dir,
