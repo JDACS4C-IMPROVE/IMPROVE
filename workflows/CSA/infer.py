@@ -194,7 +194,7 @@ def infer_config(
     except FileNotFoundError as e:
         logger.warning(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
         try:
-            model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=None, split="all", make_dir=False)
+            model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=None, split=split, make_dir=False)
         except FileNotFoundError as e:
             logger.error(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
             logger.error(f"Model directory not found for {model} {source_dataset} {split}")
