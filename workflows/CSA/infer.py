@@ -271,6 +271,7 @@ def workflow(config: csa.Config,
                             split=split)
                         
                         logger.debug(f"Training with {script} for {source} and {split}")
+                        logger.debug(f"Infer options: {infer_options}")
                         future = infer(
                             script = script,
                             input_data_dir = infer_options["input_dir"],
