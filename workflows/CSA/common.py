@@ -1,6 +1,9 @@
 import os
+import logging
 
-conda_env = "myenv"
+logger = logging.getLogger(__name__)
+logger.setLevel(os.environ( "IMPROVE_LOG_LEVEL" , logging.INFO))
+
 
 prefix = f"START=$(date +%s) ; echo Start:\t$START "
 suffix = f"STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
@@ -10,8 +13,10 @@ suffix = f"STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
 # Load conda environment if provided
 def get_conda_env(conda_env):
     if conda_env:
+        logger.debug(f"Setting conda environment: {conda_env}")
         conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} "
     else:
+        logger.debug("No conda environment provided")
         conda = "echo no conda env provided"
     return conda
 
@@ -31,7 +36,9 @@ def make_call(cli, conda_env = None , prefix = prefix, suffix = suffix):
     if suffix:
         call.append(suffix)
 
-    return " ;".join(call)
+    command = " ;".join(call)
+    logger.debug(f"Command line call: {command}")
+    return command
 
 
 def make_path(base_dir=None, stage=None, model=None, source_dataset=None, target_dataset=None, split=None, make_dir=True):
