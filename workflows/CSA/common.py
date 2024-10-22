@@ -70,5 +70,5 @@ def make_path(base_dir=None, stage=None, model=None, source_dataset=None, target
             logger.debug(f"Creating path: {path}")
             os.makedirs(path, exist_ok=True)
         else:
-            raise ValueError(f"Path does not exist: {path}")
+            raise FileNotFoundError(f"Path does not exist: {path}")
     return path
