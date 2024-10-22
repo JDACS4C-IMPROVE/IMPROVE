@@ -190,17 +190,17 @@ def infer_config(
     # should come from future / output of training
     trained_model_dir = None
     try: 
-        model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split, make_dir=False)
+        trained_model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split, make_dir=False)
     except FileNotFoundError as e:
         logger.warning(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
         try:
-            model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=None, split=split, make_dir=False)
+            trained_model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=None, split=split, make_dir=False)
         except FileNotFoundError as e:
             logger.error(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
             logger.error(f"Model directory not found for {model} {source_dataset} {split}")
             raise e
     
-    if not model_dir:
+    if not trained_model_dir:
         raise FileNotFoundError("Model directory is not specified.")
     
 
