@@ -72,7 +72,7 @@ class CLI:
                  WARNING, ERROR, CRITICAL, NOTSET"
         ) 
         common_options.add_argument(
-            '-cfg', '--config_file',
+            '--config_file',
             metavar='INI_FILE',
             dest="config_file", 
             type=str,
