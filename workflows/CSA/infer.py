@@ -184,8 +184,8 @@ def infer_config(
         raise ValueError("Source and target datasets are not specified.")
 
     # Create directory paths
-    output_dir = make_path(base_dir=output_dir, stage=stage, model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split)
-    input_dir = make_path(base_dir=input_dir, stage="preprocess", model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split, make_dir=False)
+    step_output_dir = make_path(base_dir=output_dir, stage=stage, model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split)
+    step_input_dir = make_path(base_dir=input_dir, stage="preprocess", model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split, make_dir=False)
 
     # should come from future / output of training
     trained_model_dir = None
@@ -210,8 +210,8 @@ def infer_config(
     inputs = { 
         "files": {
             },
-        "input_dir" : input_dir,
-        "output_dir" : output_dir,
+        "input_dir" : step_input_dir,
+        "output_dir" : step_output_dir,
         "model_dir" : trained_model_dir,
         "stdout" : os.path.join(output_dir , "stdout.txt"),
         "stderr" : os.path.join(output_dir , "stderr.txt")
