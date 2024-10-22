@@ -153,6 +153,7 @@ def infer(
     call = " ;".join([prefix, conda, " ".join(cli), suffix])
 
     logger.debug(f"Inference command: {call}")
+    print(call)
     return call
 
 
