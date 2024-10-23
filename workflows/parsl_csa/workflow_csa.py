@@ -2,7 +2,6 @@ import json
 import logging
 import sys
 import time
-import os
 from pathlib import Path
 from typing import Sequence, Tuple, Union
 
@@ -69,6 +68,7 @@ def train(params, hp_model, source_data_name, split):
     import json
     import subprocess
     import time
+    import os
     from pathlib import Path
 
     hp = hp_model[source_data_name]
@@ -140,6 +140,7 @@ def infer(params, source_data_name, target_data_name, split):
     import subprocess
     import json
     import time
+    import os
     from pathlib import Path
 
     model_dir = params['model_dir'] / f"{source_data_name}" / f"split_{split}"

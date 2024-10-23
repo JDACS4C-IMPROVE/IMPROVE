@@ -2,7 +2,6 @@ import json
 import logging
 import sys
 import time
-import os
 from pathlib import Path
 from typing import Sequence, Tuple, Union
 
@@ -68,6 +67,7 @@ def preprocess(inputs=[]):
     import json
     import subprocess
     import time
+    import os
     import warnings
     from pathlib import Path
 
