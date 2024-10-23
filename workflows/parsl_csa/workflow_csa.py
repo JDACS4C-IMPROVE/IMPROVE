@@ -68,6 +68,7 @@ def train(params, hp_model, source_data_name, split):
     import json
     import subprocess
     import time
+    import os
     from pathlib import Path
 
     hp = hp_model[source_data_name]
@@ -113,6 +114,8 @@ def train(params, hp_model, source_data_name, split):
         # Logger
         print(f"returncode = {result.returncode}")
         result_file_name_stdout = model_dir / 'logs.txt'
+        if model_dir.exists() is False: # If subprocess fails, model_dir may not be created and we need to write the log files in model_dir
+            os.makedirs(model_dir, exist_ok=True)
         with open(result_file_name_stdout, 'w') as file:
             file.write(result.stdout)
 
@@ -137,6 +140,7 @@ def infer(params, source_data_name, target_data_name, split):
     import subprocess
     import json
     import time
+    import os
     from pathlib import Path
 
     model_dir = params['model_dir'] / f"{source_data_name}" / f"split_{split}"
@@ -175,6 +179,8 @@ def infer(params, source_data_name, target_data_name, split):
     # Logger
     print(f"returncode = {result.returncode}")
     result_file_name_stdout = infer_dir / 'logs.txt'
+    if infer_dir.exists() is False: 
+        os.makedirs(infer_dir, exist_ok=True)
     with open(result_file_name_stdout, 'w') as file:
         file.write(result.stdout)
 
