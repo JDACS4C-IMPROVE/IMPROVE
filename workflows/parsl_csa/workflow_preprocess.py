@@ -2,6 +2,7 @@ import json
 import logging
 import sys
 import time
+import os
 from pathlib import Path
 from typing import Sequence, Tuple, Union
 
@@ -162,6 +163,8 @@ def preprocess(inputs=[]):
         # Logger
         print(f"returncode = {result.returncode}")
         result_file_name_stdout = ml_data_dir / 'logs.txt'
+        if ml_data_dir.exists() is False: 
+            os.makedirs(ml_data_dir, exist_ok=True)
         with open(result_file_name_stdout, 'w') as file:
             file.write(result.stdout)
 
