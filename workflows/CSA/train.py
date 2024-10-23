@@ -224,7 +224,7 @@ def workflow(config: csa.Config,
                         raise ValueError(f"Model {model} and source {source} not found in the configuration.")
 
                     options = train_config(
-                        input_dir=output_dir, # input_dir is the output of the preprocess
+                        input_dir=input_dir, #output_dir, # input_dir is the output of the preprocess
                         output_dir=output_dir, 
                         model=model,
                         source_dataset=source, 
