@@ -1,13 +1,13 @@
-import logging
 import argparse
-from argparse import Namespace
-import copy
+import logging
 import os
+import pprint
 import sys
-
 
 # from improve import config as BaseConfig
 from improvelib.utils import parse_from_dictlist
+
+printfn = pprint.PrettyPrinter(indent=4).pformat
 
 
 class CLI:
@@ -118,7 +118,7 @@ class CLI:
                 self.logger.debug("Adding %s to new options", d['name'])
                 new_options.append(d)
 
-        self.logger.debug("Unique Options: %s", new_options)
+        self.logger.debug("Unique Options:\n%s", printfn(new_options))
        
         if group:
             group = self.parser.add_argument_group(group)

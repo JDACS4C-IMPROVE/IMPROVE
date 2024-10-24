@@ -1,19 +1,16 @@
 #!/bin/bash --login
-# Navigate to the dir with IMPROVE repo
+# Navigate to the IMPROVE repo dir
 # Run it like this: source ./setup_improve.sh
 
 # set -e
 
-# Download data (if needed)
-data_dir="csa_data"
-if [ ! -d $PWD/$data_dir/ ]; then
-    echo "Download CSA data"
-    source download_csa.sh
-else
-    echo "CSA data folder already exists"
-fi
-
+# Get IMPROVE dir path
 improve_lib_path=$PWD
+echo "IMPROVE path: $improve_lib_path"
+
+# Checkout branch
+improve_branch="develop"
+git checkout $improve_branch
 
 # Env var PYTHOPATH
 export PYTHONPATH=$PYTHONPATH:$improve_lib_path
