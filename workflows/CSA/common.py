@@ -20,7 +20,6 @@ def get_conda_env(conda_env):
         conda = "echo no conda env provided"
     return conda
 
-
 # Make command line call for bash_app
 def make_call(cli, conda_env = None , prefix = prefix, suffix = suffix):
     call=[]
@@ -40,7 +39,7 @@ def make_call(cli, conda_env = None , prefix = prefix, suffix = suffix):
     logger.debug(f"Command line call: {command}")
     return command
 
-
+# Create path
 def make_path(base_dir=None, stage=None, model=None, source_dataset=None, target_dataset=None, split=None, make_dir=True):
 
     sections = [base_dir, stage, model]
