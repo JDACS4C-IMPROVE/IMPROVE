@@ -248,7 +248,7 @@ def workflow(config: csa.Config,
                         target_dataset=target,
                         split=split)
                     
-                    logger.debug(f"Training with {script} for {source} and {split}")
+                    logger.debug(f"Training with {train_script} for {source} and {split}")
                     future = train(
                         input_dir = options["input_dir"],
                         output_dir = options["output_dir"],
@@ -277,12 +277,18 @@ def workflow(config: csa.Config,
             continue
 
         
-        for future in train_futures:
+        for model in train_futures:
 
             # get source and split from future
             # future result is a dictionary with source and split
             
-            elements = future.outputs[0].split("/")
+            results = model.results
+            print(results)
+
+            elements = model.outputs[0].result().filepath
+            print(elements)
+            print(elements.split("/"))
+            sys.exit(1)
             split = elements[-1]
             source = elements[-2]
             
@@ -409,8 +415,6 @@ if __name__ == "__main__":
     config_params = config.params
     logger.info("Configuration parameters:")
     logger.debug(f"Config params: {config_params}")
-
-    sys.exit(0)
 
     # Run the main function
     main(config)
