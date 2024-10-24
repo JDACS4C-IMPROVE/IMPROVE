@@ -277,21 +277,21 @@ def workflow(config: csa.Config,
             continue
 
         
-        for model in train_futures:
+        for f in train_futures:
 
             # get source and split from future
             # future result is a dictionary with source and split
             
-            results = model.results
+            results = f.results
             print(results)
 
-            elements = model.outputs[0].result().filepath
-            print(elements)
-            print(elements.split("/"))
-            sys.exit(1)
+            model_dir = f.outputs[0].result().filepath
+            elements = model_dir.split("/")
             split = elements[-1]
             source = elements[-2]
             
+            logger.info(f"Training task {f.tid} completed: {model} {source} {split}")
+
             for target in config.target_datasets:
                 logger.info(f"Infering {model} on dataset {source} and {split} for {target}")
                 # infer(source, target, split)
@@ -304,23 +304,27 @@ def workflow(config: csa.Config,
                     split=split)
                 
                 i_future = infer(
-                    input_dir = options["input_dir"],
-                    output_dir = options["output_dir"],
-                    script = infer_script,
-                    conda_env = config.conda_env,
-                    inputs = [
-                        File(options["input_dir"]),
-                        ],
-                    outputs = [
-                        File(options["output_dir"]),
-                        File(options["stderr"]),
-                        File(options["stdout"]),
-                    ],
-                    stderr = options["stderr"],
-                    stdout = options["stdout"],
-                    )
-                
-                infer_futures.append(i_future)
+                            script = script,
+                            input_data_dir = infer_options["input_dir"],
+                            input_model_dir = model_dir, # infer_options["model_dir"],
+                            output_dir = infer_options["output_dir"],
+                            calc_infer_scores = True,
+                            y_col_name = config.y_col_name,
+                            conda_env = config.conda_env,
+                            inputs = [
+                                File(infer_options["input_dir"]),
+                                File(infer_options["model_dir"]),
+                            ],
+                            outputs = [
+                                File(infer_options["output_dir"]),  
+                                File(infer_options["stdout"]),
+                                File(infer_options["stderr"]),
+                            ],
+                            stderr = infer_options["stderr"],
+                            stdout = infer_options["stdout"],
+                            )
+                        logger.debug(f"Inference task {future.tid} submitted: {model} {source} {target} {split}")
+                        infer_futures.append(future)
 
 
 
