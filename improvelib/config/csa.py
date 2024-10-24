@@ -90,7 +90,7 @@ class Config(base.Config):
         )
 
         sog.add_argument(
-            '-lr', '--learning_rate',
+            '--learning_rate',
             metavar='LEARNING_RATE',
             dest="learning_rate",
             type=float,
@@ -106,7 +106,7 @@ class Config(base.Config):
         )
 
         sog.add_argument(
-            '-model', '--model_name',
+            '--model', '--model_name',
             metavar='MODEL_NAME',
             dest="model_name",
             type=str,
@@ -144,7 +144,7 @@ class Config(base.Config):
         )
 
         sog.add_argument(
-            '-split', '--split',
+            '--split',
             metavar='SPLITS',
             dest="split",
             nargs='+',
@@ -163,7 +163,7 @@ class Config(base.Config):
         )
 
         sog.add_argument(
-            '-pc', '--parsl_config_file',
+            '--parsl_config_file',
             metavar='FILE',
             dest="parsl_config_file",
             type=str,
