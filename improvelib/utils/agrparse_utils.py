@@ -1,0 +1,271 @@
+"""
+This module includes functions and classes for enhancing argument parsing in command-line applications, allowing for custom data types and actions.
+"""
+import argparse
+from typing import List, Dict, Union
+
+
+def parse_from_dictlist(
+    dictlist: List[Dict],
+    parser: argparse.ArgumentParser) -> parser: argparse.ArgumentParser:
+    """Parse command-line arguments from a list of dictionaries.
+
+    Args:
+        dictlist (List[Dict]): List of dictionaries specifying argument details.
+        parser (argparse.ArgumentParser): The argument parser instance.
+
+    Returns:
+        argparse.ArgumentParser: The updated argument parser.
+    """
+
+    for d in dictlist:
+        if "type" not in d:
+            d["type"] = None
+        # print(d['name'], 'type is ', d['type'])
+
+        if "default" not in d:
+            d["default"] = argparse.SUPPRESS
+
+        if "help" not in d:
+            d["help"] = ""
+
+        if "abv" not in d:
+            d["abv"] = None
+
+        if "action" in d:  # Actions
+            if (
+                d["action"] == "list-of-lists"
+            ):  # Non standard. Specific functionallity has been added
+                d["action"] = ListOfListsAction
+                if d["abv"] is None:
+                    parser.add_argument(
+                        "--" + d["name"],
+                        dest=d["name"],
+                        action=d["action"],
+                        type=d["type"],
+                        default=d["default"],
+                        help=d["help"],
+                    )
+                else:
+                    parser.add_argument(
+                        "-" + d["abv"],
+                        "--" + d["name"],
+                        dest=d["name"],
+                        action=d["action"],
+                        type=d["type"],
+                        default=d["default"],
+                        help=d["help"],
+                    )
+            elif (d["action"] == "store_true") or (d["action"] == "store_false"):
+                raise Exception(
+                    "The usage of store_true or store_false cannot be undone in the command line. Use type=str2bool instead."
+                )
+            else:
+                if d["abv"] is None:
+                    parser.add_argument(
+                        "--" + d["name"],
+                        action=d["action"],
+                        default=d["default"],
+                        help=d["help"],
+                        type=d["type"],
+                    )
+                else:
+                    parser.add_argument(
+                        "-" + d["abv"],
+                        "--" + d["name"],
+                        action=d["action"],
+                        default=d["default"],
+                        help=d["help"],
+                        type=d["type"],
+                    )
+        else:  # Non actions
+            if "nargs" in d:  # variable parameters
+                if "choices" in d:  # choices with variable parameters
+                    if d["abv"] is None:
+                        parser.add_argument(
+                            "--" + d["name"],
+                            nargs=d["nargs"],
+                            choices=d["choices"],
+                            default=d["default"],
+                            help=d["help"],
+                        )
+                    else:
+                        parser.add_argument(
+                            "-" + d["abv"],
+                            "--" + d["name"],
+                            nargs=d["nargs"],
+                            choices=d["choices"],
+                            default=d["default"],
+                            help=d["help"],
+                        )
+                else:  # Variable parameters (free, no limited choices)
+                    if d["abv"] is None:
+                        parser.add_argument(
+                            "--" + d["name"],
+                            nargs=d["nargs"],
+                            type=d["type"],
+                            default=d["default"],
+                            help=d["help"],
+                        )
+                    else:
+                        parser.add_argument(
+                            "-" + d["abv"],
+                            "--" + d["name"],
+                            nargs=d["nargs"],
+                            type=d["type"],
+                            default=d["default"],
+                            help=d["help"],
+                        )
+            # Select from choice (fixed number of parameters)
+            elif "choices" in d:
+                if d["abv"] is None:
+                    parser.add_argument(
+                        "--" + d["name"],
+                        choices=d["choices"],
+                        default=d["default"],
+                        help=d["help"],
+                    )
+                else:
+                    parser.add_argument(
+                        "-" + d["abv"],
+                        "--" + d["name"],
+                        choices=d["choices"],
+                        default=d["default"],
+                        help=d["help"],
+                    )
+            else:  # Non an action, one parameter, no choices
+                # print('Adding ', d['name'], ' to parser')
+                if d["abv"] is None:
+                    parser.add_argument(
+                        "--" + d["name"],
+                        type=d["type"],
+                        default=d["default"],
+                        help=d["help"],
+                    )
+                else:
+                    parser.add_argument(
+                        "-" + d["abv"],
+                        "--" + d["name"],
+                        type=d["type"],
+                        default=d["default"],
+                        help=d["help"],
+                    )
+
+    return parser
+
+
+def str2bool(v: str) -> bool:
+    """Convert a string to a boolean value.
+    This is taken from https://stackoverflow.com/questions/15008758/
+
+    Args:
+        v (str): The string to convert.
+            Strings recognized as boolean True : 'yes', 'true', 't', 'y', '1' and uppercase versions (where applicable).
+            Strings recognized as boolean False : 'no', 'false', 'f', 'n', '0' and uppercase versions (where applicable).
+
+    Returns:
+        bool: The converted boolean value.
+
+    Raises:
+        argparse.ArgumentTypeError: If the string cannot be interpreted as a boolean.
+    """
+    if v.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif v.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
+
+
+class ListOfListsAction(argparse.Action):
+    """This class extends the argparse.Action class by instantiating an
+    argparser that constructs a list-of-lists from an input (command-line
+    option or argument) given as a string."""
+
+    def __init__(self, option_strings: str, dest, type, **kwargs):
+        """Initialize a ListOfListsAction object. If no type is specified, an
+        integer is assumed by default as the type for the elements of the list-
+        of-lists.
+
+        Parameters
+        ----------
+        option_strings : string
+            String to parse
+        dest : object
+            Object to store the output (in this case the parsed list-of-lists).
+        type : data type
+            Data type to decode the elements of the lists.
+            Defaults to np.int32.
+        kwargs : object
+            Python object containing other argparse.Action parameters.
+        """
+
+        super(ListOfListsAction, self).__init__(option_strings, dest, **kwargs)
+        self.dtype = type
+        if self.dtype is None:
+            self.dtype = np.int32
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """This function overrides the __call__ method of the base
+        argparse.Action class.
+
+        This function implements the action of the ListOfListAction
+        class by parsing an input string (command-line option or argument)
+        and maping it into a list-of-lists. The resulting list-of-lists is
+        added to the namespace of parsed arguments. The parsing assumes that
+        the separator between lists is a colon ':' and the separator inside
+        the list is a comma ','. The values of the list are casted to the
+        type specified at the object initialization.
+
+        Parameters
+        ----------
+        parser : ArgumentParser object
+            Object that contains this action
+        namespace : Namespace object
+            Namespace object that will be returned by the parse_args()
+            function.
+        values : string
+            The associated command-line arguments converted to string type
+            (i.e. input).
+        option_string : string
+            The option string that was used to invoke this action. (optional)
+        """
+
+        decoded_list = []
+        removed1 = values.replace("[", "")
+        removed2 = removed1.replace("]", "")
+        out_list = removed2.split(":")
+
+        for line in out_list:
+            in_list = []
+            elem = line.split(",")
+            for el in elem:
+                in_list.append(self.dtype(el))
+            decoded_list.append(in_list)
+
+        setattr(namespace, self.dest, decoded_list)
+
+
+class StoreIfPresent(argparse.Action):
+    """
+    This class allows to define an argument in argparse that keeps the default
+    value empty and, if not passed by the user, the argument is not available
+    in the parsed arguments. By default, argparse includes all defined arguments
+    in the Namespace object returned by parse_args(), even if they are not
+    provided by the user, assigning them the default value.
+
+    This is primarily used with args that we plan to deprecate.
+    """
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Args:
+            parser (ArgumentParser object): Object that contains this action
+            namespace (Namespace object): Namespace object that will be
+                returned by the parse_args() function.
+            values (str): The associated command-line arguments converted to
+                string type (i.e. input).
+            option_string (str): The option string that was used to invoke
+                this action. (optional)
+        """
+        setattr(namespace, self.dest, values)
