@@ -1,5 +1,4 @@
 """Utility functions for improvelib."""
-
 import argparse
 import json
 import os
