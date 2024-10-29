@@ -198,7 +198,7 @@ logger = logging.getLogger(f"{params['model_name']}")
 params['ml_data_dir'] = Path(params['output_dir']) / 'ml_data' 
 
 # Model scripts
-params['preprocess_python_script'] = os.path.join(params['model_dir'],f"{params['model_name']}_preprocess_improve.py")
+params['preprocess_python_script'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_preprocess_improve.py")
 
 ##########################################################################
 ##################### START PARSL PARALLEL EXECUTION #####################

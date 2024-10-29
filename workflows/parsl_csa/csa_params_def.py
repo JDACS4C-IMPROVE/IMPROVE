@@ -28,7 +28,7 @@ additional_definitions = [
      "default": 'graphdrp',
      "help": "Name of the deep learning model"
     },
-    {"name": "model_dir",
+    {"name": "model_scripts_dir",
      "type": str,
      "default": './', 
      "help": "Path to the model repository"
