@@ -1,0 +1,101 @@
+{
+    "graphdrp": {
+        "CCLE": {
+            "batch_size": 64,
+            "learning_rate": 0.0012233565752066463
+        },
+        "CTRPv2": {
+            "batch_size": 256,
+            "learning_rate": 0.0001
+        },
+        "GDSCv1": {
+            "batch_size": 1024,
+            "learning_rate": 0.06408519376992045
+        },
+        "GDSCv2": {
+            "batch_size": 128,
+            "learning_rate": 0.0005245278010578158
+        },
+        "gCSI": {
+            "batch_size": 32,
+            "learning_rate": 0.00015145175483629418
+        }
+    },
+
+    "HiDRA": {
+        "CCLE": {
+            "batch_size": 16,
+            "learning_rate": 0.0011825165353494742
+        },
+        "CTRPv2": {},
+        "GDSCv1": {
+            "batch_size": 64,
+            "learning_rate": 0.0033642852862458077
+        },
+        "GDSCv2": {},
+        "gCSI": {
+            "batch_size": 32,
+            "learning_rate": 0.00685103425830459
+        }
+    },
+    "IGTD": {
+        "CCLE": {
+            "batch_size": 16,
+            "learning_rate": 0.00044116909746320135
+        },
+        "CTRPv2": {
+            "batch_size": 512,
+            "learning_rate": 0.0005219211138261751
+        },
+        "GDSCv1": {
+            "batch_size": 32,
+            "learning_rate": 0.0006637139133709175
+        },
+        "GDSCv2": {
+            "batch_size": 128,
+            "learning_rate": 0.0005058417379141607
+        },
+        "gCSI": {
+            "batch_size": 32,
+            "learning_rate": 0.0008434053110179821
+        }
+    },
+    "Paccmann_MCA": {
+        "CCLE": {
+            "batch_size": 512,
+            "learning_rate": 0.00019306380321264862
+        },
+        "CTRPv2": {},
+        "GDSCv1": {
+            "batch_size": 128,
+            "learning_rate": 2.18431820219191e-05
+        },
+        "GDSCv2": {
+            "batch_size": 128,
+            "learning_rate": 0.00010468988102446662
+        },
+        "gCSI": {
+            "batch_size": 256,
+            "learning_rate": 7.092892399034623e-05
+        }
+    },
+    "PathDSP": {
+        "CCLE": {
+            "batch_size": 64,
+            "learning_rate": 9.043143432931976e-05
+        },
+        "CTRPv2": {},
+        "GDSCv1": {
+            "batch_size": 128,
+            "learning_rate": 7.565669627288258e-05
+        },
+        "GDSCv2": {
+            "batch_size": 16,
+            "learning_rate": 6.916681700876223e-05
+        },
+        "gCSI": {
+            "batch_size": 128,
+            "learning_rate": 0.00024319069525915603
+        }
+    }
+}
