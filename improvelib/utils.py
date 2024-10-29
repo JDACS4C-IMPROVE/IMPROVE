@@ -1,31 +1,31 @@
-""" Basic definitions for IMPROVE framework. """
+"""Utility functions for improvelib."""
 
 import argparse
 import json
 import os
 import time
 from pathlib import Path
-# use NewType becuase TypeAlias is available from python 3.10
-from typing import List, Set, Union, NewType, Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 
-from .metrics import compute_metrics
+# from .metrics import compute_metrics
+from improvelib.metrics import compute_metrics
 
-from .argparse_utils import (
+from improvelib.utils.argparse_utils import (
     parse_from_dictlist,
     str2bool,
     ListOfListsAction,
     StoreIfPresent,
 )
 
-from .data_utils import (
+from improvelib.utils.data_utils import (
     save_stage_ydf,
     store_predictions_df,
 )
 
-from .file_utils import (
+from improvelib.utils.file_utils import (
     build_ml_data_file_name,
     build_model_path,
     build_paths,
@@ -34,13 +34,20 @@ from .file_utils import (
     get_file_format,
 )
 
-from .subprocess_utils import (
+from improvelib.utils.general_utils import (
+    cast_value,
+    compute_performance_scores
+)
+
+from improvelib.utils.subprocess_utils import (
     save_subprocess_stdout
 )
 
-from .timer_utils import (
+from improvelib.utils.timer_utils import (
     Timer
 )
+
+
 
 ## subprocess_utils.py
 # def save_subprocess_stdout(
@@ -121,22 +128,23 @@ from .timer_utils import (
 #         raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
-def cast_value(s):
-    """Cast a value to numeric if possible.
+## general_utils.py
+# def cast_value(s):
+#     """Cast a value to numeric if possible.
 
-    Args:
-        s: The value to cast.
+#     Args:
+#         s: The value to cast.
 
-    Returns:
-        int, float, or str: The casted value if successful, otherwise the original string.
-    """
-    try:
-        return int(s)
-    except ValueError:
-        try:
-            return float(s)
-        except ValueError:
-            return s  # Return the original string if it's neither int nor float
+#     Returns:
+#         int, float, or str: The casted value if successful, otherwise the original string.
+#     """
+#     try:
+#         return int(s)
+#     except ValueError:
+#         try:
+#             return float(s)
+#         except ValueError:
+#             return s  # Return the original string if it's neither int nor float
 
 
 ## argparse_utils.py
@@ -641,46 +649,47 @@ def cast_value(s):
 #     return None
 
 
-def compute_performance_scores(y_true: np.array,
-                               y_pred: np.array,
-                               stage: str, 
-                               metric_type: str, 
-                               output_dir: str) -> Dict:
-    """Evaluate predictions according to specified metrics.
+## general_utils.py
+# def compute_performance_scores(y_true: np.array,
+#                                y_pred: np.array,
+#                                stage: str, 
+#                                metric_type: str, 
+#                                output_dir: str) -> Dict:
+#     """Evaluate predictions according to specified metrics.
 
-    Args:
-        y_true (np.array): Array with ground truth values.
-        y_pred (np.array): Array with model predictions.
-        stage (str): String specified if evaluation is with respect to val or test set.
-        metric_type (str): Either classification or regression.
-        output_dir (str): Directory to write results.
+#     Args:
+#         y_true (np.array): Array with ground truth values.
+#         y_pred (np.array): Array with model predictions.
+#         stage (str): String specified if evaluation is with respect to val or test set.
+#         metric_type (str): Either classification or regression.
+#         output_dir (str): Directory to write results.
 
-    Returns:
-        dict: Dictionary with metrics evaluated and corresponding scores.
-    """
-    # Compute multiple performance scores
-    scores = compute_metrics(y_true, y_pred, metric_type)
+#     Returns:
+#         dict: Dictionary with metrics evaluated and corresponding scores.
+#     """
+#     # Compute multiple performance scores
+#     scores = compute_metrics(y_true, y_pred, metric_type)
 
-    # Add val_loss metric
-    #key = f"{stage}_loss"
-    #scores[key] = scores[params["loss"]]
+#     # Add val_loss metric
+#     #key = f"{stage}_loss"
+#     #scores[key] = scores[params["loss"]]
 
-    scores_fname = f"{stage}_scores.json"
-    scorespath = Path(output_dir) / scores_fname
+#     scores_fname = f"{stage}_scores.json"
+#     scorespath = Path(output_dir) / scores_fname
 
-    with open(scorespath, "w", encoding="utf-8") as f:
-        json.dump(scores, f, ensure_ascii=False, indent=4)
+#     with open(scorespath, "w", encoding="utf-8") as f:
+#         json.dump(scores, f, ensure_ascii=False, indent=4)
 
-    # Performance scores for Supervisor HPO
-    # TODO. do we still need to print IMPROVE_RESULT?
-    if stage == "val":
-        print("\nIMPROVE_RESULT val_loss:\t{}\n".format(scores["mse"]))
-        print("Validation scores:\n\t{}".format(scores))
-    elif stage == "test":
-        print("Inference scores:\n\t{}".format(scores))
-    else:
-        print("Invalid stage: must be 'val' or 'test'.")
-    return scores
+#     # Performance scores for Supervisor HPO
+#     # TODO. do we still need to print IMPROVE_RESULT?
+#     if stage == "val":
+#         print("\nIMPROVE_RESULT val_loss:\t{}\n".format(scores["mse"]))
+#         print("Validation scores:\n\t{}".format(scores))
+#     elif stage == "test":
+#         print("Inference scores:\n\t{}".format(scores))
+#     else:
+#         print("Invalid stage: must be 'val' or 'test'.")
+#     return scores
 
 
 ## file_utils.py
@@ -710,3 +719,30 @@ def compute_performance_scores(y_true: np.array,
 #         raise Exception(f"ERROR ! {folder_name} folder not available.\n")
 
 #     return outpath
+
+
+if __name__ == "__main__":
+    # Test the cast_value function
+    print("Testing cast_value:")
+    print(cast_value("10"))  # Should return 10 (int)
+    print(cast_value("10.5"))  # Should return 10.5 (float)
+    print(cast_value("hello"))  # Should return "hello" (str)
+
+    # Test the Timer class
+    print("\nTesting Timer:")
+    timer = Timer()
+    time.sleep(1)  # Sleep for 1 second
+    timer.display_timer()  # Should print elapsed time
+
+    # Test the save_subprocess_stdout function (mocking subprocess.run)
+    # Note: You would need to set up a mock for this in a real test
+    # print("\nTesting save_subprocess_stdout:")
+    # result = subprocess.run(["echo", "Hello World"], capture_output=True, text=True)
+    # save_subprocess_stdout(result)
+
+    # Test the compute_performance_scores function
+    # print("\nTesting compute_performance_scores:")
+    # y_true = np.array([1, 0, 1])
+    # y_pred = np.array([0.8, 0.2, 0.9])
+    # scores = compute_performance_scores(y_true, y_pred, stage="test", metric_type="classification", output_dir=".")
+    # print("Scores:", scores)
