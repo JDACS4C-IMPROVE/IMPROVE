@@ -1,9 +1,10 @@
 """
 This module provides a Timer class for measuring elapsed time, displaying the duration, and saving runtime information to a file.
 """
+import json
 import time
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional, Union
 
 
 class Timer:
