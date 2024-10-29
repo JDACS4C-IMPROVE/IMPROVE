@@ -129,7 +129,7 @@ def infer(
         conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} "
     else:
         conda = "echo no conda env provided"
-
+    
     suffix = "STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
 
    
