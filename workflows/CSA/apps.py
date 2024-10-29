@@ -113,7 +113,8 @@ def infer(
     script: str = None, 
     input_data_dir: str = None, 
     input_model_dir: str = None, 
-    output_dir: str = None, 
+    output_dir: str = None,
+    calc_infer_scores = True,
     y_col_name: str = None, 
     conda_env: str = None, 
     stdout: str = "stdout.txt", 
@@ -128,7 +129,8 @@ def infer(
            "--input_data_dir" , input_data_dir,
            "--input_model_dir" , input_model_dir,
            "--output_dir" , output_dir,
-           "--y_col_name" , y_col_name
+           "--y_col_name" , y_col_name,
+           "--calc_infer_scores" , calc_infer_scores
            ]
     
     call = make_call(cli, conda_env)
