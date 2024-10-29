@@ -305,9 +305,9 @@ def workflow(config: csa.Config,
                 
                 i_future = infer(
                             script = script,
-                            input_data_dir = infer_options["input_dir"],
+                            input_data_dir = options["input_dir"],
                             input_model_dir = model_dir, # infer_options["model_dir"],
-                            output_dir = infer_options["output_dir"],
+                            output_dir = options["output_dir"],
                             calc_infer_scores = True,
                             y_col_name = config.y_col_name,
                             conda_env = config.conda_env,

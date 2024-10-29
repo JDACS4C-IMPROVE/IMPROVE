@@ -109,31 +109,45 @@ def train(
 
 
 @bash_app
-def infer( 
-    script: str = None, 
-    input_data_dir: str = None, 
-    input_model_dir: str = None, 
-    output_dir: str = None, 
-    y_col_name: str = None, 
-    conda_env: str = None, 
-    stdout: str = "stdout.txt", 
-    stderr: str = "stderr.txt", 
-    inputs: Sequence[File] = [], 
-    outputs: Sequence[File] = [] ):    
-    
-    logger.info(f"Setting up infer: {script} on input data {input_data_dir} and saving to {output_dir}")
+def infer(
+    script: str = None,
+    input_data_dir: str = None,
+    input_model_dir: str = None,
+    output_dir: str = None,
+    calc_infer_scores: bool = False,
+    y_col_name: str = None,
+    conda_env: str = None,
+    stdout: str = "stdout.txt",
+    stderr: str = "stderr.txt",
+    inputs: Sequence[File] = [],
+    outputs: Sequence[File] = []):
+    """Infer the model."""
+    call = "echo 'Inferencing the model'"
+    prefix = f"START=$(date +%s) ; echo Start:\t$START "
 
+    if conda_env:
+        conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} "
+    else:
+        conda = "echo no conda env provided"
+
+    suffix = "STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
+
+   
+    # Create the command line interface for inference
     cli = [ "time",
-           str(script), 
-           "--input_data_dir" , input_data_dir,
-           "--input_model_dir" , input_model_dir,
-           "--output_dir" , output_dir,
-           "--y_col_name" , y_col_name
-           ]
-    
-    call = make_call(cli, conda_env)
-    logger.debug(f"Infer call: {call}")
+              script,
+          "--input_data_dir" , input_data_dir,
+          "--input_model_dir" , input_model_dir,
+          "--output_dir" , output_dir,
+          "--calc_infer_scores" , calc_infer_scores,
+          "--y_col_name" , y_col_name
+     ]
 
+    # create a list of strings from cli
+    call = " ;".join([prefix, conda, " ".join([ str(i) for i in cli]), suffix])
+
+    logger.debug(f"Inference command: {call}")
+    print(call)
     return call
 
 
