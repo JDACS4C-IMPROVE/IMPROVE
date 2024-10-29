@@ -1,8 +1,9 @@
 """ subprocess_utils.py """
-from typing import Union, Optional
-from pathlib import Path
-import subprocess
 import logging
+import subprocess
+from pathlib import Path
+from typing import Union, Optional
+
 
 # def save_subprocess_stdout(
 #     result,
