@@ -1,8 +1,8 @@
 """
-This module contains functions for data manipulation and evaluation, including saving dataframes and storing predictions.
+This module includes functionality for data manipulation and evaluation, including saving dataframes and model predictions.
 """
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
