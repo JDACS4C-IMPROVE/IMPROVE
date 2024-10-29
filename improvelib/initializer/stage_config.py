@@ -1,7 +1,9 @@
 import os
 import sys
 import logging
+import pprint
 from pathlib import Path
+# from pprint import pprint
 
 from improvelib.initializer.config import Config
 from improvelib.initializer.cli_params_def import (
@@ -15,6 +17,8 @@ from improvelib.utils import build_paths
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
+
+printfn = pprint.PrettyPrinter(indent=4).pformat
 
 
 class SectionConfig(Config):
@@ -54,15 +58,14 @@ class SectionConfig(Config):
                               additional_definitions=None,
                               required=None):
         """Initialize Command Line Interface and Config."""
-        self.logger.debug(
-            f"Initializing parameters for {self.section}.")
+        self.logger.debug(f"Initializing parameters for {self.section}.")
 
         if additional_cli_section is None:
             additional_cli_section = 'Additional Parameters'
 
-        self.logger.debug("additional_definitions(stage):", additional_definitions)
+        self.logger.debug("additional_definitions(stage):", printfn(additional_definitions))
         if additional_definitions is not None:
-            if isinstance(additional_definitions, str) or isinstance(additional_definitions, Path):
+            if isinstance(additional_definitions, (str, Path)):
                 additional_definitions = self.load_parameter_definitions(
                     additional_definitions)
             self.cli.set_command_line_options(
