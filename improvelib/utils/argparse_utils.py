@@ -3,6 +3,7 @@ This module includes functionality for argument parsing.
 """
 import argparse
 from typing import List, Dict, Union
+
 import numpy as np
 
 
