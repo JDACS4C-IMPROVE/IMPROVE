@@ -1,1 +1,1 @@
-"""IMPROVE Functionality."""
+"""improvelib package."""

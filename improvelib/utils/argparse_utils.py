@@ -1,13 +1,15 @@
 """
-This module includes functions and classes for enhancing argument parsing in command-line applications, allowing for custom data types and actions.
+This module includes functionality for argument parsing.
 """
 import argparse
 from typing import List, Dict, Union
+import numpy as np
 
 
 def parse_from_dictlist(
     dictlist: List[Dict],
-    parser: argparse.ArgumentParser) -> parser: argparse.ArgumentParser:
+    parser: argparse.ArgumentParser
+    ) -> argparse.ArgumentParser:
     """Parse command-line arguments from a list of dictionaries.
 
     Args:
@@ -160,8 +162,8 @@ def str2bool(v: str) -> bool:
 
     Args:
         v (str): The string to convert.
-            Strings recognized as boolean True : 'yes', 'true', 't', 'y', '1' and uppercase versions (where applicable).
-            Strings recognized as boolean False : 'no', 'false', 'f', 'n', '0' and uppercase versions (where applicable).
+            Strings recognized as True : 'yes', 'true', 't', 'y', '1' and uppercase (where applicable).
+            Strings recognized as False : 'no', 'false', 'f', 'n', '0' and uppercase (where applicable).
 
     Returns:
         bool: The converted boolean value.
