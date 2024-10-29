@@ -1,6 +1,7 @@
 """ 
 This module includes general utility functions.
 """
+from pathlib import Path
 from typing import Dict
 
 import numpy as np
