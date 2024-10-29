@@ -26,12 +26,8 @@ git checkout develop
 ### 3. Install Dependencies
 Create and activate the conda environment (Not the model environment) to support Parsl and all other dependencies for IMPROVE
 ```
-conda env create -f parsl_env.yml
-```
-
-If you face an error during execution you may have to do this for Parsl:
-```
-export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libffi.so.7
+conda create -n parsl parsl numpy pandas scikit-learn pyyaml -y
+conda activate parsl
 ```
 
 ### 4. Set PYTHONPATH
