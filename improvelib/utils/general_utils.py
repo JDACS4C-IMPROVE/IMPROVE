@@ -5,6 +5,8 @@ from typing import Dict
 
 import numpy as np
 
+from improvelib.metrics import compute_metrics
+
 
 def cast_value(s):
     """Cast a value to numeric if possible.
