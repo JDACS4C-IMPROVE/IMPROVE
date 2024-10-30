@@ -26,17 +26,12 @@ source setup_improve.sh
 ```
 
 ### 3. Download benchmark data for cross study analysis
-
-Go to your working directory containing parsl_csa workflow scripts. For eg:
-
-```bash
-cd /workflows/parsl_csa
-```
-Download benchmark data:
+Download benchmark data to the data destination directory using [this](https://github.com/JDACS4C-IMPROVE/IMPROVE/blob/develop/scripts/get-benchmarks). For example:
 
 ```bash
-source download_csa.sh
+./scripts/get-benchmarks ./workflows/parsl_csa
 ```
+
 The downloaded benchmark data tree is shown below:
 ```
 csa_data/raw_data/
@@ -74,7 +69,7 @@ csa_data/raw_data/
 **Configuration file**:
 **csa_params.ini** contains parameters necessary for the workflow. The user can change the parameters inside this configuration file.
 
- - input_dir : Path to the benchmark raw data for cross study analysis. 
+ - input_dir : Path to the benchmark raw_data for cross study analysis. 
  - output_dir : Path to the output directory. The subdirectories in the output_dir will be organized as:
     - ml_data: Contains pre-processed data.
     - models: Contains trained models.
