@@ -15,7 +15,7 @@ git checkout <BRANCH>
 2. Make sure to follow the IMPROVE lib [documentation](https://jdacs4c-improve.github.io/docs) to ensure the model is compliant with the IMPROVE framework
 
 ### 2. Execute setup_improve.sh
-Each model repository should contain a setup_improve.sh file to set Python paths and to download the required benchmark datasets. Follow the [template](https://github.com/JDACS4C-IMPROVE/IMPROVE/tree/develop/templates) to create one for your model.
+Each model repository should contain a setup_improve.sh file to set Python paths and to download the required benchmark datasets. Follow the IMPROVE documentation to create one for your model.
 
 Execute within the model directory:
 ```bash
