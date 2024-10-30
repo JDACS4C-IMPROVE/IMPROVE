@@ -3,6 +3,7 @@ import sys
 import logging
 import pprint
 from pathlib import Path
+from enum import Enum
 # from pprint import pprint
 
 from improvelib.initializer.config import Config
@@ -20,6 +21,12 @@ logger = logging.getLogger(__name__)
 
 printfn = pprint.PrettyPrinter(indent=4).pformat
 
+
+class Sections(Enum):
+    PREPROCESS = 'Preprocess'
+    TRAIN = 'Train'
+    INFER = 'Infer'
+    
 
 class SectionConfig(Config):
 
@@ -78,7 +85,7 @@ class SectionConfig(Config):
                                           additional_definitions=self.options,
                                           required=required)
 
-        if self.section.lower() == 'preprocess':
+        if self.section == Sections.PREPROCESS:
             p = build_paths(p)
 
         self.logger.setLevel(self.log_level)
@@ -89,21 +96,21 @@ class PreprocessConfig(SectionConfig):
     """Class to handle configuration files for Preprocessing."""
 
     def __init__(self) -> None:
-        super().__init__('Preprocess', improve_preprocess_conf)
+        super().__init__(Sections.PREPROCESS.value, improve_preprocess_conf)
 
 
 class TrainConfig(SectionConfig):
     """Class to handle configuration files for Training."""
 
     def __init__(self) -> None:
-        super().__init__('Train', improve_train_conf)
+        super().__init__(Sections.TRAIN.value, improve_train_conf)
 
 
 class InferConfig(SectionConfig):
     """Class to handle configuration files for Inference."""
 
     def __init__(self) -> None:
-        super().__init__('Infer', improve_infer_conf)
+        super().__init__(Sections.INFER.value, improve_infer_conf)
 
 
 if __name__ == "__main__":

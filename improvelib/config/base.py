@@ -747,6 +747,7 @@ class Config:
             self.save_parameter_file(final_config_file)
 
         self.__class__ = current_class
+
         return self.params
 
 

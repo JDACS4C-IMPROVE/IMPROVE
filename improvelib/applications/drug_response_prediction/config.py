@@ -7,7 +7,17 @@ encoding a suggested deprecation.
 """
 
 from improvelib.initializer.stage_config import PreprocessConfig, TrainConfig, InferConfig
+from improvelib.metrics import RegressionMetrics, ClassificationMetrics
 
+
+def update_params(params):
+    metric_type_param = 'metric_type'
+    if metric_type_param in params:
+        if params[metric_type_param] == 'regression':
+            params[metric_type_param] = RegressionMetrics
+        elif params[metric_type_param] == 'classification':
+            params[metric_type_param] = ClassificationMetrics
+    return params
 
 class DRPPreprocessConfig(PreprocessConfig):
 
@@ -99,6 +109,15 @@ class DRPTrainConfig(TrainConfig):
              options=self._app_train_params,
              group='Drug Response Prediction Training')
 
+    #def initialize_parameters(self, 
+    #                            pathToModelDir,
+    #                            default_config,
+    #                            additional_definitions):
+    #    params = self.initialize_parameters(pathToModelDir, default_config, additional_definitions)
+    #    
+    #    return params
+        
+
 
 class DRPInferConfig(InferConfig):
     _app_infer_params = [
@@ -125,3 +144,4 @@ class DRPInferConfig(InferConfig):
         self.cli.set_command_line_options(
             options=self._app_infer_params,
             group='Drug Response Prediction Inference')
+        self.params = update_params(self.params)

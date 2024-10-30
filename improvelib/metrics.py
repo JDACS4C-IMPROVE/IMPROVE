@@ -3,6 +3,8 @@
 import sys
 import sklearn
 from math import sqrt
+from enum import Enum
+from abc import ABC
 
 from scipy.stats.mstats import pearsonr, spearmanr
 
@@ -10,11 +12,25 @@ if sklearn.__version__ < "1.4.0":
     from sklearn.metrics import r2_score, mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
 else:
     from sklearn.metrics import r2_score, mean_squared_error, root_mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
+    
 
+class ClassificationMetrics(Enum):
+    ACC = "acc"
+    RECALL = "recall"
+    PRECISION = "precision"
+    F1_SCORE = "f1"
+    AUC = "auc"
+    AUPR = "aupr"
+
+class RegressionMetrics(Enum):
+    MSE = "mse"
+    RMSE = "rmse"
+    PCC = "pearson"
+    SCC = "spearman"
+    R2 = "r2"
 
 def str2Class(str):
     return getattr(sys.modules[__name__], str)
-
 
 def compute_metrics(y_true, y_pred, metric_type):
     """Compute the specified set of metrics.
@@ -34,24 +50,9 @@ def compute_metrics(y_true, y_pred, metric_type):
         A dictionary of evaluated metrics.
     """
     scores = {}
-    if metric_type == "classification":
-        metrics = ["acc", "recall", "precision", "f1", "auc", "aupr"]
-    elif metric_type == "regression":
-        metrics = ["mse", "rmse", "pcc", "scc", "r2"]
-    else:
-        print("Invalid metric_type")
-
-    for mtstr in metrics:
-        mapstr = mtstr
-        if mapstr == "pcc":
-            mapstr = "pearson"
-        elif mapstr == "scc":
-            mapstr = "spearman"
-        elif mapstr == "r2":
-            mapstr = "r_square"
-        scores[mtstr] = str2Class(mapstr)(y_true, y_pred)
-
-    scores = {k: float(v) for k, v in scores.items()}
+    
+    for metric in metric_type:
+        scores[metric.value] = float(str2Class(metric.value)(y_true, y_pred))
 
     return scores
 
@@ -134,7 +135,7 @@ def spearman(y_true, y_pred):
     return scc
 
 
-def r_square(y_true, y_pred):
+def r2(y_true, y_pred):
     """Compute R2 Coefficient.
 
     Parameters
