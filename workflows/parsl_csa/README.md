@@ -121,7 +121,7 @@ python workflow_csa.py --config_file <CONFIG_FILE>
 #### Execution with singularity container:
 In csa_params.ini:  
     - Set use_singularity = True  
-    - singularity_image = <NAME_OF_YOUR_SINGULARITY_CONTAINER>  
+    - singularity_image = <PATH_TO_YOUR_SINGULARITY_CONTAINER>  
     - Change other parameters if needed  
 
 Preprocess the raw data:
