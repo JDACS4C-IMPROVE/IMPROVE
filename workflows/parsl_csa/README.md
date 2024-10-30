@@ -86,7 +86,7 @@ The hyperparameters can be optimized using [Supervisor](https://github.com/JDACS
 #### Execution without singularity container:
   
 Make sure to change the 'model_name' parameter in csa_params.ini to your <MODEL_NAME>.  
-Change the 'model_scripts_dir' parameter to the path to your model directory'  
+Change the 'model_scripts_dir' parameter to the path to your model directory 
 Change the 'model_environment' parameter to the name of your model conda environment.  
 Make changes to csa_params.ini as needed for your experimenet.
 
