@@ -15,9 +15,10 @@ git checkout <BRANCH>
 2. Make sure to follow the IMPROVE lib [documentation](https://jdacs4c-improve.github.io/docs) to ensure the model is compliant with the IMPROVE framework
 
 ### 2. Clone IMPROVE repo and set PYTHONPATH
-Clone the [IMPROVE](https://github.com/JDACS4C-IMPROVE/IMPROVE/tree/develop) repository to a directory of your preference (outside your model's directory).
+Clone the [IMPROVE](https://github.com/JDACS4C-IMPROVE/IMPROVE/tree/develop) repository to a directory of your preference (outside your model directory).
 
 ```bash
+cd ..
 git clone https://github.com/JDACS4C-IMPROVE/IMPROVE
 cd IMPROVE
 git checkout develop
