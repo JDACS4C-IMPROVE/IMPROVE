@@ -14,14 +14,28 @@ git checkout <BRANCH>
     - <MODEL_NAME>_infer_improve.py
 2. Make sure to follow the IMPROVE lib [documentation](https://jdacs4c-improve.github.io/docs) to ensure the model is compliant with the IMPROVE framework
 
-### 2. Execute setup_improve.sh
-Each model repository should contain a setup_improve.sh file to set Python paths and to download the required benchmark datasets. Follow the IMPROVE documentation to create one for your model.
+### 2. Clone IMPROVE repo and set PYTHONPATH
+Clone the [IMPROVE](https://github.com/JDACS4C-IMPROVE/IMPROVE/tree/develop) repository to a directory of your preference (outside your model's directory).
 
-Execute within the model directory:
 ```bash
+git clone https://github.com/JDACS4C-IMPROVE/IMPROVE
+cd IMPROVE
+git checkout develop
 source setup_improve.sh
 ```
 
+### 3. Download benchmark data for cross study analysis
+
+Go to your working directory containing parsl_csa workflow scripts. For eg:
+
+```bash
+cd /workflows/parsl_csa
+```
+Download benchmark data:
+
+```bash
+source download_csa.sh
+```
 The downloaded benchmark data tree is shown below:
 ```
 csa_data/raw_data/
@@ -55,7 +69,7 @@ csa_data/raw_data/
     └── response.tsv
 ```
 
-### 3. To run cross study analysis using Parsl:
+### 4. To run cross study analysis using Parsl:
 **Configuration file**:
 **csa_params.ini** contains parameters necessary for the workflow. The user can change the parameters inside this configuration file.
 
