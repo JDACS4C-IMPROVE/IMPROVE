@@ -8,7 +8,9 @@
 
 DESTINATION=$1
 data_dir="csa_data"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 benchmark_download_script=download_csa.sh
+
 if [ -z "$DESTINATION" ]; then
     echo "Usage: $0 <destination>"
     exit 1
@@ -16,7 +18,7 @@ fi
 if [ ! -d $DESTINATION/$data_dir/ ]; then
     mkdir -p $DESTINATION
     cd $DESTINATION
-    source $benchmark_download_script
+    source $SCRIPT_DIR/$benchmark_download_script
 else
     echo "CSA data folder already exists"
 fi
