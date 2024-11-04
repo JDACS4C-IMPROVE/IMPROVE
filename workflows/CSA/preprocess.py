@@ -47,6 +47,8 @@ def preprocess(
     ):
     """Preprocess the input file using the script."""
     
+    import logging 
+    logger = logging.getLogger(__name__)
 
     # Prefix and activate the conda environment
     if conda_env:

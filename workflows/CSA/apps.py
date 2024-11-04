@@ -112,6 +112,9 @@ def train(
 
 @bash_app
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> develop
 def infer(
     script: str = None,
     input_data_dir: str = None,
@@ -125,6 +128,7 @@ def infer(
     inputs: Sequence[File] = [],
     outputs: Sequence[File] = []):
     """Infer the model."""
+<<<<<<< HEAD
    
     # Create the command line interface for inference
     cli = [ "time",
@@ -163,6 +167,28 @@ def infer(
     call = make_call(cli, conda_env)
     logger.debug(f"Infer call: {call}")
 >>>>>>> 6ce965769a641f0112996d4628c0d01aa3f34d50
+=======
+    call = "echo 'Inferencing the model'"
+    prefix = f"START=$(date +%s) ; echo Start:\t$START "
+
+    if conda_env:
+        conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} "
+    else:
+        conda = "echo no conda env provided"
+    
+    suffix = "STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
+
+   
+    # Create the command line interface for inference
+    cli = [ "time",
+              script,
+          "--input_data_dir" , input_data_dir,
+          "--input_model_dir" , input_model_dir,
+          "--output_dir" , output_dir,
+          "--calc_infer_scores" , calc_infer_scores,
+          "--y_col_name" , y_col_name
+     ]
+>>>>>>> develop
 
     # # create a list of strings from cli
     # call = " ;".join([prefix, conda, " ".join([ str(i) for i in cli]), suffix])

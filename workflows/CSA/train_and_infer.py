@@ -32,9 +32,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", "INFO"))
 
 
-
-
-
 # Create training output relative to the input directory for the workflow
 def train_config(
         input_dir = None, 
@@ -128,7 +125,7 @@ def infer_config(
     except FileNotFoundError as e:
         logger.warning(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
         try:
-            trained_model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=None, split=split, make_dir=False)
+            trained_model_dir = make_path(base_dir=output_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=None, split=split, make_dir=False)
             logger.debug(f"Found model directory for {model} {source_dataset} {split}")
         except FileNotFoundError as e:
             logger.error(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
@@ -305,8 +302,6 @@ def workflow(config: csa.Config,
                     split=split)
                 
                 i_future = infer(
-                            script = infer_script,
-                            input_data_dir = options["input_dir"],
                             script = infer_script,
                             input_data_dir = options["input_dir"],
                             input_model_dir = model_dir, # infer_options["model_dir"],
