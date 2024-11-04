@@ -326,7 +326,7 @@ def workflow(config: csa.Config,
 
 
     # Wait for all the futures to complete
-    logger.info("Waiting for training tasks to complete.")
+    logger.info("Waiting for infer tasks to complete.")
 
     while future in infer_futures:
 
