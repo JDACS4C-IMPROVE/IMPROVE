@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel( os.getenv("IMPROVE_LOG_LEVEL", logging.INFO))
 
 prefix= "START=$(date +%s) ; echo Start:\t$START "
-suffix= "STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
+timing="printf '{ "hours":"%02d" , "minutes":"%02d" , "seconds":"%02d" , "total":%02d }\n' $((seconds/3600)) $((seconds%3600/60)) $((seconds%60)) ${seconds} > timing.json"
+suffix= "STOP=$(date +%s) ; seconds=$((STOP-START)); echo Duration:\t${seconds} seconds; printf '{ \"hours\":\"%02d\" , \"minutes\":\"%02d\" , \"seconds\":\"%02d\" , \"total\":%02d }' $((seconds/3600)) $((seconds%3600/60)) $((seconds%60)) ${seconds} > timing.json ; sleep 1"
+
 
 def get_conda_env(conda_env):
     if conda_env:
@@ -122,16 +124,6 @@ def infer(
     inputs: Sequence[File] = [],
     outputs: Sequence[File] = []):
     """Infer the model."""
-    call = "echo 'Inferencing the model'"
-    prefix = f"START=$(date +%s) ; echo Start:\t$START "
-
-    if conda_env:
-        conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} "
-    else:
-        conda = "echo no conda env provided"
-
-    suffix = "STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1"
-
    
     # Create the command line interface for inference
     cli = [ "time",
@@ -143,10 +135,12 @@ def infer(
           "--y_col_name" , y_col_name
      ]
 
-    # create a list of strings from cli
-    call = " ;".join([prefix, conda, " ".join([ str(i) for i in cli]), suffix])
+    # # create a list of strings from cli
+    # call = " ;".join([prefix, conda, " ".join([ str(i) for i in cli]), suffix])
 
-    logger.debug(f"Inference command: {call}")
+    call = make_call(cli, conda_env)
+    logger.debug(f"Inference call: {call}")
+
     print(call)
     return call
 
