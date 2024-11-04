@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 import subprocess
 import warnings
 from pathlib import Path
@@ -19,7 +20,9 @@ import improvelib.utils as frm
 from csa_bruteforce_params_def import csa_bruteforce_params
 from improvelib.utils import Timer
 
+start_full_wf = time.time()
 
+'''
 def build_split_fname(source: str, split: int, phase: str):
     """ Build split file name. If file does not exist continue """
     return f"{source_data_name}_split_{split}_{phase}.txt"
@@ -36,12 +39,12 @@ def save_captured_output(result,
     with open(result_file_name_stdout, 'w') as file:
         file.write(result.stdout)
     return True
+'''
 
 
 filepath = Path(__file__).resolve().parent
 
-print_fn = print
-print_fn(f"File path: {filepath}")
+print(f"File path: {filepath}")
 
 
 # ===============================================================
@@ -83,40 +86,33 @@ splits_dir = Path(params['input_dir']) / params['splits_dir']
 print("Created splits path.")
 print("splits_dir: ", splits_dir)
 
-source_datasets = params["source_datasets"]
-target_datasets = params["target_datasets"]
-only_cross_study = params["only_cross_study"]
-split_nums = params["split_nums"]
-epochs = params["epochs"]
-cuda_name = params["cuda_name"]
-print("internal params")
 
 
 # ===============================================================
 ###  Generate CSA results (within- and cross-study)
 # ===============================================================
 
-timer = Timer()
+# timer = Timer()
 # Iterate over source datasets
 # Note! The "source_data_name" iterations are independent of each other
-print_fn(f"\nsource_datasets: {source_datasets}")
-print_fn(f"target_datasets: {target_datasets}")
-print_fn(f"split_nums:      {split_nums}")
+print(f"\nsource_datasets: {params["source_datasets"]}")
+print(f"target_datasets: {params["target_datasets"]}")
+print(f"split_nums:      {params["split_nums"]}")
 
-for source_data_name in source_datasets:
+for source_data_name in params["source_datasets"]:
 
     # Get the split file paths
     # This parsing assumes splits file names are: SOURCE_split_NUM_[train/val/test].txt
-    if len(split_nums) == 0:
+    if len(params["split_nums"]) == 0:
         # Get all splits
         split_files = list((splits_dir).glob(f"{source_data_name}_split_*.txt"))
-        split_nums = [str(s).split("split_")[1].split("_")[0] for s in split_files]
-        split_nums = sorted(set(split_nums))
+        params["split_nums"] = [str(s).split("split_")[1].split("_")[0] for s in split_files]
+        params["split_nums"] = sorted(set(params["split_nums"]))
         # num_splits = 1
     else:
         # Use the specified splits
         split_files = []
-        for s in split_nums:
+        for s in params["split_nums"]:
             split_files.extend(list((splits_dir).glob(f"{source_data_name}_split_{s}_*.txt")))
 
     files_joined = [str(s) for s in split_files]
@@ -124,21 +120,21 @@ for source_data_name in source_datasets:
     # --------------------
     # Preprocess and Train
     # --------------------
-    for split in split_nums:
-        print_fn(f"Split id {split} out of {len(split_nums)} splits.")
+    for split in params["split_nums"]:
+        print(f"Split id {split} out of {len(params["split_nums"])} splits.")
         # Check that train, val, and test are available. Otherwise, continue to the next split.
         for phase in ["train", "val", "test"]:
-            fname = build_split_fname(source_data_name, split, phase)
+            fname = f"{source_data_name}_split_{split}_{phase}.txt"
             if fname not in "\t".join(files_joined):
                 warnings.warn(f"\nThe {phase} split file {fname} is missing \
                               (continue to next split)")
                 continue
 
-        for target_data_name in target_datasets:
-            if only_cross_study and (source_data_name == target_data_name):
+        for target_data_name in params["target_datasets"]:
+            if params["only_cross_study"] and (source_data_name == target_data_name):
                 continue # only cross-study
-            print_fn(f"\nSource data: {source_data_name}")
-            print_fn(f"Target data: {target_data_name}")
+            print(f"\nSource data: {source_data_name}")
+            print(f"Target data: {target_data_name}")
 
             ml_data_dir = MAIN_ML_DATA_DIR / \
                 f"{source_data_name}-{target_data_name}" / f"split_{split}"
@@ -155,13 +151,14 @@ for source_data_name in source_datasets:
 
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # p1 (none): Preprocess train data
-            timer_preprocess = Timer()
-            print_fn("\nPreprocessing")
+            start_preprocess = time.time()
+            # timer_preprocess = Timer()
+            print("\nPreprocessing")
             train_split_file = f"{source_data_name}_split_{split}_train.txt"
             val_split_file = f"{source_data_name}_split_{split}_val.txt"
-            print_fn(f"train_split_file: {train_split_file}")
-            print_fn(f"val_split_file:   {val_split_file}")
-            print_fn(f"test_split_file:  {test_split_file}")
+            print(f"train_split_file: {train_split_file}")
+            print(f"val_split_file:   {val_split_file}")
+            print(f"test_split_file:  {test_split_file}")
             preprocess_run = ["python", preprocess_python_script,
                   "--train_split_file", str(train_split_file),
                   "--val_split_file", str(val_split_file),
@@ -174,59 +171,114 @@ for source_data_name in source_datasets:
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT,
                                     universal_newlines=True)
+            
+            # Logger
             print(f"returncode = {result.returncode}")
-            save_captured_output(result, "preprocess", MAIN_LOG_DIR,
-                                 source_data_name, target_data_name, split)
-            tt = timer_preprocess.display_timer(print_fn)
-            extra_dict = {"source_data": source_data_name,
-                          "target_data": target_data_name,
-                          "split": split}
-            timer_preprocess.save_timer(ml_data_dir, extra_dict=extra_dict)
+            result_file_name_stdout = ml_data_dir / 'logs.txt'
+            if ml_data_dir.exists() is False: 
+                os.makedirs(ml_data_dir, exist_ok=True)
+            with open(result_file_name_stdout, 'w') as file:
+                file.write(result.stdout)
+
+            # Timer
+            time_diff = time.time() - start_preprocess
+            hours = int(time_diff // 3600)
+            minutes = int((time_diff % 3600) // 60)
+            seconds = time_diff % 60
+            time_diff_dict = {'hours': hours,
+                            'minutes': minutes,
+                            'seconds': seconds}
+            dir_to_save = ml_data_dir
+            filename = 'runtime.json'
+            with open(Path(dir_to_save) / filename, 'w') as json_file:
+                json.dump(time_diff_dict, json_file, indent=4)
+
+
+            # print(f"returncode = {result.returncode}")
+            # save_captured_output(result, "preprocess", MAIN_LOG_DIR,
+            #                      source_data_name, target_data_name, split)
+            # tt = timer_preprocess.display_timer(print_fn)
+            # extra_dict = {"source_data": source_data_name,
+            #               "target_data": target_data_name,
+            #               "split": split}
+            # timer_preprocess.save_timer(ml_data_dir, extra_dict=extra_dict)
 
             # p2 (p1): Train model
             # Train a single model for a given [source, split] pair
             # Train using train samples and early stop using val samples
             if model_dir.exists() is False:
-                timer_train = Timer()
-                print_fn("\nTrain")
-                print_fn(f"ml_data_dir: {ml_data_dir}")
-                print_fn(f"model_dir:   {model_dir}")
+                start_train = time.time()
+                # timer_train = Timer()
+                print("\nTrain")
+                print(f"ml_data_dir: {ml_data_dir}")
+                print(f"model_dir:   {model_dir}")
                 if params["uses_cuda_name"]:
                     train_run = ["python", train_python_script,
                         "--input_dir", str(ml_data_dir),
                         "--output_dir", str(model_dir),
-                        "--epochs", str(epochs),  # DL-specific
-                        "--cuda_name", cuda_name, # DL-specific
+                        "--epochs", str(params["epochs"]),  # DL-specific
+                        "--cuda_name", params["cuda_name"], # DL-specific
                         "--y_col_name", y_col_name
                     ]
                 else:
                     train_run = ["python", train_python_script,
                         "--input_dir", str(ml_data_dir),
                         "--output_dir", str(model_dir),
-                        "--epochs", str(epochs),  # DL-specific
+                        "--epochs", str(params["epochs"]),  # DL-specific
                         "--y_col_name", y_col_name
                     ]
                 result = subprocess.run(train_run,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT,
                                         universal_newlines=True)
+                
+                # Logger
                 print(f"returncode = {result.returncode}")
-                save_captured_output(result, "train", MAIN_LOG_DIR,
-                                     source_data_name, "none", split)
-                tt = timer_train.display_timer(print_fn)
-                extra_dict = {"source_data": source_data_name, "split": split}
-                timer_train.save_timer(model_dir, extra_dict=extra_dict)
+                result_file_name_stdout = model_dir / 'logs.txt'
+                if model_dir.exists() is False: # If subprocess fails, model_dir may not be created and we need to write the log files in model_dir
+                    os.makedirs(model_dir, exist_ok=True)
+                with open(result_file_name_stdout, 'w') as file:
+                    file.write(result.stdout)
+
+                # Timer
+                time_diff = time.time() - start_train
+                hours = int(time_diff // 3600)
+                minutes = int((time_diff % 3600) // 60)
+                seconds = time_diff % 60
+                time_diff_dict = {'hours': hours,
+                                'minutes': minutes,
+                                'seconds': seconds}
+                dir_to_save = model_dir
+                filename = 'runtime.json'
+                with open(Path(dir_to_save) / filename, 'w') as json_file:
+                    json.dump(time_diff_dict, json_file, indent=4)
+
+
+
+
+
+
+                # print(f"returncode = {result.returncode}")
+                # save_captured_output(result, "train", MAIN_LOG_DIR,
+                #                      source_data_name, "none", split)
+                # tt = timer_train.display_timer(print_fn)
+                # extra_dict = {"source_data": source_data_name, "split": split}
+                # timer_train.save_timer(model_dir, extra_dict=extra_dict)
 
             # Infer
             # p3 (p1, p2): Inference
-            timer_infer = Timer()
-            print_fn("\nInfer")
+            start_infer = time.time()
+            # timer_infer = Timer()
+            print("\nInfer")
+            print(f"ml_data_dir: {ml_data_dir}")
+            print(f"model_dir:   {model_dir}")
+            print(f"infer_dir:   {infer_dir}")
             if params["uses_cuda_name"]:
                 infer_run = ["python", infer_python_script,
                     "--input_data_dir", str(ml_data_dir),
                     "--input_model_dir", str(model_dir),
                     "--output_dir", str(infer_dir),
-                    "--cuda_name", cuda_name, # DL-specific
+                    "--cuda_name", params["cuda_name"], # DL-specific
                     "--y_col_name", y_col_name,
                     "--calc_infer_scores", "true"
                 ]
@@ -242,18 +294,60 @@ for source_data_name in source_datasets:
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT,
                                     universal_newlines=True)
+            
+            # Logger
             print(f"returncode = {result.returncode}")
-            save_captured_output(result, "infer", MAIN_LOG_DIR,
-                                 source_data_name, target_data_name, split)
-            tt = timer_infer.display_timer(print_fn)
-            extra_dict = {"source_data": source_data_name,
-                          "target_data": target_data_name,
-                          "split": split}
-            timer_infer.save_timer(infer_dir, extra_dict=extra_dict)
+            result_file_name_stdout = infer_dir / 'logs.txt'
+            if infer_dir.exists() is False: 
+                os.makedirs(infer_dir, exist_ok=True)
+            with open(result_file_name_stdout, 'w') as file:
+                file.write(result.stdout)
+
+            # Timer
+            time_diff = time.time() - start_infer
+            hours = int(time_diff // 3600)
+            minutes = int((time_diff % 3600) // 60)
+            seconds = time_diff % 60
+            time_diff_dict = {'hours': hours,
+                            'minutes': minutes,
+                            'seconds': seconds}
+            dir_to_save = infer_dir
+            filename = 'runtime.json'
+            with open(Path(dir_to_save) / filename, 'w') as json_file:
+                json.dump(time_diff_dict, json_file, indent=4)
+
+
+
+
+
+
+
+
+            # print(f"returncode = {result.returncode}")
+            # save_captured_output(result, "infer", MAIN_LOG_DIR,
+            #                      source_data_name, target_data_name, split)
+            # tt = timer_infer.display_timer(print_fn)
+            # extra_dict = {"source_data": source_data_name,
+            #               "target_data": target_data_name,
+            #               "split": split}
+            # timer_infer.save_timer(infer_dir, extra_dict=extra_dict)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tt = timer.display_timer(print_fn)
-timer.save_timer(MAIN_CSA_OUTDIR)
-print_fn('Finished full cross-study run.')
+# Timer - full run
+time_diff = time.time() - start_full_wf
+hours = int(time_diff // 3600)
+minutes = int((time_diff % 3600) // 60)
+seconds = time_diff % 60
+time_diff_dict = {'hours': hours,
+                  'minutes': minutes,
+                  'seconds': seconds}
+dir_to_save = params['output_dir']
+filename = 'full_runtime.json'
+with open(Path(dir_to_save) / filename, 'w') as json_file:
+    json.dump(time_diff_dict, json_file, indent=4)
+
+
+print('Finished full cross-study run.')
+
 
