@@ -63,7 +63,7 @@ def train_config(
         raise ValueError("Source and target datasets are not specified.")
 
     # Create directory paths
-    train_input_dir = make_path(input_dir, "preprocess", model, source_dataset, target_dataset, split)
+    # train_input_dir = make_path(input_dir, "preprocess", model, source_dataset, target_dataset, split)
     train_output_dir = os.path.join( output_dir , stage , model , source_dataset , split)
 
     # should come from future / output of preprocess
@@ -304,7 +304,7 @@ def workflow(config: csa.Config,
                     split=split)
                 
                 i_future = infer(
-                            script = script,
+                            script = infer_script,
                             input_data_dir = options["input_dir"],
                             input_model_dir = model_dir, # infer_options["model_dir"],
                             output_dir = options["output_dir"],
@@ -312,19 +312,19 @@ def workflow(config: csa.Config,
                             y_col_name = config.y_col_name,
                             conda_env = config.conda_env,
                             inputs = [
-                                File(infer_options["input_dir"]),
-                                File(infer_options["model_dir"]),
+                                File(options["input_dir"]),
+                                File(options["model_dir"]),
                             ],
-                            outputs = [
-                                File(infer_options["output_dir"]),  
-                                File(infer_options["stdout"]),
-                                File(infer_options["stderr"]),
+                            outputs = [ 
+                                File(options["output_dir"]),  
+                                File(options["stdout"]),
+                                File(options["stderr"]),
                             ],
-                            stderr = infer_options["stderr"],
-                            stdout = infer_options["stdout"],
+                            stderr = options["stderr"],
+                            stdout = options["stdout"],
                             )
-                        logger.debug(f"Inference task {future.tid} submitted: {model} {source} {target} {split}")
-                        infer_futures.append(future)
+                logger.debug(f"Inference task {future.tid} submitted: {model} {source} {target} {split}")
+                infer_futures.append(future)
 
 
 
