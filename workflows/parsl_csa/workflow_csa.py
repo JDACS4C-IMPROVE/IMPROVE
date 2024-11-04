@@ -10,7 +10,7 @@ from parsl import python_app
 from parsl.config import Config
 from parsl.executors import HighThroughputExecutor
 from parsl.providers import LocalProvider
-
+import os
 import csa_params_def as CSA
 from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
 
@@ -214,8 +214,8 @@ params['model_dir'] = Path(params['output_dir']) / 'models'
 params['infer_dir'] = Path(params['output_dir']) / 'infer'
 
 #Model scripts
-params['train_python_script'] = f"{params['model_name']}_train_improve.py"
-params['infer_python_script'] = f"{params['model_name']}_infer_improve.py"
+params['train_python_script'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
+params['infer_python_script'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_infer_improve.py")
 
 #Read Hyperparameters file
 with open(params['hyperparameters_file']) as f:
