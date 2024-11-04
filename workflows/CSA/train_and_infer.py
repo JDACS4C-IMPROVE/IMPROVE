@@ -129,6 +129,7 @@ def infer_config(
         logger.warning(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
         try:
             trained_model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=None, split=split, make_dir=False)
+            logger.debug(f"Found model directory for {model} {source_dataset} {split}")
         except FileNotFoundError as e:
             logger.error(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
             logger.error(f"Model directory not found for {model} {source_dataset} {split}")
@@ -241,7 +242,7 @@ def workflow(config: csa.Config,
                         raise ValueError(f"Model {model} and source {source} not found in the configuration.")
 
                     options = train_config(
-                        input_dir=output_dir, # input_dir is the output of the preprocess
+                        input_dir=input_dir, # input_dir is the output of the preprocess
                         output_dir=output_dir, 
                         model=model,
                         source_dataset=source, 
@@ -291,12 +292,12 @@ def workflow(config: csa.Config,
             source = elements[-2]
             
             logger.info(f"Training task {f.tid} completed: {model} {source} {split}")
-
+            logger.debug(f"Path to model: {model_dir}")
             for target in config.target_datasets:
-                logger.info(f"Infering {model} on dataset {source} and {split} for {target}")
+                logger.info(f"Infering {model} on dataset {source} and {target} for split {split}")
                 # infer(source, target, split)
                 options = infer_config(
-                    input_dir=output_dir, # input_dir is the output of the preprocess
+                    input_dir=input_dir, # input_dir is the output of the preprocess
                     output_dir=output_dir, 
                     model=model,
                     source_dataset=source, 
@@ -306,7 +307,10 @@ def workflow(config: csa.Config,
                 i_future = infer(
                             script = infer_script,
                             input_data_dir = options["input_dir"],
+                            script = infer_script,
+                            input_data_dir = options["input_dir"],
                             input_model_dir = model_dir, # infer_options["model_dir"],
+                            output_dir = options["output_dir"],
                             output_dir = options["output_dir"],
                             calc_infer_scores = True,
                             y_col_name = config.y_col_name,
@@ -314,18 +318,25 @@ def workflow(config: csa.Config,
                             inputs = [
                                 File(options["input_dir"]),
                                 File(options["model_dir"]),
+                                File(options["input_dir"]),
+                                File(options["model_dir"]),
                             ],
                             outputs = [ 
+                                File(options["output_dir"]),  
+                                File(options["stdout"]),
+                                File(options["stderr"]),
+                            outputs = [
                                 File(options["output_dir"]),  
                                 File(options["stdout"]),
                                 File(options["stderr"]),
                             ],
                             stderr = options["stderr"],
                             stdout = options["stdout"],
+                            stderr = options["stderr"],
+                            stdout = options["stdout"],
                             )
-                logger.debug(f"Inference task {future.tid} submitted: {model} {source} {target} {split}")
-                infer_futures.append(future)
-
+                logger.debug(f"Inference task {i_future.tid} submitted: {model} {source} {target} {split}")
+                infer_futures.append(i_future)
 
 
     # Wait for all the futures to complete
