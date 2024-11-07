@@ -1,4 +1,8 @@
-""" Post-processing results from Cross-Study Analysis (CSA) runs. """
+"""Cross-study analysis (CSA) post-processing utilities.
+
+This module provides utilities for post-processing results from cross-study analysis runs,
+including runtime analysis and performance metrics calculation.
+"""
 
 import json
 import os
@@ -9,28 +13,26 @@ from typing import Optional, Union
 import pandas as pd
 from sklearn.metrics import r2_score, mean_absolute_error
 from scipy.stats import pearsonr, spearmanr, sem
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from improvelib.metrics import compute_metrics
 
 
-def splits_generator():
-    """ Generates data splits for cross-study analysis. """
-    return None
-
-
-def apply_decimal_to_dataframe(df: pd.DataFrame, decimal_places: int=4):
-    """
-    Applies a specified number of decimal places to all numeric columns in a
-    DataFrame, handling potential errors.
-
+def apply_decimal_to_dataframe(df: pd.DataFrame, decimal_places: int=4) -> pd.DataFrame:
+    """Apply specified decimal places to numeric DataFrame columns.
+    
     Args:
-        df (pd.DataFrame): DataFrame to modify
-        decimal_places (int): The desired number of decimal places
-
+        df: DataFrame to modify.
+        decimal_places: Desired number of decimal places. Defaults to 4.
+        
     Returns:
-        modified DataFrame with the specified decimal format applied where possible
+        Modified DataFrame with specified decimal format applied to numeric columns.
+        
+    Raises:
+        Exception: If error occurs while formatting specific columns.
     """
-
     for col in df.select_dtypes(include='number').columns:
         try:
             # Round values to the specified number of decimal places
@@ -41,23 +43,30 @@ def apply_decimal_to_dataframe(df: pd.DataFrame, decimal_places: int=4):
     return df
 
 
-def csa_postprocess(res_dir_path,
+def csa_postprocess(res_dir_path: Union[str, Path],
                     model_name: str,
                     y_col_name: str,
                     metric_type: str="regression",
                     decimal_places: int=4,
                     outdir: str="./",
-                    verbose: bool=False):
-    """ Generates cross-study analysis tables and a figure.
-
+                    verbose: bool=False) -> pd.DataFrame:
+    """Generate cross-study analysis tables and figures.
+    
     Args:
-        res_dir_path: full path to the cross-study results dir
-        model_name (str): name of the model (e.g., GraphDRP, IGTD)
-        y_col_name (str): prediction variable
-        outdir: full path to save the csa post-processing results
-
-    Return:
-        performance scores for all source-target pairs and splits
+        res_dir_path: Path to cross-study results directory.
+        model_name: Name of the model (e.g., GraphDRP, IGTD).
+        y_col_name: Name of prediction variable.
+        metric_type: Type of metrics to compute. Defaults to "regression".
+        decimal_places: Number of decimal places for results. Defaults to 4.
+        outdir: Path to save results. Defaults to "./".
+        verbose: Whether to print detailed output. Defaults to False.
+        
+    Returns:
+        Performance scores for all source-target pairs and splits.
+        
+    Raises:
+        FileNotFoundError: If prediction files are not found.
+        Exception: If unexpected error occurs during processing.
     """
     infer_dir_name = "infer"
     infer_dir_path = res_dir_path/infer_dir_name
@@ -65,16 +74,64 @@ def csa_postprocess(res_dir_path,
 
     os.makedirs(outdir, exist_ok=True)
 
-    def calc_mae(y_true, y_pred):
-        return sklearn.metrics.mean_absolute_error(y_true=y_true, y_pred=y_pred)
+    def calc_mae(y_true: Union[np.ndarray, list], y_pred: Union[np.ndarray, list]) -> float:
+        """Calculates the Mean Absolute Error (MAE) between true and predicted values.
+        
+        Args:
+            y_true (np.ndarray or list): Array of true values.
+            y_pred (np.ndarray or list): Array of predicted values.
 
-    def calc_r2(y_true, y_pred):
-        return sklearn.metrics.r2_score(y_true=y_true, y_pred=y_pred)
+        Returns:
+            float: The mean absolute error between `y_true` and `y_pred`.
+        
+        Raises:
+            ValueError: If `y_true` and `y_pred` have different lengths.
+        """
+        return mean_absolute_error(y_true=y_true, y_pred=y_pred)
 
-    def calc_pcc(y_true, y_pred):
+    def calc_r2(y_true: Union[np.ndarray, list], y_pred: Union[np.ndarray, list]) -> float:
+        """Calculates the R-squared (R²) score between true and predicted values.
+        
+        Args:
+            y_true (np.ndarray or list): Array of true values.
+            y_pred (np.ndarray or list): Array of predicted values.
+
+        Returns:
+            float: The R-squared score between `y_true` and `y_pred`.
+        
+        Raises:
+            ValueError: If `y_true` and `y_pred` have different lengths.
+        """
+        return r2_score(y_true=y_true, y_pred=y_pred)
+
+    def calc_pcc(y_true: Union[np.ndarray, list], y_pred: Union[np.ndarray, list]) -> float:
+        """Calculates the Pearson Correlation Coefficient between true and predicted values.
+        
+        Args:
+            y_true (np.ndarray or list): Array of true values.
+            y_pred (np.ndarray or list): Array of predicted values.
+
+        Returns:
+            float: The Pearson correlation coefficient between `y_true` and `y_pred`.
+        
+        Raises:
+            ValueError: If `y_true` and `y_pred` have different lengths.
+        """
         return pearsonr(y_true, y_pred)[0]
 
-    def calc_scc(y_true, y_pred):
+    def calc_scc(y_true: Union[np.ndarray, list], y_pred: Union[np.ndarray, list]) -> float:
+        """Calculates the Spearman Correlation Coefficient between true and predicted values.
+        
+        Args:
+            y_true (np.ndarray or list): Array of true values.
+            y_pred (np.ndarray or list): Array of predicted values.
+
+        Returns:
+            float: The Spearman correlation coefficient between `y_true` and `y_pred`.
+        
+        Raises:
+            ValueError: If `y_true` and `y_pred` have different lengths.
+        """
         return spearmanr(y_true, y_pred)[0]
 
     scores_names = {"mae": calc_mae,
@@ -121,8 +178,6 @@ def csa_postprocess(res_dir_path,
 
                     split = int(split_dir.name.split("split_")[1])
                     jj[split] = sc
-                    # df = pd.DataFrame(jj)
-                    # df = df.T.reset_index().rename(columns={"index": "split"})
 
                     # Clean
                     del preds, y_true, y_pred, sc, split
@@ -164,7 +219,6 @@ def csa_postprocess(res_dir_path,
     std_tb = {}
     for met in scores.met.unique():
         df = scores[scores.met == met]
-        # df = df.sort_values(["src", "trg", "met", "split"])
         df['model'] = model_name
         df.to_csv(outdir / f"{met}_scores.csv", index=True)
         # Mean
@@ -181,13 +235,6 @@ def csa_postprocess(res_dir_path,
         print(f"{met} std:\n{std}")
         std_tb[met] = std
 
-    # Quick test
-    # met="mse"; src="CCLE"; trg="GDSCv1" 
-    # print(f"src: {src}; trg: {trg}; met: {met}; mean: {scores[(scores.met==met) & (scores.src==src) & (scores.trg==trg)].value.mean()}")
-    # print(f"src: {src}; trg: {trg}; met: {met}; std:  {scores[(scores.met==met) & (scores.src==src) & (scores.trg==trg)].value.std()}")
-    # met="mse"; src="CCLE"; trg="GDSCv2" 
-    # print(f"src: {src}; trg: {trg}; met: {met}; mean: {scores[(scores.met==met) & (scores.src==src) & (scores.trg==trg)].value.mean()}")
-    # print(f"src: {src}; trg: {trg}; met: {met}; std:  {scores[(scores.met==met) & (scores.src==src) & (scores.trg==trg)].value.std()}")
 
     # Generate densed csa table
     df_on = scores[scores.src == scores.trg].reset_index()
@@ -222,16 +269,29 @@ def runtime_analysis(res_dir_path: Union[str, Path],
                      res_fname: str='runtime.json',
                      decimal_places: int=4,
                      verbose: bool=False) -> Union[pd.DataFrame, None]:
-    """
+    """Analyze runtime performance for different stages.
+    
     Args:
-        res_dir_path (str or Path): output dir containing all the csa results
-            (e.g., improve_output, parsl_exp)
-        stage_dir_name (str): dir containing specific stage results (e.g.,
-            ml_data, models, infer)
-        res_fname (str): file name containing raw runtime results
-
+        res_dir_path: Output directory containing all CSA results.
+        stage_dir_name: Directory containing specific stage results (e.g., ml_data, models, infer).
+        model_name: Name of the model being analyzed.
+        res_fname: File name containing raw runtime results. Defaults to 'runtime.json'.
+        decimal_places: Number of decimal places for results. Defaults to 4.
+        verbose: Whether to print detailed output. Defaults to False.
+        
     Returns:
-        pd.DataFrame (aggregated results) or None (if results are not available)
+        pd.DataFrame or None: Aggregated runtime results containing:
+            - src: Source dataset name
+            - trg: Target dataset name
+            - split: Split number
+            - hours: Runtime hours
+            - minutes: Runtime minutes
+            - tot_mins: Total runtime in minutes
+            - model: Model name
+            Returns None if no results are available.
+            
+    Warnings:
+        UserWarning: If runtime files are not found.
     """
     stage_dir_path = Path(res_dir_path) / stage_dir_name
     stage_dirs = sorted(list(stage_dir_path.glob("*")))
@@ -247,7 +307,7 @@ def runtime_analysis(res_dir_path: Union[str, Path],
         split_dirs = sorted(list((dir_path).glob(f"split_*")))
 
         for split_dir in split_dirs:  # split_dirs: split_0, split_1
-            runtime_file_path = split_dir / res_fname  # TODO: runtime.json, ...
+            runtime_file_path = split_dir / res_fname
             try:
                 with open(runtime_file_path, 'r') as file:
                     rr = json.load(file)
@@ -272,16 +332,17 @@ def runtime_analysis(res_dir_path: Union[str, Path],
 def plot_color_coded_csa_table(df: pd.DataFrame,
                                filepath: str="./",
                                title: str=None):
-    """
-    Creates a color-coded table with shades of red and green based on the
-    values and saves it as a figure.
-
+    """Creates and saves a color-coded table as a heatmap figure, with values 
+    shaded from red to green based on their relative values.
+    
     Args:
-        data (dict): Dictionary containing the data for the table.
-        filename (str): The filename for the saved figure.
+        df: DataFrame containing the data to visualize.
+        filepath: Path where the figure will be saved. Defaults to "./".
+        title: Title for the plot. Defaults to None.
+        
+    Returns:
+        None: Saves the plot as an image file to the specified filepath.
     """
-    import seaborn as sns
-    import matplotlib.pyplot as plt
 
     # Create a DataFrame
     df = pd.DataFrame(df)
@@ -289,7 +350,6 @@ def plot_color_coded_csa_table(df: pd.DataFrame,
 
     # Create a color map from red to green
     # https://seaborn.pydata.org/tutorial/color_palettes.html
-    # cmap = sns.diverging_palette(220, 20, as_cmap=True).reversed()
     cmap = sns.diverging_palette(145, 300, s=60, as_cmap=True).reversed()
 
     # Plot the heatmap
