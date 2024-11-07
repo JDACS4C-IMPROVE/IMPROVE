@@ -28,16 +28,17 @@ def apply_decimal_to_dataframe(df: pd.DataFrame, decimal_places: int=4) -> pd.Da
         decimal_places: Desired number of decimal places. Defaults to 4.
         
     Returns:
-        Modified DataFrame with specified decimal format applied to numeric columns.
+        pd.DataFrame: Modified DataFrame with specified decimal format applied to numeric columns.
         
     Raises:
         Exception: If error occurs while formatting specific columns.
     """
     for col in df.select_dtypes(include='number').columns:
         try:
-            # Round values to the specified number of decimal places
+            # Round each numeric column to the specified number of decimal places
             df[col] = df[col].round(decimal_places)
         except Exception as e:
+            # Log an error message if rounding fails for a column
             print(f"Error formatting column '{col}': {e}")
 
     return df
@@ -62,15 +63,22 @@ def csa_postprocess(res_dir_path: Union[str, Path],
         verbose: Whether to print detailed output. Defaults to False.
         
     Returns:
-        Performance scores for all source-target pairs and splits.
+        pd.DataFrame: Performance scores DataFrame containing:
+            - met: Metric name
+            - split: Split number
+            - value: Score value
+            - src: Source dataset name
+            - trg: Target dataset name
+            - model: Model name
         
     Raises:
         FileNotFoundError: If prediction files are not found.
         Exception: If unexpected error occurs during processing.
     """
     infer_dir_name = "infer"
-    infer_dir_path = res_dir_path/infer_dir_name
-    dirs = sorted(list(infer_dir_path.glob("*-*")));  # print(dirs)
+    infer_dir_path = res_dir_path / infer_dir_name
+    # List all directories matching the pattern "*-*" in the infer directory
+    dirs = sorted(list(infer_dir_path.glob("*-*")))
 
     os.makedirs(outdir, exist_ok=True)
 
@@ -78,8 +86,8 @@ def csa_postprocess(res_dir_path: Union[str, Path],
         """Calculates the Mean Absolute Error (MAE) between true and predicted values.
         
         Args:
-            y_true (np.ndarray or list): Array of true values.
-            y_pred (np.ndarray or list): Array of predicted values.
+            y_true: Array of true values.
+            y_pred: Array of predicted values.
 
         Returns:
             float: The mean absolute error between `y_true` and `y_pred`.
@@ -93,8 +101,8 @@ def csa_postprocess(res_dir_path: Union[str, Path],
         """Calculates the R-squared (R²) score between true and predicted values.
         
         Args:
-            y_true (np.ndarray or list): Array of true values.
-            y_pred (np.ndarray or list): Array of predicted values.
+            y_true: Array of true values.
+            y_pred: Array of predicted values.
 
         Returns:
             float: The R-squared score between `y_true` and `y_pred`.
@@ -108,8 +116,8 @@ def csa_postprocess(res_dir_path: Union[str, Path],
         """Calculates the Pearson Correlation Coefficient between true and predicted values.
         
         Args:
-            y_true (np.ndarray or list): Array of true values.
-            y_pred (np.ndarray or list): Array of predicted values.
+            y_true: Array of true values.
+            y_pred: Array of predicted values.
 
         Returns:
             float: The Pearson correlation coefficient between `y_true` and `y_pred`.
@@ -123,8 +131,8 @@ def csa_postprocess(res_dir_path: Union[str, Path],
         """Calculates the Spearman Correlation Coefficient between true and predicted values.
         
         Args:
-            y_true (np.ndarray or list): Array of true values.
-            y_pred (np.ndarray or list): Array of predicted values.
+            y_true: Array of true values.
+            y_pred: Array of predicted values.
 
         Returns:
             float: The Spearman correlation coefficient between `y_true` and `y_pred`.
@@ -139,22 +147,14 @@ def csa_postprocess(res_dir_path: Union[str, Path],
                     "pcc": calc_pcc,
                     "scc": calc_scc}
 
-    # ====================
-    # Aggregate raw scores
-    # ====================
-
     preds_file_name = "test_y_data_predicted.csv"
-
     sep = ','
     scores_fpath = outdir / "all_scores.csv"
-
     missing_pred_files = []
 
-    # Check if data was already aggregated
     if scores_fpath.exists(): 
         print("Load scores")
         scores = pd.read_csv(scores_fpath, sep=sep)
-
     else:
         print("Calc scores")
         dfs = []
@@ -164,22 +164,19 @@ def csa_postprocess(res_dir_path: Union[str, Path],
             trg = str(dir_path.name).split("-")[1]
             split_dirs = sorted(list((dir_path).glob(f"split_*")))
 
-            jj = {}  # dict (key: split id, value: dict of scores)
+            jj = {}
 
             for split_dir in split_dirs:
                 preds_file_path = split_dir / preds_file_name
                 try:
+                    # Read predicted and true values from CSV
                     preds = pd.read_csv(preds_file_path, sep=sep)
-
-                    # Compute scores
                     y_true = preds[f"{y_col_name}_true"].values
                     y_pred = preds[f"{y_col_name}_pred"].values
+                    # Compute metrics for the current split
                     sc = compute_metrics(y_true, y_pred, metric_type=metric_type)
-
                     split = int(split_dir.name.split("split_")[1])
                     jj[split] = sc
-
-                    # Clean
                     del preds, y_true, y_pred, sc, split
 
                 except FileNotFoundError:
@@ -189,7 +186,6 @@ def csa_postprocess(res_dir_path: Union[str, Path],
                 except Exception as e:
                     print(f"An unexpected error occurred: {e}")
 
-            # Convert dict to df, and aggregate dfs
             df = pd.DataFrame(jj)
             df = df.stack().reset_index()
             df.columns = ['met', 'split', 'value']
@@ -198,7 +194,6 @@ def csa_postprocess(res_dir_path: Union[str, Path],
             if df.empty is False:
                 dfs.append(df)
 
-        # Concat dfs and save
         scores = pd.concat(dfs, axis=0)
         scores['model'] = model_name
         scores.to_csv(outdir / "all_scores.csv", index=False)
@@ -210,33 +205,29 @@ def csa_postprocess(res_dir_path: Union[str, Path],
                     line = 'infer' + str(line).split('infer')[1]
                     f.write(line + "\n")
 
-    # Average across splits
+    # Calculate mean and standard deviation for each metric
     sc_mean = scores.groupby(["met", "src", "trg"])["value"].mean().reset_index()
     sc_std = scores.groupby(["met", "src", "trg"])["value"].std().reset_index()
 
-    # Generate csa table
     mean_tb = {}
     std_tb = {}
     for met in scores.met.unique():
         df = scores[scores.met == met]
         df['model'] = model_name
         df.to_csv(outdir / f"{met}_scores.csv", index=True)
-        # Mean
         mean = df.groupby(["src", "trg"])["value"].mean()
         mean = mean.unstack()
         mean = apply_decimal_to_dataframe(mean, decimal_places)
         mean.to_csv(outdir / f"{met}_mean_csa_table.csv", index=True)
         print(f"{met} mean:\n{mean}")
         mean_tb[met] = mean
-        # Std
         std = df.groupby(["src", "trg"])["value"].std()
         std = std.unstack()
         std.to_csv(outdir / f"{met}_std_csa_table.csv", index=True)
         print(f"{met} std:\n{std}")
         std_tb[met] = std
 
-
-    # Generate densed csa table
+    # Separate within-dataset and cross-dataset results
     df_on = scores[scores.src == scores.trg].reset_index()
     on_mean = df_on.groupby(["met"])["value"].mean().reset_index().rename(columns={"value": "mean"})
     on_std = df_on.groupby(["met"])["value"].std().reset_index().rename(columns={"value": "std"})
@@ -255,7 +246,6 @@ def csa_postprocess(res_dir_path: Union[str, Path],
         print(f"Off-diag mean:\n{off_mean}")
         print(f"Off-diag std: \n{off_std}")
 
-    # Combine dfs
     df = pd.concat([on, off], axis=0).sort_values("met")
     df['model'] = model_name
     df.to_csv(outdir / "densed_csa_table.csv", index=False)
@@ -299,16 +289,17 @@ def runtime_analysis(res_dir_path: Union[str, Path],
     missing_files = []
     jj = []
 
-    for dir_path in stage_dirs:  # stage_dirs: CCLE-CCLE, CCLE-CTRPv2, ...
+    for dir_path in stage_dirs:
         dir_name = str(dir_path.name).split("-")
         src = dir_name[0]
         trg = dir_name[1] if len(dir_name) > 1 else 'NA'
 
         split_dirs = sorted(list((dir_path).glob(f"split_*")))
 
-        for split_dir in split_dirs:  # split_dirs: split_0, split_1
+        for split_dir in split_dirs:
             runtime_file_path = split_dir / res_fname
             try:
+                # Load runtime data from JSON file
                 with open(runtime_file_path, 'r') as file:
                     rr = json.load(file)
                 rr['src'] = src
@@ -324,6 +315,7 @@ def runtime_analysis(res_dir_path: Union[str, Path],
     if len(jj) > 0:
         df = pd.DataFrame(jj)
         df = df.replace(to_replace='NA', value=None)
+        # Calculate total runtime in minutes
         df['tot_mins'] = df['hours'] * 60 + df['minutes']
         df['model'] = model_name
     return df
@@ -332,8 +324,7 @@ def runtime_analysis(res_dir_path: Union[str, Path],
 def plot_color_coded_csa_table(df: pd.DataFrame,
                                filepath: str="./",
                                title: str=None):
-    """Creates and saves a color-coded table as a heatmap figure, with values 
-    shaded from red to green based on their relative values.
+    """Creates and saves a color-coded table as a heatmap figure.
     
     Args:
         df: DataFrame containing the data to visualize.
@@ -343,27 +334,21 @@ def plot_color_coded_csa_table(df: pd.DataFrame,
     Returns:
         None: Saves the plot as an image file to the specified filepath.
     """
-
-    # Create a DataFrame
     df = pd.DataFrame(df)
     df.set_index('src', inplace=True)
 
-    # Create a color map from red to green
-    # https://seaborn.pydata.org/tutorial/color_palettes.html
+    # Create a diverging color palette from red to green
     cmap = sns.diverging_palette(145, 300, s=60, as_cmap=True).reversed()
 
-    # Plot the heatmap
     plt.figure(figsize=(10, 8))
     ax = sns.heatmap(df, annot=True, cmap=cmap, center=0, cbar=False,
                      linewidths=0.5, linecolor='gray', fmt=".2f")
 
-    # Set the labels and title
     ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
 
-    # Set the title
     plt.title(title)
 
-    # Save the plot
+    # Save the heatmap as an image file
     plt.savefig(filepath, bbox_inches='tight', dpi=150)
     plt.close()
