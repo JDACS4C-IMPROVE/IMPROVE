@@ -328,7 +328,7 @@ def workflow(config: csa.Config,
     # Wait for all the futures to complete
     logger.info("Waiting for infer tasks to complete.")
 
-    while future in infer_futures:
+    while infer_futures:
 
         # Check if the future is done
         for future in infer_futures:
