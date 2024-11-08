@@ -5,6 +5,12 @@ runtime performance analysis and prediction performance analysis.
 
 Example:
     python csa_postproc.py --res_dir res.csa --model_name GraphDRP --y_col_name auc
+    
+Command-line arguments:
+    --res_dir: Directory containing the CSA results.
+    --model_name: Name of the model (e.g., GraphDRP, DeepCDR).
+    --y_col_name: Name of the target column. Defaults to 'auc'.
+    --outdir: Directory to save post-processing results. Optional.
 """
 
 import argparse
