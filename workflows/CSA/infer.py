@@ -305,26 +305,27 @@ def workflow(config: csa.Config,
     while infer_futures :
         for future in infer_futures:
             if future.done():
-                print(f"Future {future.tid} is done.")
+                logger.info(f"Future(infer) {future.tid} is done.")
                 # remove the future from the list
                 infer_futures.remove(future)
 
-            for data in future.outputs:
-                if data.done():
-                    # print(data.result().url)
-                    # print(data.filepath)
-                    # print(data.file_obj)
-                    if os.path.isfile(data.filepath):
-                        print(f"{data.tid} is done.")
-                        print(f"Name {data.filename} is a file.")
-                    elif os.path.isdir(data.filepath):
-                        print(f"{data.tid} is done.")
-                        print(f"Name {data.filename} is a directory.")
+                for data in future.outputs:
+                    if data.done():
+                        # print(data.result().url)
+                        # print(data.filepath)
+                        # print(data.file_obj)
+                        if os.path.isfile(data.filepath):
+                            print(f"{data.tid} is done.")
+                            print(f"Name {data.filename} is a file.")
+                        elif os.path.isdir(data.filepath):
+                            print(f"{data.tid} is done.")
+                            print(f"Name {data.filename} is a directory.")
+                        else:
+                            print(f"Data {data.tid} is neither file nor directory.")
                     else:
-                        print(f"Data {data.tid} is neither file nor directory.")
-                else:
-                    print(f"Data {data.tid} - {data.filename}  is not done.")    
-        time.sleep(10)    
+                        print(f"Data {data.tid} - {data.filename}  is not done.")
+        logger.info(f"Waiting for 30 seconds. {len(infer_futures)} infer tasks remaining.")    
+        time.sleep(30)    
 
 
     logger.info("Workflow completed.")
