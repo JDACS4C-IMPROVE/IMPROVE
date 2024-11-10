@@ -1,6 +1,5 @@
 IMPROVE_MODEL_NAME=deepttc
-IMPROVE_STAGE=preprocess
-IMPROVE_MODEL_SCRIPT=${IMPROVE_MODEL_NAME}_${IMPROVE_STAGE}_improve.py
+IMPROVE_MODEL_SCRIPT=${IMPROVE_MODEL_NAME}_train_improve.py
 
 # Set env if CANDLE_MODEL is not in same directory as this script
 IMPROVE_MODEL_DIR=${IMPROVE_MODEL_DIR:-$( dirname -- "$0" )}
