@@ -61,10 +61,15 @@ params = cfg.initialize_parameters(
 print("Loaded params")
 
 # Model scripts
-model_name = params["model_name"]
-preprocess_python_script = f'{model_name}_preprocess_improve.py'
-train_python_script = f'{model_name}_train_improve.py'
-infer_python_script = f'{model_name}_infer_improve.py'
+#model_name = params["model_name"]
+#preprocess_python_script = f'{model_name}_preprocess_improve.py'
+#train_python_script = f'{model_name}_train_improve.py'
+#infer_python_script = f'{model_name}_infer_improve.py'
+
+#Model scripts
+preprocess_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_preprocess_improve.py")
+train_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
+infer_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_infer_improve.py")
 print("Created script names.")
 
 # Specify dirs
@@ -85,6 +90,7 @@ print("MAIN_LOG_DIR:     ", MAIN_LOG_DIR)
 splits_dir = Path(params['input_dir']) / params['splits_dir']
 print("Created splits path.")
 print("splits_dir: ", splits_dir)
+
 
 
 
