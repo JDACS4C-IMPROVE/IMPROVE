@@ -1,8 +1,13 @@
 
 # Step-by-step instructions to run cross study analysis using Parsl on Lambda
 
+### 1. Create and activate a conda environment to support improvelib and Parsl
+```bash
+conda create -n parsl parsl numpy pandas scikit-learn pyyaml -y
+conda activate parsl
+```
 
-### 1. Clone the model repository
+### 2. Clone the model repository
 ```bash
 git clone <MODEL_REPO>
 cd MODEL_NAME
@@ -17,7 +22,7 @@ git checkout <BRANCH>
 2. Make sure to follow the IMPROVE lib [documentation](https://jdacs4c-improve.github.io/docs) to ensure the model is compliant with the IMPROVE framework
 
 
-### 2. Clone IMPROVE repo and set PYTHONPATH
+### 3. Clone IMPROVE repo and set PYTHONPATH
 Clone the [IMPROVE](https://github.com/JDACS4C-IMPROVE/IMPROVE/tree/develop) repository to a directory of your preference (outside your model directory).
 
 ```bash
@@ -29,7 +34,7 @@ source setup_improve.sh
 ```
 
 
-### 3. Download benchmark data for cross study analysis
+### 4. Download benchmark data for cross study analysis
 
 Download benchmark data to the data destination directory using [this](https://github.com/JDACS4C-IMPROVE/IMPROVE/blob/develop/scripts/get-benchmarks). For example:
 
@@ -71,7 +76,7 @@ csa_data/raw_data/
 ```
 
 
-### 4. To run cross study analysis using Parsl:
+### 5. To run cross study analysis using Parsl:
 **Configuration file**:
 **csa_params.ini** contains parameters necessary for the workflow. The user can change the parameters inside this configuration file.
 
