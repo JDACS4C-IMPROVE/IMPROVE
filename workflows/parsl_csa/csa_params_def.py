@@ -30,7 +30,7 @@ additional_definitions = [
     },
     {"name": "model_scripts_dir",
      "type": str,
-     "default": './', 
+     "default": './',
      "help": "Path to the model repository"
     },
     {"name": "model_environment",
