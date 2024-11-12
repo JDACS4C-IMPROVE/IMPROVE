@@ -1,7 +1,8 @@
 import sys
 import json
 import os
-from time import time
+import time
+#from time import time
 from typing import Sequence, Tuple, Union
 from pathlib import Path
 import logging
@@ -228,8 +229,8 @@ def workflow(config: csa.Config,
                 # need only one target dataset for trainig for now ; train file is source dataset specific and identical for all target datasets
                 target = config.target_datasets[0]
                 for split in config.splits:
-                    print(output_dir)
-                    print(os.getcwd())
+                    # print(output_dir)
+                    # print(os.getcwd())
                     logger.info(f"Trainig {model} on dataset {source} and {split}")
 
                     if model in model_config and source in model_config[model]:
@@ -275,60 +276,70 @@ def workflow(config: csa.Config,
             continue
 
         
-        for f in train_futures:
+        while train_futures:
 
-            # get source and split from future
-            # future result is a dictionary with source and split
-            
-            results = f.results
-            print(results)
+            logger.info(f"Waiting for training {len(train_futures)} tasks to complete.")
+            for f in train_futures:
 
-            model_dir = f.outputs[0].result().filepath
-            elements = model_dir.split("/")
-            split = elements[-1]
-            source = elements[-2]
-            
-            logger.info(f"Training task {f.tid} completed: {model} {source} {split}")
-            logger.debug(f"Path to model: {model_dir}")
-            for target in config.target_datasets:
-                logger.info(f"Infering {model} on dataset {source} and {target} for split {split}")
-                # infer(source, target, split)
-                options = infer_config(
-                    input_dir=input_dir, # input_dir is the output of the preprocess
-                    output_dir=output_dir, 
-                    model=model,
-                    source_dataset=source, 
-                    target_dataset=target,
-                    split=split)
+                # get source and split from future
+                # future result is a dictionary with source and split
                 
-                i_future = infer(
-                            script = infer_script,
-                            input_data_dir = options["input_dir"],
-                            input_model_dir = model_dir, # infer_options["model_dir"],
-                            output_dir = options["output_dir"],
-                            calc_infer_scores = True,
-                            y_col_name = config.y_col_name,
-                            conda_env = config.conda_env,
-                            inputs = [
-                                File(options["input_dir"]),
-                                File(options["model_dir"]),
-                            ],
-                            outputs = [
-                                File(options["output_dir"]),  
-                                File(options["stdout"]),
-                                File(options["stderr"]),
-                            ],
-                            stderr = options["stderr"],
-                            stdout = options["stdout"],
-                            )
-                logger.debug(f"Inference task {i_future.tid} submitted: {model} {source} {target} {split}")
-                infer_futures.append(i_future)
+                if f.done():
+                    if f.exception():
+                        logger.error(f"Future(training) {f.tid} has an exception: {f.exception()}")
+                    else:
+                        logger.info(f"Future(training) {f.tid} is done.")
+                        # logger.info(f"Output: {f.result()}")
+                    
+                    train_futures.remove(f)
 
+                    model_dir = f.outputs[0].result().filepath
+                    elements = model_dir.split("/")
+                    split = elements[-1]
+                    source = elements[-2]
+                    
+                    logger.info(f"Training task {f.tid} completed: {model} {source} {split}")
+                    logger.debug(f"Path to model: {model_dir}")
+                    for target in config.target_datasets:
+                        logger.info(f"Infering {model} on dataset {source} and {target} for split {split}")
+                        # infer(source, target, split)
+                        options = infer_config(
+                            input_dir=input_dir, # input_dir is the output of the preprocess
+                            output_dir=output_dir, 
+                            model=model,
+                            source_dataset=source, 
+                            target_dataset=target,
+                            split=split)
+                        
+                        i_future = infer(
+                                    script = infer_script,
+                                    input_data_dir = options["input_dir"],
+                                    input_model_dir = model_dir, # infer_options["model_dir"],
+                                    output_dir = options["output_dir"],
+                                    calc_infer_scores = True,
+                                    y_col_name = config.y_col_name,
+                                    conda_env = config.conda_env,
+                                    inputs = [
+                                        File(options["input_dir"]),
+                                        File(options["model_dir"]),
+                                    ],
+                                    outputs = [
+                                        File(options["output_dir"]),  
+                                        File(options["stdout"]),
+                                        File(options["stderr"]),
+                                    ],
+                                    stderr = options["stderr"],
+                                    stdout = options["stdout"],
+                                    )
+                        logger.debug(f"Inference task {i_future.tid} submitted: {model} {source} {target} {split}")
+                        infer_futures.append(i_future)
 
-    # Wait for all the futures to complete
-    logger.info("Waiting for infer tasks to complete.")
+            # Wait for all the futures to complete
+            time.sleep(30)
+            
+        logger.info("Waiting for infer tasks to complete.")
 
-    while future in infer_futures:
+    while infer_futures:
 
         # Check if the future is done
         for future in infer_futures:

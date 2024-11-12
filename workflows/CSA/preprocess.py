@@ -1,7 +1,8 @@
 import sys
 import json
 import os
-from time import time
+import time
+#from time import time
 from typing import Sequence, Tuple, Union
 from pathlib import Path
 import logging
@@ -294,23 +295,30 @@ def workflow(config: csa.Config,
         print(future.stderr)
         print(future.result())
 
-    for future in preprocess_futures:
-        for data in future.outputs:
-            if data.done():
-                # print(data.result().url)
-                # print(data.filepath)
-                # print(data.file_obj)
-                if os.path.isfile(data.filepath):
-                    print(f"{data.tid} is done.")
-                    print(f"Name {data.filename} is a file.")
-                elif os.path.isdir(data.filepath):
-                    print(f"{data.tid} is done.")
-                    print(f"Name {data.filename} is a directory.")
-                else:
-                    print(f"Data {data.tid} is neither file nor directory.")
-            else:
-                print(f"Data {data.tid} is not done.")    
-    
+    while preprocess_futures:
+        for future in preprocess_futures:
+            if future.done():
+                print(f"Future {future.tid} is done.")
+                # remove the future from the list
+                preprocess_futures.remove(future)
+                for data in future.outputs:
+                    if data.done():
+                        # print(data.result().url)
+                        # print(data.filepath)
+                        # print(data.file_obj)
+                        if os.path.isfile(data.filepath):
+                            print(f"{data.tid} is done.")
+                            print(f"Name {data.filename} is a file.")
+                        elif os.path.isdir(data.filepath):
+                            print(f"{data.tid} is done.")
+                            print(f"Name {data.filename} is a directory.")
+                        else:
+                            print(f"Data {data.tid} is neither file nor directory.")
+                    else:
+                        print(f"Data {data.tid} is not done.")
+                # sleep for 10 seconds
+            time.sleep(10)    
+        
 
 
     logger.info("Workflow completed.")

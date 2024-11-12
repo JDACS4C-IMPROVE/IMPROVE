@@ -17,7 +17,7 @@ from parsl.executors import HighThroughputExecutor
 from parsl.providers import LocalProvider
 from parsl.data_provider.files import File
 # from parsl.data_provider.staging import Staging
-
+import time
 
 
 from common import make_call
@@ -132,6 +132,9 @@ def infer(
     call = "echo 'Inferencing the model'"
     prefix = f"START=$(date +%s) ; echo Start:\t$START "
 
+    import logging
+    logger = logger = logging.getLogger(__name__)
+    
     if conda_env:
         conda= f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} "
     else:
@@ -194,7 +197,6 @@ def infer_config(
     try: 
         trained_model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split, make_dir=False)
     except FileNotFoundError as e:
-        logger.warning(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
         try:
             trained_model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=None, split=split, make_dir=False)
         except FileNotFoundError as e:
@@ -272,7 +274,6 @@ def workflow(config: csa.Config,
                             target_dataset=target,
                             split=split)
                         
-                        logger.debug(f"Training with {script} for {source} and {split}")
                         logger.debug(f"Infer options: {infer_options}")
                         future = infer(
                             script = script,
@@ -301,23 +302,30 @@ def workflow(config: csa.Config,
             logger.debug(f"Skipping model {model}")
             continue
 
-    for future in infer_futures:
-        for data in future.outputs:
-            if data.done():
-                # print(data.result().url)
-                # print(data.filepath)
-                # print(data.file_obj)
-                if os.path.isfile(data.filepath):
-                    print(f"{data.tid} is done.")
-                    print(f"Name {data.filename} is a file.")
-                elif os.path.isdir(data.filepath):
-                    print(f"{data.tid} is done.")
-                    print(f"Name {data.filename} is a directory.")
-                else:
-                    print(f"Data {data.tid} is neither file nor directory.")
-            else:
-                print(f"Data {data.tid} - {data.filename}  is not done.")    
-    
+    while infer_futures :
+        for future in infer_futures:
+            if future.done():
+                logger.info(f"Future(infer) {future.tid} is done.")
+                # remove the future from the list
+                infer_futures.remove(future)
+
+                for data in future.outputs:
+                    if data.done():
+                        # print(data.result().url)
+                        # print(data.filepath)
+                        # print(data.file_obj)
+                        if os.path.isfile(data.filepath):
+                            print(f"{data.tid} is done.")
+                            print(f"Name {data.filename} is a file.")
+                        elif os.path.isdir(data.filepath):
+                            print(f"{data.tid} is done.")
+                            print(f"Name {data.filename} is a directory.")
+                        else:
+                            print(f"Data {data.tid} is neither file nor directory.")
+                    else:
+                        print(f"Data {data.tid} - {data.filename}  is not done.")
+        logger.info(f"Waiting for 30 seconds. {len(infer_futures)} infer tasks remaining.")    
+        time.sleep(30)    
 
 
     logger.info("Workflow completed.")
