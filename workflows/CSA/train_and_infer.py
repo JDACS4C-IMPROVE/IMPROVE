@@ -1,7 +1,8 @@
 import sys
 import json
 import os
-from time import time
+import time
+#from time import time
 from typing import Sequence, Tuple, Union
 from pathlib import Path
 import logging
@@ -228,8 +229,8 @@ def workflow(config: csa.Config,
                 # need only one target dataset for trainig for now ; train file is source dataset specific and identical for all target datasets
                 target = config.target_datasets[0]
                 for split in config.splits:
-                    print(output_dir)
-                    print(os.getcwd())
+                    # print(output_dir)
+                    # print(os.getcwd())
                     logger.info(f"Trainig {model} on dataset {source} and {split}")
 
                     if model in model_config and source in model_config[model]:
