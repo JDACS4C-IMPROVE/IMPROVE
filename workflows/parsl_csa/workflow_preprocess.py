@@ -1,11 +1,11 @@
 import json
 import logging
+import os
 import sys
 import time
 from pathlib import Path
 from typing import Sequence, Tuple, Union
 
-import os
 import parsl
 from parsl import python_app
 from parsl.config import Config
@@ -39,6 +39,7 @@ config_lambda = Config(
             address='127.0.0.1',
             label="htex_preprocess",
             cpu_affinity="alternating",
+            available_accelerators=params["available_accelerators"],
             #max_workers_per_node=2, ## IS NOT SUPPORTED IN Parsl version: 2023.06.19. CHECK HOW TO USE THIS???
             worker_debug=True,
             worker_port_range=worker_port_range,
@@ -198,7 +199,8 @@ logger = logging.getLogger(f"{params['model_name']}")
 params['ml_data_dir'] = Path(params['output_dir']) / 'ml_data' 
 
 # Model scripts
-params['preprocess_python_script'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_preprocess_improve.py")
+params['preprocess_python_script'] = os.path.join(
+    params['model_scripts_dir'], f"{params['model_name']}_preprocess_improve.py")
 
 ##########################################################################
 ##################### START PARSL PARALLEL EXECUTION #####################
