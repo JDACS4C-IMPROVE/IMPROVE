@@ -143,7 +143,8 @@ def preprocess(inputs=[]):
                               str("--test_split_file " + str(test_split_file)),
                               str("--input_dir " + params['input_dir']),
                               str("--output_dir " + str(ml_data_dir)),
-                              str("--y_col_name " + str(params['y_col_name']))
+                              str("--y_col_name " + str(params['y_col_name'])),
+                              str("--input_supp_data_dir " + str(params['input_supp_data_dir']))
             ]
         else:
             preprocess_run = ["bash", "execute_in_conda.sh",
@@ -154,7 +155,8 @@ def preprocess(inputs=[]):
                               "--test_split_file", str(test_split_file),
                               "--input_dir", params['input_dir'], 
                               "--output_dir", str(ml_data_dir),
-                              "--y_col_name", str(params['y_col_name'])
+                              "--y_col_name", str(params['y_col_name']),
+                              "--input_supp_data_dir", str(params['input_supp_data_dir'])
             ]
 
         result = subprocess.run(preprocess_run,

@@ -63,5 +63,10 @@ additional_definitions = [
      "type": str,
      "default": '',
      "help": "Singularity image file of the model"
+    },
+    {"name": "input_supp_data_dir",
+     "type": str,
+     "default": '',
+     "help": "Dir containing supplementary data in addition to benchmark data (usually model-specific data)."
     }
-    ]
+]
