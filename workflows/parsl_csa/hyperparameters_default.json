@@ -116,6 +116,28 @@
             "learning_rate": 0.0004
         }
     },
+    "tcnns": {
+        "CCLE": {
+            "batch_size": 100,
+            "learning_rate": 0.0001
+        },
+        "CTRPv2": {
+            "batch_size": 100,
+            "learning_rate": 0.0001
+        },
+        "GDSCv1": {
+            "batch_size": 100,
+            "learning_rate": 0.0001
+        },
+        "GDSCv2": {
+            "batch_size": 100,
+            "learning_rate": 0.0001
+        },
+        "gCSI": {
+            "batch_size": 100,
+            "learning_rate": 0.0001
+        }
+    },
     "uno": {
         "CCLE": {
             "batch_size": 32,
