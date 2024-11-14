@@ -1,11 +1,11 @@
 import json
 import logging
+import os
 import sys
 import time
 from pathlib import Path
 from typing import Sequence, Tuple, Union
 
-import os
 import parsl
 from parsl import python_app
 from parsl.config import Config
@@ -39,6 +39,7 @@ config_lambda = Config(
             address='127.0.0.1',
             label="htex_preprocess",
             cpu_affinity="alternating",
+            available_accelerators=params["available_accelerators"],
             #max_workers_per_node=2, ## IS NOT SUPPORTED IN Parsl version: 2023.06.19. CHECK HOW TO USE THIS???
             worker_debug=True,
             worker_port_range=worker_port_range,
@@ -142,7 +143,8 @@ def preprocess(inputs=[]):
                               str("--test_split_file " + str(test_split_file)),
                               str("--input_dir " + params['input_dir']),
                               str("--output_dir " + str(ml_data_dir)),
-                              str("--y_col_name " + str(params['y_col_name']))
+                              str("--y_col_name " + str(params['y_col_name'])),
+                              str("--input_supp_data_dir " + str(params['input_supp_data_dir']))
             ]
         else:
             preprocess_run = ["bash", "execute_in_conda.sh",
@@ -153,7 +155,8 @@ def preprocess(inputs=[]):
                               "--test_split_file", str(test_split_file),
                               "--input_dir", params['input_dir'], 
                               "--output_dir", str(ml_data_dir),
-                              "--y_col_name", str(params['y_col_name'])
+                              "--y_col_name", str(params['y_col_name']),
+                              "--input_supp_data_dir", str(params['input_supp_data_dir'])
             ]
 
         result = subprocess.run(preprocess_run,
@@ -164,7 +167,7 @@ def preprocess(inputs=[]):
         # Logger
         print(f"returncode = {result.returncode}")
         result_file_name_stdout = ml_data_dir / 'logs.txt'
-        if ml_data_dir.exists() is False: 
+        if ml_data_dir.exists() is False:
             os.makedirs(ml_data_dir, exist_ok=True)
         with open(result_file_name_stdout, 'w') as file:
             file.write(result.stdout)
@@ -198,7 +201,8 @@ logger = logging.getLogger(f"{params['model_name']}")
 params['ml_data_dir'] = Path(params['output_dir']) / 'ml_data' 
 
 # Model scripts
-params['preprocess_python_script'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_preprocess_improve.py")
+params['preprocess_python_script'] = os.path.join(
+    params['model_scripts_dir'], f"{params['model_name']}_preprocess_improve.py")
 
 ##########################################################################
 ##################### START PARSL PARALLEL EXECUTION #####################
