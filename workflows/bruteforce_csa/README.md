@@ -1,9 +1,9 @@
 # Step-by-step instructions to run cross study analysis using the brute force method
 
-### 2. Clone the model repository
+### 1. Clone the model repository
 ```bash
 git clone <MODEL_REPO>
-cd MODEL_NAME
+cd <MODEL_REPO>
 git checkout <BRANCH>
 ```
 
@@ -16,6 +16,7 @@ git checkout <BRANCH>
 3. If the model uses supplemental data (i.e. author data), use the provided script in the repo to download this data (e.g. PathDSP/download_author_data.sh).
 
 ### 2. Set up model environment
+Follow the steps in the model repo to set up the environment for the model and activate the model.
 
 ```bash
 conda activate <MODEL_ENV>
@@ -40,43 +41,11 @@ Download benchmark data to the data destination directory using [this](https://g
 ./scripts/get-benchmarks ./workflows/bruteforce_csa
 ```
 
-The downloaded benchmark data tree is shown below:
-```
-csa_data/raw_data/
-├── splits
-│   ├── CCLE_all.txt
-│   ├── CCLE_split_0_test.txt
-│   ├── CCLE_split_0_train.txt
-│   ├── CCLE_split_0_val.txt
-│   ├── CCLE_split_1_test.txt
-│   ├── CCLE_split_1_train.txt
-│   ├── CCLE_split_1_val.txt
-│   ├── ...
-│   ├── GDSCv2_split_9_test.txt
-│   ├── GDSCv2_split_9_train.txt
-│   └── GDSCv2_split_9_val.txt
-├── x_data
-│   ├── cancer_copy_number.tsv
-│   ├── cancer_discretized_copy_number.tsv
-│   ├── cancer_DNA_methylation.tsv
-│   ├── cancer_gene_expression.tsv
-│   ├── cancer_miRNA_expression.tsv
-│   ├── cancer_mutation_count.tsv
-│   ├── cancer_mutation_long_format.tsv
-│   ├── cancer_mutation.parquet
-│   ├── cancer_RPPA.tsv
-│   ├── drug_ecfp4_nbits512.tsv
-│   ├── drug_info.tsv
-│   ├── drug_mordred_descriptor.tsv
-│   └── drug_SMILES.tsv
-└── y_data
-    └── response.tsv
-```
+### 4. Configure the parameters for cross study analysis
 
+#### These should be changed in csa_bruteforce_params.ini:
 
-### These should be changed in csa_bruteforce_params.ini:
-
-`model_scripts_dir` set to the path to the model directory containing the model scripts (from step 2).
+`model_scripts_dir` set to the path to the model directory containing the model scripts (from step 1).
 
 `model_name` set to your model name (this should have the same capitalization pattern as your model scripts, e.g. deepttc for deepttc_preprocess_improve.py, etc).
 
@@ -86,28 +55,26 @@ csa_data/raw_data/
 
 `input_supp_data_dir` add this if your model uses supplemental data. Set to the path to this folder, or the name of the folder if it is located in `model_scripts_dir`.
 
-### These you may want to change in csa_bruteforce_params.ini:
+#### These you may want to change in csa_bruteforce_params.ini:
 
 `csa_outdir` is `./bruteforce_output` but you can change to whatever directory you like.
 
 `source_datasets`, `target_datasets`, and `split_nums` can be modified for testing purposes or quicker runs.
 
-
-## Running workflow
-
-```
-
-2. Set up conda -- Follow instructions in your repo.
-
-3. Activate conda -- Follow instructions in your repo.
-
-4. Set up improve
-```
-source setup_improve.py
-```
-5. Run workflow
+### 5. Run brute force workflow
+To run with provided config file:
 ```
 python csa_bruteforce_wf.py
 ```
 
-Note: If submitting a job, steps 3-5 should be in the shell script.
+To run with an alternate config file:
+```
+python csa_bruteforce_wf.py --config <YOUR_CONFIG_FILE>
+```
+
+If submitting a job:
+```
+conda activate <MODEL_ENV>
+export PYTHONPATH=/YOUR/PATH/TO/IMPROVE
+python csa_bruteforce_wf.py --config <YOUR_CONFIG_FILE>
+```
