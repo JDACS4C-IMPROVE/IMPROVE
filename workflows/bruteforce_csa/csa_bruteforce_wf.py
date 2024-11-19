@@ -91,8 +91,18 @@ splits_dir = Path(params['input_dir']) / params['splits_dir']
 print("Created splits path.")
 print("splits_dir: ", splits_dir)
 
-
-
+try:
+    # check if input_supp_data_dir provided
+    supp_data_dir = params['input_supp_data_dir']
+    # check if input_supp_data_dir is a directory
+    if not os.path.isdir(supp_data_dir):
+        # if input_supp_data_dir isn't a directory, check if it's in model_scripts_dir
+        supp_data_dir = os.path.join(params['model_scripts_dir'],supp_data_dir)
+        if not os.path.isdir(supp_data_dir):
+            print("Parameter input_supp_data_dir provided but not found at provided bath or in model_scripts_dir.")
+except KeyError:
+    # if no input_supp_data_dir provided, set to empty string
+    supp_data_dir = ""
 
 # ===============================================================
 ###  Generate CSA results (within- and cross-study)
@@ -171,7 +181,8 @@ for source_data_name in params["source_datasets"]:
                   "--test_split_file", str(test_split_file),
                   "--input_dir", params['input_dir'], # str("./csa_data/raw_data"),
                   "--output_dir", str(ml_data_dir),
-                  "--y_col_name", str(y_col_name)
+                  "--y_col_name", str(y_col_name),
+                  "--input_supp_data_dir", str(supp_data_dir)
             ]
             result = subprocess.run(preprocess_run,
                                     stdout=subprocess.PIPE,
