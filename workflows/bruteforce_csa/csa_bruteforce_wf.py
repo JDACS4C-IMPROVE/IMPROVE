@@ -137,7 +137,7 @@ for source_data_name in params["source_datasets"]:
     # Preprocess and Train
     # --------------------
     for split in params["split_nums"]:
-        print(f"Split id {split} out of {len(params["split_nums"])} splits.")
+        print(f"Split id {split} out of {len(params['split_nums'])} splits.")
         # Check that train, val, and test are available. Otherwise, continue to the next split.
         for phase in ["train", "val", "test"]:
             fname = f"{source_data_name}_split_{split}_{phase}.txt"
