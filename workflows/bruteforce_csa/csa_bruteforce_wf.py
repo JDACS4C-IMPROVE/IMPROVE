@@ -111,9 +111,9 @@ except KeyError:
 # timer = Timer()
 # Iterate over source datasets
 # Note! The "source_data_name" iterations are independent of each other
-print(f"\nsource_datasets: {params["source_datasets"]}")
-print(f"target_datasets: {params["target_datasets"]}")
-print(f"split_nums:      {params["split_nums"]}")
+print("source_datasets:", params["source_datasets"])
+print("target_datasets:", params["target_datasets"])
+print("split_nums:", params["split_nums"])
 
 for source_data_name in params["source_datasets"]:
 
