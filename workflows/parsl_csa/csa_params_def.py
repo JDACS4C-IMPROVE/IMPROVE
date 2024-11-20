@@ -30,7 +30,7 @@ additional_definitions = [
     },
     {"name": "model_scripts_dir",
      "type": str,
-     "default": './', 
+     "default": './',
      "help": "Path to the model repository"
     },
     {"name": "model_environment",
@@ -63,5 +63,10 @@ additional_definitions = [
      "type": str,
      "default": '',
      "help": "Singularity image file of the model"
+    },
+    {"name": "input_supp_data_dir",
+     "type": str,
+     "default": '',
+     "help": "Dir containing supplementary data in addition to benchmark data (usually model-specific data)."
     }
-    ]
+]

@@ -49,5 +49,10 @@ csa_bruteforce_params = [
      "default": True,
      "help": "Change to false if the model doesn't have a cuda_name parameter."
     },
+    {"name": "model_scripts_dir",
+     "type": str,
+     "default": './', 
+     "help": "Path to the model repository"
+    },
     
 ]

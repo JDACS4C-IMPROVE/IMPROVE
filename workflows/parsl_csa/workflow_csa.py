@@ -179,7 +179,7 @@ def infer(params, source_data_name, target_data_name, split):
     # Logger
     print(f"returncode = {result.returncode}")
     result_file_name_stdout = infer_dir / 'logs.txt'
-    if infer_dir.exists() is False: 
+    if infer_dir.exists() is False:
         os.makedirs(infer_dir, exist_ok=True)
     with open(result_file_name_stdout, 'w') as file:
         file.write(result.stdout)
@@ -214,8 +214,10 @@ params['model_dir'] = Path(params['output_dir']) / 'models'
 params['infer_dir'] = Path(params['output_dir']) / 'infer'
 
 #Model scripts
-params['train_python_script'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
-params['infer_python_script'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_infer_improve.py")
+params['train_python_script'] = os.path.join(
+    params['model_scripts_dir'], f"{params['model_name']}_train_improve.py")
+params['infer_python_script'] = os.path.join(
+    params['model_scripts_dir'], f"{params['model_name']}_infer_improve.py")
 
 #Read Hyperparameters file
 with open(params['hyperparameters_file']) as f:
@@ -236,7 +238,8 @@ for source_data_name in params['source_datasets']:
 infer_futures = []
 for future_t in train_futures:
     for target_data_name in params['target_datasets']:
-        infer_futures.append(infer(params, future_t.result()['source_data_name'], target_data_name, future_t.result()['split']))
+        infer_futures.append(infer(params, future_t.result()['source_data_name'],
+                                   target_data_name, future_t.result()['split']))
 
 for future_i in infer_futures:
     print(future_i.result())

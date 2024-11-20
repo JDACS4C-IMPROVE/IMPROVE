@@ -78,9 +78,10 @@ csa_data/raw_data/
 
 ### 5. To run cross study analysis using Parsl:
 **Configuration file**:
-**csa_params.ini** contains parameters necessary for the workflow. The user can change the parameters inside this configuration file.
+**csa_params.ini** contains parameters necessary for the workflow (see [example_params_files](./example_params_files)). The user can change the parameters inside this configuration file.
 
  - `input_dir` : Path to the benchmark `raw_data` for cross study analysis. 
+ - `input_supp_data_dir` : Dir containing supplementary data in addition to csa benchmark data (usually model-specific data). A common practice is to provide these data inside a dedicated dir inside model dir (e.g., PathDSP/author_data/...).
  - `output_dir` : Path to the output directory. The subdirectories in the `output_dir` will be organized as:
     - `ml_data`: Contains pre-processed data.
     - `models`: Contains trained models.
