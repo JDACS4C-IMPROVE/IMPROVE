@@ -44,7 +44,7 @@ output_dir = Path(params['output_dir'])
 if output_dir.exists() is False:
     os.makedirs(output_dir, exist_ok=True)
 #params['ml_data_dir'] = f"ml_data/{params['source']}-{params['source']}/split_{params['split']}"
-params['model_outdir'] = f"{params['output_dir']}/{params['source']}/split_{params['split']}"
+#params['model_outdir'] = f"{params['output_dir']}/{params['source']}/split_{params['split']}"
 params['script_name'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
 
 # ---------------------
@@ -107,7 +107,7 @@ params['hyperparams'] = [d['name'] for d in hyperparams]
 
 @profile
 def run(job, optuna_trial=None):
-    model_outdir_job_id = Path(params['model_outdir'] + f"/{job.id}")
+    model_outdir_job_id = Path(params['output_dir'] + f"/{job.id}")
     #learning_rate = job.parameters["learning_rate"]
     #batch_size = job.parameters["batch_size"]
 

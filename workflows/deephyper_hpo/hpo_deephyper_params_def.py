@@ -1,14 +1,4 @@
 additional_definitions = [
-    {"name": "source",
-     "type": str,
-     "default": "GDSCv1",
-     "help": "source dataset for HPO"
-    },
-    {"name": "split",
-     "type": str,
-     "default": "4",
-     "help": "Split of the source datasets for HPO"
-    },
     {"name": "model_name",
      "type": str,
      "default": 'PathDSP',
