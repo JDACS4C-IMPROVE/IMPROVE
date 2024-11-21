@@ -33,7 +33,7 @@ from improvelib.initializer.stage_config import SectionConfig
 # Initialize parameters for DeepHyper HPO
 # ---------------------
 filepath = Path(__file__).resolve().parent
-cfg = SectionConfigg() 
+cfg = SectionConfig() 
 global params
 params = cfg.initialize_parameters(
     pathToModelDir=filepath,
