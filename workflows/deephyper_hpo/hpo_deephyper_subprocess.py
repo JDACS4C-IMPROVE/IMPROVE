@@ -71,6 +71,21 @@ else:
     # CUDA_VISIBLE_DEVICES is now set via set_affinity_gpu_polaris.sh
     local_rank = os.environ["PMI_LOCAL_RANK"]
 
+
+# check if ml_data_dir is a directory
+if not os.path.isdir(params['ml_data_dir']):
+    # if ml_data_dir isn't a directory, check if it's in model_scripts_dir
+    params['ml_data_dir'] = os.path.join(params['model_scripts_dir'],params['ml_data_dir'])
+    if not os.path.isdir(params['ml_data_dir']):
+        print("Parameter ml_data_dir provided but not found at provided bath or in model_scripts_dir.")
+
+# check if model_environment is a directory
+if not os.path.isdir(params['model_environment']):
+    # if model_environment isn't a directory, check if it's in model_scripts_dir
+    params['model_environment'] = os.path.join(params['model_scripts_dir'],params['model_environment'])
+    if not os.path.isdir(params['model_environment']):
+        print("Parameter model_environment provided but not found at provided bath or in model_scripts_dir.")
+
 # ---------------------
 # Enable logging
 # ---------------------

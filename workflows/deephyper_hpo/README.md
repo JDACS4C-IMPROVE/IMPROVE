@@ -83,3 +83,6 @@ mpirun -np 10 python hpo_deephyper_subprocess.py --config <ALTERNATE_CONFIG_FILE
 
 # Run HPO using DeepHyper on Polaris with singularity
 
+TODO:
+Needs to maximize loss sometimes
+Should losses match?
