@@ -47,6 +47,7 @@ if output_dir.exists() is False:
 #params['model_outdir'] = f"{params['output_dir']}/{params['source']}/split_{params['split']}"
 params['script_name'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
 
+print(params)
 # ---------------------
 # Enable using multiple GPUs
 # ---------------------
