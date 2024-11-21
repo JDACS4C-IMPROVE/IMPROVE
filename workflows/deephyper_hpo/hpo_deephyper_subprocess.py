@@ -27,15 +27,17 @@ from mpi4py import MPI
 import socket
 import hpo_deephyper_params_def
 from hpo_deephyper_hyperparameters import hyperparams
-from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
-#from improvelib.initializer.config import Config
+#from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+from improvelib.config.base import Config
+
 # ---------------------
 # Initialize parameters for DeepHyper HPO
 # ---------------------
 filepath = Path(__file__).resolve().parent
-cfg = DRPPreprocessConfig() 
+cfg = Config() 
 global params
 params = cfg.initialize_parameters(
+    section="HPO",
     pathToModelDir=filepath,
     default_config="hpo_deephyper_params.ini",
     additional_definitions=hpo_deephyper_params_def.additional_definitions
