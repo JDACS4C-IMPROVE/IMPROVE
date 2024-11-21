@@ -15,6 +15,7 @@ import json
 import subprocess
 import pandas as pd
 import os
+import sys
 import time
 from pathlib import Path
 import logging
@@ -27,19 +28,37 @@ from mpi4py import MPI
 import socket
 import hpo_deephyper_params_def
 from hpo_deephyper_hyperparameters import hyperparams
-from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
-#from improvelib.initializer.config import Config
+# from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+
+
+# Import local modules
+script_directory = os.path.dirname(os.path.abspath(__file__))
+# Add a new directory to the PYTHONPATH
+lib_path = os.path.join(script_directory, "../lib")
+
+if lib_path not in sys.path:
+    sys.path.append(lib_path)
+
+# from config.base import Config
+
+
+from improvelib.initializer.config import Config
 # ---------------------
 # Initialize parameters for DeepHyper HPO
 # ---------------------
 filepath = Path(__file__).resolve().parent
-cfg = DRPPreprocessConfig() 
+cfg = Config() 
 global params
 params = cfg.initialize_parameters(
+    section="HPO",
     pathToModelDir=filepath,
     default_config="hpo_deephyper_params.ini",
     additional_definitions=hpo_deephyper_params_def.additional_definitions
 )
+
+print(params)
+sys.exit(0)
+
 output_dir = Path(params['output_dir'])
 if output_dir.exists() is False:
     os.makedirs(output_dir, exist_ok=True)
