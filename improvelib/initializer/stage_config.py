@@ -110,6 +110,7 @@ class WorkflowConfig(SectionConfig):
 
     def __init__(self) -> None:
         super().__init__('Workflow', [])
+        self.cli.set_command_line_options(options=[],group='Workflow')
 
 
 if __name__ == "__main__":
