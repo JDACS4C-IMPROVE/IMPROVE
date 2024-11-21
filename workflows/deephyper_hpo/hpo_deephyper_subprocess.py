@@ -28,12 +28,12 @@ import socket
 import hpo_deephyper_params_def
 from hpo_deephyper_hyperparameters import hyperparams
 #from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
-from improvelib.initializer.stage_config import SectionConfig
+from improvelib.initializer.stage_config import WorkflowConfig
 # ---------------------
 # Initialize parameters for DeepHyper HPO
 # ---------------------
 filepath = Path(__file__).resolve().parent
-cfg = SectionConfig() 
+cfg = WorkflowConfig() 
 global params
 params = cfg.initialize_parameters(
     pathToModelDir=filepath,
