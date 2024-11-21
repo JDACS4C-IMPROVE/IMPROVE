@@ -65,7 +65,7 @@ If necesssary (i.e not proceeding directly from above steps), activate environme
 ```
 module load openmpi 
 conda activate dh
-export PYTHONPATH=../IMPROVE
+export PYTHONPATH=../../../IMPROVE
 ```
 
 Run HPO:
