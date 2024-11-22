@@ -44,9 +44,9 @@ additional_definitions = [
      "default": True,
      "help": "Are you using an interactive session?"
     },
-    {"name": "ml_data_dir",
+    {"name": "hyperparameter_file",
      "type": str,
-     "default": './',
-     "help": "Location of the preprocessed data."
+     "default": './hpo_deephyper_hyperparameters.py',
+     "help": "JSON file containing hyperparameters and ranges to test."
     }
     ]

@@ -45,8 +45,7 @@ params = cfg.initialize_parameters(
 output_dir = Path(params['output_dir'])
 if output_dir.exists() is False:
     os.makedirs(output_dir, exist_ok=True)
-#params['ml_data_dir'] = f"ml_data/{params['source']}-{params['source']}/split_{params['split']}"
-#params['model_outdir'] = f"{params['output_dir']}/{params['source']}/split_{params['split']}"
+
 params['script_name'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
 
 print(params)
@@ -75,12 +74,12 @@ else:
     local_rank = os.environ["PMI_LOCAL_RANK"]
 
 
-# check if ml_data_dir is a directory
-if not os.path.isdir(params['ml_data_dir']):
-    # if ml_data_dir isn't a directory, check if it's in model_scripts_dir
-    params['ml_data_dir'] = os.path.join(params['model_scripts_dir'],params['ml_data_dir'])
-    if not os.path.isdir(params['ml_data_dir']):
-        print("Parameter ml_data_dir provided but not found at provided bath or in model_scripts_dir.")
+# check if input_dir is a directory
+if not os.path.isdir(params['input_dir']):
+    # if input_dir isn't a directory, check if it's in model_scripts_dir
+    params['input_dir'] = os.path.join(params['model_scripts_dir'],params['input_dir'])
+    if not os.path.isdir(params['input_dir']):
+        print("Parameter input_dir provided but not found at provided bath or in model_scripts_dir.")
 
 # check if model_environment is a directory
 if not os.path.isdir(params['model_environment']):
@@ -132,7 +131,7 @@ def run(job, optuna_trial=None):
     train_run = ["bash", "hpo_deephyper_subprocess_train.sh",
              str(params['model_environment']),
              str(params['script_name']),
-             str(params['ml_data_dir']),
+             str(params['input_dir']),
              str(model_outdir_job_id),
              str(params['epochs']),
              str(os.environ["CUDA_VISIBLE_DEVICES"])
