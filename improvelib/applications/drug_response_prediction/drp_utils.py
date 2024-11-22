@@ -25,12 +25,12 @@ def get_common_samples(
     """Search for common data in a reference column and retain only those rows.
 
     Args:
-        df1: First dataframe.
-        df2: Second dataframe.
-        ref_col: The reference column to find the common values.
+        df1 (pd.DataFrame): First dataframe.
+        df2 (pd.DataFrame): Second dataframe.
+        ref_col (str): The reference column to find the common values.
 
     Returns:
-        Tuple of DataFrames after filtering for common data.
+        Tuple[pd.DataFrame, pd.DataFrame]: Tuple of DataFrames after filtering for common data.
     """
     common_ids = list(set(df1[ref_col]).intersection(df2[ref_col]))
     df1 = df1[df1[ref_col].isin(common_ids)].reset_index(drop=True)
@@ -42,12 +42,12 @@ def common_elements(list1: List, list2: List, verbose: bool = False) -> List:
     """Return a list of elements that the provided lists have in common.
 
     Args:
-        list1: One list.
-        list2: Another list.
-        verbose: Flag for verbosity. If True, info about computations is displayed. Default is False.
+        list1 (List): One list.
+        list2 (List): Another list.
+        verbose (bool): Flag for verbosity. If True, info about computations is displayed. Default is False.
 
     Returns:
-        List of common elements.
+        List: List of common elements.
     """
     in_common = list(set(list1).intersection(set(list2)))
     if verbose:
@@ -59,24 +59,24 @@ class DrugResponseLoader:
     """Class for loading monotherapy drug response data.
 
     Args:
-        params: IMPROVE parameters.
-        split_file: File name that contains the split ids (rows).
-        sep: Character separator in the loaded files (e.g., "\t" for TSV files).
-        verbose: Flag for verbosity. Default is True.
+        params (Dict): IMPROVE parameters.
+        split_file (str): File name that contains the split ids (rows).
+        sep (str): Character separator in the loaded files (e.g., "\t" for TSV files).
+        verbose (bool): Flag for verbosity. Default is True.
 
     Attributes:
-        response_fname: Default response file name.
-        known_file_names: List of known file names.
-        params: Parameters for loading data.
-        sep: Separator used in data files.
-        inp: Parsed input data files.
-        y_col_name: Column name for the target variable.
-        canc_col_name: Column name for cancer sample identifiers.
-        drug_col_name: Column name for drug identifiers.
-        y_data_path: Path to the directory containing y data files.
-        split_fpath: Path to the file containing split identifiers.
-        dfs: Dictionary to store loaded dataframes.
-        verbose: Verbosity flag.
+        response_fname (str): Default response file name.
+        known_file_names (List[str]): List of known file names.
+        params (Dict): Parameters for loading data.
+        sep (str): Separator used in data files.
+        inp (List): Parsed input data files.
+        y_col_name (str): Column name for the target variable.
+        canc_col_name (str): Column name for cancer sample identifiers.
+        drug_col_name (str): Column name for drug identifiers.
+        y_data_path (str): Path to the directory containing y data files.
+        split_fpath (Path): Path to the file containing split identifiers.
+        dfs (Dict[str, pd.DataFrame]): Dictionary to store loaded dataframes.
+        verbose (bool): Verbosity flag.
 
     Example:
         from improve import drug_resp_pred as drp
@@ -87,24 +87,24 @@ class DrugResponseLoader:
     """
 
     def __init__(self, params: Dict, split_file: str, sep: str = "\t", verbose: bool = True):
-        self.response_fname = "response.tsv"  # Default response file name
-        self.known_file_names = [self.response_fname]  # List of known file names
+        self.response_fname = "response.tsv"
+        self.known_file_names = [self.response_fname]
 
-        self.params = params  # Parameters for loading data
-        self.sep = sep  # Separator used in data files
+        self.params = params
+        self.sep = sep
         if isinstance(params["y_data_files"], str):
-            self.inp = literal_eval(params["y_data_files"])  # Parsed input data files
+            self.inp = literal_eval(params["y_data_files"])
         else:
             self.inp = params["y_data_files"]
 
-        self.y_col_name = params["y_col_name"]  # Column name for the target variable
-        self.canc_col_name = params["canc_col_name"]  # Column name for cancer sample identifiers
-        self.drug_col_name = params["drug_col_name"]  # Column name for drug identifiers
+        self.y_col_name = params["y_col_name"]
+        self.canc_col_name = params["canc_col_name"]
+        self.drug_col_name = params["drug_col_name"]
 
-        self.y_data_path = params["y_data_path"]  # Path to the directory containing y data files
-        self.split_fpath = Path(params["splits_path"]) / split_file  # Path to the file containing split identifiers
-        self.dfs = {}  # Dictionary to store loaded dataframes
-        self.verbose = verbose  # Verbosity flag
+        self.y_data_path = params["y_data_path"]
+        self.split_fpath = Path(params["splits_path"]) / split_file
+        self.dfs = {}
+        self.verbose = verbose
 
         if self.verbose:
             print(f"y_data_files: {params['y_data_files']}")
@@ -118,7 +118,13 @@ class DrugResponseLoader:
             to_print = []
             to_print.append("Loaded data:\n")
             to_print.append("\n".join(
-                [f"{fname}: {df.shape} \nUnique cells: {df[self.canc_col_name].nunique()} \nUnique drugs: {df[self.drug_col_name].nunique()}" for fname, df in self.dfs.items()]))
+                [
+                    f"{fname}: {df.shape} \nUnique cells: "
+                    f"{df[self.canc_col_name].nunique()} \nUnique drugs: "
+                    f"{df[self.drug_col_name].nunique()}"
+                    for fname, df in self.dfs.items()
+                ]
+            ))
             to_print = "".join(to_print)
             return to_print
         else:
@@ -129,7 +135,7 @@ class DrugResponseLoader:
         """Check if the given file path exists.
 
         Args:
-            fpath: File path to check.
+            fpath (str): File path to check.
 
         Raises:
             Exception: If the file path does not exist.
@@ -142,10 +148,10 @@ class DrugResponseLoader:
         """Load response data from a file.
 
         Args:
-            fname: File name to load data from.
+            fname (str): File name to load data from.
 
         Returns:
-            Loaded data as a DataFrame.
+            pd.DataFrame: Loaded data as a DataFrame.
         """
         fpath = Path(os.path.join(str(self.y_data_path), fname))
         logger.debug(f"Loading {fpath}")
