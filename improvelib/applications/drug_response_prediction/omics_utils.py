@@ -23,8 +23,10 @@ Exceptions (files that do not use `level_map` and may not be multi-level):
     - cancer_mutation.parquet
     
 Notes:
-    - Ensure that the input omics data files are correctly formatted as multi-level tables, except for the noted exceptions.
-    - The `level_map` must be correctly defined for each type of omics data file to ensure proper column renaming.
+    - Ensure that the input omics data files are correctly formatted as 
+      multi-level tables, except for the noted exceptions.
+    - The `level_map` must be correctly defined for each type of omics data 
+      file to ensure proper column renaming.
 """
 
 from pathlib import Path
@@ -40,6 +42,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.ERROR))
 
+
 def set_col_names_in_multilevel_dataframe(
         df: pd.DataFrame,
         level_map: Dict,
@@ -47,12 +50,15 @@ def set_col_names_in_multilevel_dataframe(
     """Support loading of omic data files by renaming multi-level column names.
 
     Args:
-        df: Omics dataframe.
-        level_map: Encodes the column level and the corresponding identifier systems.
-        gene_system_identifier: Gene identifier system to use. Options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any list combination of ["Entrez", "Gene_Symbol", "Ensembl"].
+        df (pd.DataFrame): Omics dataframe.
+        level_map (Dict): Encodes the column level and the corresponding 
+            identifier systems.
+        gene_system_identifier (Union[str, List[str]]): Gene identifier system 
+            to use. Options: "Entrez", "Gene_Symbol", "Ensembl", "all", or any 
+            list combination of ["Entrez", "Gene_Symbol", "Ensembl"].
 
     Returns:
-        The input dataframe with the specified multi-level column names.
+        pd.DataFrame: The input dataframe with the specified multi-level column names.
     """
     df = df.copy()
 
@@ -89,6 +95,7 @@ def set_col_names_in_multilevel_dataframe(
         df = df.droplevel(level=drop_levels, axis=1)
     return df
 
+
 class OmicsLoader:
     """Class aggregates methods to load omics data.
 
@@ -120,7 +127,8 @@ class OmicsLoader:
     Example:
         from improve import drug_resp_pred as drp
         params = {
-            "x_data_canc_files": "[['cancer_gene_expression.tsv', 'Gene_Symbol'], ['cancer_copy_number.tsv', 'Entrez']]",
+            "x_data_canc_files": "[['cancer_gene_expression.tsv', 'Gene_Symbol'], "
+                                 "['cancer_copy_number.tsv', 'Entrez']]",
             "canc_col_name": "SampleID",
             "x_data_path": "/path/to/omics/data"
         }
@@ -157,8 +165,8 @@ class OmicsLoader:
             self.rppa_fname
         ]
 
-        self.params = params  # Configuration parameters for loading data
-        self.sep = sep  # Separator used in data files (default is tab)
+        self.params = params
+        self.sep = sep
         
         # Convert input files from string to list if necessary
         if isinstance(params["x_data_canc_files"], str):
@@ -169,10 +177,10 @@ class OmicsLoader:
 
         logger.debug(f"self.inp: {self.inp}")
 
-        self.x_data_path = params["x_data_path"]  # Path to omics data directory
-        self.canc_col_name = params["canc_col_name"]  # Column name for indexing
-        self.dfs = {}  # Dictionary to store loaded omics data as DataFrames, keyed by filename
-        self.verbose = verbose  # Flag to control verbosity of output
+        self.x_data_path = params["x_data_path"]
+        self.canc_col_name = params["canc_col_name"]
+        self.dfs = {}
+        self.verbose = verbose
 
         if self.verbose:
             print(f"canc_col_name: {params['canc_col_name']}")
@@ -200,7 +208,7 @@ class OmicsLoader:
         """Check if a file path exists.
 
         Args:
-            fpath: Path to check.
+            fpath (Union[str, Path]): Path to check.
 
         Raises:
             Exception: If the path does not exist.
