@@ -31,24 +31,16 @@ import hpo_deephyper_params_def
 from improvelib.config.base import Config
 
 # ---------------------
-# Initialize parameters for DeepHyper HPO
+# Enable logging
 # ---------------------
-filepath = Path(__file__).resolve().parent
-cfg = Config() 
-global params
-params = cfg.initialize_parameters(
-    section="HPO",
-    pathToModelDir=filepath,
-    default_config="hpo_deephyper_params.ini",
-    additional_definitions=hpo_deephyper_params_def.additional_definitions
+
+logging.basicConfig(
+    # filename=f"deephyper.{rank}.log, # optional if we want to store the logs to disk
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s",
+    force=True,
 )
-output_dir = Path(params['output_dir'])
-if output_dir.exists() is False:
-    os.makedirs(output_dir, exist_ok=True)
 
-params['script_name'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
-
-print(params)
 # ---------------------
 # Enable using multiple GPUs
 # ---------------------
@@ -83,43 +75,9 @@ def locate_input(param_to_check, model_scripts_dir):
             print(f"Parameter {checking} provided but not found at provided path or in model_scripts_dir.") 
     return param_to_check
 
-params['input_dir'] = locate_input(params['input_dir'], params['model_scripts_dir'])
-params['model_environment'] = locate_input(params['model_environment'], params['model_scripts_dir'])
-params['hyperparameter_file'] = locate_input(params['hyperparameter_file'], params['model_scripts_dir'])
 
-'''
-# check if input_dir is a directory
-if not os.path.isdir(params['input_dir']):
-    # if input_dir isn't a directory, check if it's in model_scripts_dir
-    params['input_dir'] = os.path.join(params['model_scripts_dir'],params['input_dir'])
-    if not os.path.isdir(params['input_dir']):
-        print("Parameter input_dir provided but not found at provided bath or in model_scripts_dir.")
 
-# check if model_environment is a directory
-if not os.path.isdir(params['model_environment']):
-    # if model_environment isn't a directory, check if it's in model_scripts_dir
-    params['model_environment'] = os.path.join(params['model_scripts_dir'],params['model_environment'])
-    if not os.path.isdir(params['model_environment']):
-        print("Parameter model_environment provided but not found at provided bath or in model_scripts_dir.")
 
-# check if hyperparameter_file is a file at that path
-if not os.path.isfile(params['hyperparameter_file']):
-    # if model_environment isn't a directory, check if it's in model_scripts_dir
-    params['hyperparameter_file'] = os.path.join(params['model_scripts_dir'],params['hyperparameter_file'])
-    if not os.path.isfile(params['hyperparameter_file']):
-        print("Parameter  provided but not found at provided bath or in model_scripts_dir.")
-'''
-
-# ---------------------
-# Enable logging
-# ---------------------
-
-logging.basicConfig(
-    # filename=f"deephyper.{rank}.log, # optional if we want to store the logs to disk
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s",
-    force=True,
-)
 
 # ---------------------
 # Hyperparameters
@@ -142,9 +100,6 @@ for hp in hyperparams:
 
 params['hyperparams'] = [d['name'] for d in hyperparams]
 
-
-# problem.add_hyperparameter((0, 0.5), "dropout", default_value=0.0)
-# problem.add_hyperparameter([True, False], "early_stopping", default_value=False)
 
 
 @profile
@@ -194,6 +149,26 @@ def run(job, optuna_trial=None):
 
 
 if __name__ == "__main__":
+    # Initialize parameters for DeepHyper HPO
+    filepath = Path(__file__).resolve().parent
+    cfg = Config() 
+    global params
+    params = cfg.initialize_parameters(
+        section="HPO",
+        pathToModelDir=filepath,
+        default_config="hpo_deephyper_params.ini",
+        additional_definitions=hpo_deephyper_params_def.additional_definitions
+    )
+    output_dir = Path(params['output_dir'])
+    if output_dir.exists() is False:
+        os.makedirs(output_dir, exist_ok=True)
+
+    # Configure parameters for DeepHyper HPO
+    params['script_name'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
+    params['input_dir'] = locate_input(params['input_dir'], params['model_scripts_dir'])
+    params['model_environment'] = locate_input(params['model_environment'], params['model_scripts_dir'])
+    params['hyperparameter_file'] = locate_input(params['hyperparameter_file'], params['model_scripts_dir'])
+
     with Evaluator.create(
         run, method="mpicomm", method_kwargs={"callbacks": [TqdmCallback()]}
     ) as evaluator:
