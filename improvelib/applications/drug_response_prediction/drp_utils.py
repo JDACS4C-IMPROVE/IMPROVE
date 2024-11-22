@@ -131,14 +131,14 @@ class DrugResponseLoader:
             return "No data files were loaded."
 
     @staticmethod
-    def check_path(fpath: str):
-        """Check if the given file path exists.
+    def check_path(fpath: Union[str, Path]) -> None:
+        """Check if a file path exists.
 
         Args:
-            fpath (str): File path to check.
+            fpath (Union[str, Path]): Path to check.
 
         Raises:
-            Exception: If the file path does not exist.
+            Exception: If the path does not exist.
         """
         fpath = Path(fpath)
         if not fpath.exists():
@@ -159,7 +159,7 @@ class DrugResponseLoader:
         df = pd.read_csv(fpath, sep=self.sep)
         return df
 
-    def load_all_response_data(self):
+    def load_all_response_data(self) -> None:
         """Load all response data files specified in the input parameters."""
         for i in self.inp[0]:
             fname = i
