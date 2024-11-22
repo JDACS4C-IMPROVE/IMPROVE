@@ -1,14 +1,19 @@
-""" Functionality for IMPROVE drug response prediction (DRP) models. """
+"""
+This module provides utilities for loading and processing response data for 
+drug response prediction models in the IMPROVE framework. It also provides 
+functionality to filter dataframes, retaining only the common IDs shared between them.
+"""
 
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+# Standard library imports
+from ast import literal_eval
 import logging
 import os
-from ast import literal_eval
+from pathlib import Path
+from typing import Dict, List, Tuple, Union
+
 import pandas as pd
 
 # Set logger for this module
-
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -19,43 +24,16 @@ def get_common_samples(
         df1: pd.DataFrame,
         df2: pd.DataFrame,
         ref_col: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Search for common data in reference column and retain only .
+    """Search for common data in a reference column and retain only those rows.
 
     Args:
-        df1, df2 (pd.DataFrame): dataframes
-        ref_col (str): the ref column to find the common values
+        df1 (pd.DataFrame): First dataframe.
+        df2 (pd.DataFrame): Second dataframe.
+        ref_col (str): The reference column to find the common values.
 
     Returns:
-        df1, df2 after filtering for common data.
-
-    Example:
-        Before:
-
-        df1:
-        col1	ref_col	    col3	    col4
-        CCLE	ACH-000956	Drug_749	0.7153
-        CCLE	ACH-000325	Drug_1326	0.9579
-        CCLE	ACH-000475	Drug_490	0.213
-
-        df2:
-        ref_col     col2                col3                col4
-        ACH-000956  3.5619370596224327	0.0976107966264223	4.888499735514123
-        ACH-000179  5.202025844609336	3.5046203924035524	3.5058909297299574
-        ACH-000325  6.016139702655253	0.6040713236688608	0.0285691521967709
-
-        After:
-
-        df1:
-        col1	ref_col	    col3	    col4
-        CCLE	ACH-000956	Drug_749	0.7153
-        CCLE	ACH-000325	Drug_1326	0.9579
-
-        df2:
-        ref_col     col2                col3                col4
-        ACH-000956  3.5619370596224327	0.0976107966264223	4.888499735514123
-        ACH-000325  6.016139702655253	0.6040713236688608	0.0285691521967709
+        Tuple[pd.DataFrame, pd.DataFrame]: Tuple of DataFrames after filtering for common data.
     """
-    # Retain df1 and df2 samples with common ref_col
     common_ids = list(set(df1[ref_col]).intersection(df2[ref_col]))
     df1 = df1[df1[ref_col].isin(common_ids)].reset_index(drop=True)
     df2 = df2[df2[ref_col].isin(common_ids)].reset_index(drop=True)
@@ -63,16 +41,15 @@ def get_common_samples(
 
 
 def common_elements(list1: List, list2: List, verbose: bool = False) -> List:
-    """
-    Return list of elements that the provided lists have in common.
+    """Return a list of elements that the provided lists have in common.
 
     Args:
-        list1: One list.
-        list2: Another list.
-        verbose: Flag for verbosity. If True, info about computations is displayed. Default: True.
+        list1 (List): One list.
+        list2 (List): Another list.
+        verbose (bool): Flag for verbosity. If True, info about computations is displayed. Default is False.
 
     Returns:
-        List of common elements.
+        List: List of common elements.
     """
     in_common = list(set(list1).intersection(set(list2)))
     if verbose:
@@ -80,28 +57,28 @@ def common_elements(list1: List, list2: List, verbose: bool = False) -> List:
     return in_common
 
 
-# ==============================================================
-# Drug response loaders
-# ==============================================================
-
-
-# source: str,
-# # split: Union[int, None] = None,
-# # split_type: Union[str, List[str], None] = None,
-# split_file_name: Union[str, List[str], None] = None,
-# y_col_name: str = "auc",
-# sep: str = "\t",
-# verbose: bool = True) -> pd.DataFrame:
-
-
-class DrugResponseLoader():
-    """
-    Class for loading monotherapy drug response data.
+class DrugResponseLoader:
+    """Class for loading monotherapy drug response data.
 
     Args:
-        params : IMPROVE params
-        split_file : file name that contains the split ids (rows)
-        sep : chararcter separtor in the loaded files (e.g., "\t" for tsv files)
+        params (Dict): IMPROVE parameters.
+        split_file (str): File name that contains the split ids (rows).
+        sep (str): Character separator in the loaded files (e.g., "\t" for TSV files).
+        verbose (bool): Flag for verbosity. Default is True.
+
+    Attributes:
+        response_fname (str): Default response file name.
+        known_file_names (List[str]): List of known file names.
+        params (Dict): Parameters for loading data.
+        sep (str): Separator used in data files.
+        inp (List): Parsed input data files.
+        y_col_name (str): Column name for the target variable.
+        canc_col_name (str): Column name for cancer sample identifiers.
+        drug_col_name (str): Column name for drug identifiers.
+        y_data_path (str): Path to the directory containing y data files.
+        split_fpath (Path): Path to the file containing split identifiers.
+        dfs (Dict[str, pd.DataFrame]): Dictionary to store loaded dataframes.
+        verbose (bool): Verbosity flag.
 
     Example:
         from improve import drug_resp_pred as drp
@@ -111,19 +88,13 @@ class DrugResponseLoader():
         rsp = drp_loader["response.tsv"]
     """
 
-    def __init__(self,
-                 params: Dict,  # improve params
-                 split_file: str,
-                 sep: str = "\t",
-                 verbose: bool = True):
-
+    def __init__(self, params: Dict, split_file: str, sep: str = "\t", verbose: bool = True):
         self.response_fname = "response.tsv"
         self.known_file_names = [self.response_fname]
 
         self.params = params
         self.sep = sep
         if isinstance(params["y_data_files"], str):
-            # instanciate array from string
             self.inp = literal_eval(params["y_data_files"])
         else:
             self.inp = params["y_data_files"]
@@ -132,7 +103,6 @@ class DrugResponseLoader():
         self.canc_col_name = params["canc_col_name"]
         self.drug_col_name = params["drug_col_name"]
 
-        # self.y_data_path = params["y_data_path"]/params["y_data_files"][0][0]
         self.y_data_path = params["y_data_path"]
         self.split_fpath = Path(params["splits_path"]) / split_file
         self.dfs = {}
@@ -142,42 +112,57 @@ class DrugResponseLoader():
             print(f"y_data_files: {params['y_data_files']}")
             print(f"y_col_name: {params['y_col_name']}")
 
-        # self.inp_fnames = []
-        # for i in self.inp:
-        #     logger.debug(f"i: {i}")
-        #     # was [['response.tsv']] but now ['response.tsv']
-        #     # assert len(i) == 1, f"Inner lists must contain only one item, but {i} is {len(i)}"
-        #     self.inp_fnames.append(i)
-        # logger.debug(self.inp_fnames)
-
         self.load_all_response_data()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return a string representation of the loaded data."""
         if self.dfs:
             to_print = []
             to_print.append("Loaded data:\n")
             to_print.append("\n".join(
-                [f"{fname}: {df.shape} \nUnique cells: {df[self.canc_col_name].nunique()} \nUnique drugs: {df[self.drug_col_name].nunique()}" for fname, df in self.dfs.items()]))
+                [
+                    f"{fname}: {df.shape} \nUnique cells: "
+                    f"{df[self.canc_col_name].nunique()} \nUnique drugs: "
+                    f"{df[self.drug_col_name].nunique()}"
+                    for fname, df in self.dfs.items()
+                ]
+            ))
             to_print = "".join(to_print)
             return to_print
         else:
             return "No data files were loaded."
 
-    @ staticmethod
-    def check_path(fpath):
-        fpath = Path(fpath)
-        if fpath.exists() == False:
-            raise Exception(f"ERROR ! {fpath} not found.\n")
+    @staticmethod
+    def check_path(fpath: Union[str, Path]) -> None:
+        """Check if a file path exists.
 
-    def load_response_data(self, fname):
+        Args:
+            fpath (Union[str, Path]): Path to check.
+
+        Raises:
+            Exception: If the path does not exist.
+        """
+        fpath = Path(fpath)
+        if not fpath.exists():
+            raise Exception(f"ERROR! {fpath} not found.\n")
+
+    def load_response_data(self, fname: str) -> pd.DataFrame:
+        """Load response data from a file.
+
+        Args:
+            fname (str): File name to load data from.
+
+        Returns:
+            pd.DataFrame: Loaded data as a DataFrame.
+        """
         fpath = Path(os.path.join(str(self.y_data_path), fname))
         logger.debug(f"Loading {fpath}")
         DrugResponseLoader.check_path(fpath)
         df = pd.read_csv(fpath, sep=self.sep)
         return df
 
-    def load_all_response_data(self, verbose: str = True):
-        """ ... """
+    def load_all_response_data(self) -> None:
+        """Load all response data files specified in the input parameters."""
         for i in self.inp[0]:
             fname = i
             df = self.load_response_data(fname)
@@ -185,3 +170,4 @@ class DrugResponseLoader():
             ids = pd.read_csv(self.split_fpath, header=None)[0].tolist()
             df = df.loc[ids]
             self.dfs[fname] = df
+
