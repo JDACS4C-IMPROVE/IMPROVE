@@ -50,7 +50,7 @@ You will need to change the following parameters for your model:
 
 
 ## 5. Modify hyperparameters file
-`hpo_deephyper_hyperparameters.py` contains a list of dictionaries for the hyperparameters.
+`hpo_deephyper_hyperparameters.json` contains a list of dictionaries for the hyperparameters.
 The default settings are as follows:
 
 | Hyperparameter | Min  | Max  | Default |
@@ -59,6 +59,10 @@ The default settings are as follows:
 | learning_rate  | 1e-6 | 0.01 | 0.001   |
 
 You can add more hyperparameters to test by adding additional dictionaries to this list. Two examples are given in the comments in this script.
+
+Examples of additional hyperparamter dictionaries are in 
+Insure that the name is a valid parameter for the model
+Insure true/false
 
 ## 6. Perform HPO
 If necesssary (i.e not proceeding directly from above steps), activate environment:

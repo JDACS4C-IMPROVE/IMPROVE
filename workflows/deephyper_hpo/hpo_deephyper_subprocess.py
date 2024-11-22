@@ -26,7 +26,7 @@ from deephyper.search.hps import CBO
 from mpi4py import MPI
 import socket
 import hpo_deephyper_params_def
-from hpo_deephyper_hyperparameters import hyperparams
+#from hpo_deephyper_hyperparameters import hyperparams
 #from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
 from improvelib.config.base import Config
 
@@ -73,6 +73,7 @@ else:
     # CUDA_VISIBLE_DEVICES is now set via set_affinity_gpu_polaris.sh
     local_rank = os.environ["PMI_LOCAL_RANK"]
 
+# def locate_input
 
 # check if input_dir is a directory
 if not os.path.isdir(params['input_dir']):
@@ -87,6 +88,13 @@ if not os.path.isdir(params['model_environment']):
     params['model_environment'] = os.path.join(params['model_scripts_dir'],params['model_environment'])
     if not os.path.isdir(params['model_environment']):
         print("Parameter model_environment provided but not found at provided bath or in model_scripts_dir.")
+
+# check if hyperparameter_file is a file at that path
+if not os.path.isfile(params['hyperparameter_file']):
+    # if model_environment isn't a directory, check if it's in model_scripts_dir
+    params['hyperparameter_file'] = os.path.join(params['model_scripts_dir'],params['hyperparameter_file'])
+    if not os.path.isfile(params['hyperparameter_file']):
+        print("Parameter  provided but not found at provided bath or in model_scripts_dir.")
 
 # ---------------------
 # Enable logging
@@ -103,6 +111,9 @@ logging.basicConfig(
 # Hyperparameters
 # ---------------------
 problem = HpProblem()
+
+with open(params['hyperparameter_file']) as f:
+    hyperparams = json.load(f)
 
 for hp in hyperparams:
     if hp['type'] == "categorical":

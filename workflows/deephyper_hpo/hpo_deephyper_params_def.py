@@ -46,7 +46,7 @@ additional_definitions = [
     },
     {"name": "hyperparameter_file",
      "type": str,
-     "default": './hpo_deephyper_hyperparameters.py',
+     "default": './hpo_deephyper_hyperparameters.json',
      "help": "JSON file containing hyperparameters and ranges to test."
     }
     ]
