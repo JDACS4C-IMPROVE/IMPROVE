@@ -131,7 +131,7 @@ with open(params['hyperparameter_file']) as f:
 
 for hp in hyperparams:
     if hp['type'] == "categorical":
-        print("not implemented yet")
+        problem.add_hyperparameter(hp['choices'], hp['name'], default_value=hp['default'])
     else:
         if hp['log_uniform']:
             problem.add_hyperparameter((hp['min'], hp['max'], "log-uniform"), 
