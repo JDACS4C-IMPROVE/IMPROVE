@@ -73,8 +73,21 @@ else:
     # CUDA_VISIBLE_DEVICES is now set via set_affinity_gpu_polaris.sh
     local_rank = os.environ["PMI_LOCAL_RANK"]
 
-# def locate_input
+def locate_input(param_to_check, model_scripts_dir):
+    checking = param_to_check
+   # checks if param_to_check is a dir/file
+    if not os.path.exists(param_to_check):
+        # if param_to_check doesn't exist at that path, check if it's in model_scripts_dir
+        param_to_check = os.path.join(model_scripts_dir,param_to_check)
+        if not os.path.exists(param_to_check):
+            print(f"Parameter {checking} provided but not found at provided path or in model_scripts_dir.") 
+    return param_to_check
 
+params['input_dir'] = locate_input(params['input_dir'], params['model_scripts_dir'])
+params['model_environment'] = locate_input(params['model_environment'], params['model_scripts_dir'])
+params['hyperparameter_file'] = locate_input(params['hyperparameter_file'], params['model_scripts_dir'])
+
+'''
 # check if input_dir is a directory
 if not os.path.isdir(params['input_dir']):
     # if input_dir isn't a directory, check if it's in model_scripts_dir
@@ -95,6 +108,7 @@ if not os.path.isfile(params['hyperparameter_file']):
     params['hyperparameter_file'] = os.path.join(params['model_scripts_dir'],params['hyperparameter_file'])
     if not os.path.isfile(params['hyperparameter_file']):
         print("Parameter  provided but not found at provided bath or in model_scripts_dir.")
+'''
 
 # ---------------------
 # Enable logging
