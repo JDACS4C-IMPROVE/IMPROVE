@@ -16,13 +16,14 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.ERROR))
 
+
 class DrugsLoader:
     """Class to load and manage drug data.
 
     Args:
-        params: IMPROVE parameters.
-        sep: Character separator in the loaded files (e.g., "\t" for TSV files).
-        verbose: Whether to print detailed loading information.
+        params (Dict): IMPROVE parameters.
+        sep (str): Character separator in the loaded files (e.g., "\t" for TSV files).
+        verbose (bool): Whether to print detailed loading information.
 
     Attributes:
         smiles_fname (str): Filename for SMILES data.
@@ -55,9 +56,9 @@ class DrugsLoader:
         """Initialize the DrugsLoader with parameters and file settings.
 
         Args:
-            params: IMPROVE parameters.
-            sep: Character separator in the loaded files (e.g., "\t" for TSV files).
-            verbose: Whether to print detailed loading information.
+            params (Dict): IMPROVE parameters.
+            sep (str): Character separator in the loaded files (e.g., "\t" for TSV files).
+            verbose (bool): Whether to print detailed loading information.
         """
         
         # Filenames for different types of drug data
@@ -72,8 +73,8 @@ class DrugsLoader:
             self.ecfp4_512bit_fname
         ]
 
-        self.params = params  # Configuration parameters for loading data
-        self.sep = sep  # Separator used in data files (default is tab)
+        self.params = params
+        self.sep = sep
 
         # Convert input files from string to list if necessary
         if isinstance(params["x_data_drug_files"], str):
@@ -83,10 +84,10 @@ class DrugsLoader:
 
         logger.debug(f"self.inp: {self.inp}")
 
-        self.drug_col_name = params["drug_col_name"]  # Column name for drug identifiers
-        self.x_data_path = params["x_data_path"]  # Path to drug data directory
-        self.dfs = {}  # Dictionary to store loaded drug data as DataFrames, keyed by filename
-        self.verbose = verbose  # Flag to control verbosity of output
+        self.drug_col_name = params["drug_col_name"]
+        self.x_data_path = params["x_data_path"]
+        self.dfs = {}
+        self.verbose = verbose
 
         if self.verbose:
             print(f"drug_col_name: {params['drug_col_name']}")
@@ -105,7 +106,9 @@ class DrugsLoader:
     def __repr__(self) -> str:
         """Return a string representation of the loaded data."""
         if self.dfs:
-            return "Loaded data:\n" + "\n".join([f"{fname}: {df.shape}" for fname, df in self.dfs.items()])
+            return "Loaded data:\n" + "\n".join(
+                [f"{fname}: {df.shape}" for fname, df in self.dfs.items()]
+            )
         else:
             return "No data files were loaded."
 
@@ -114,7 +117,7 @@ class DrugsLoader:
         """Check if a file path exists.
 
         Args:
-            fpath: Path to check.
+            fpath (Union[str, Path]): Path to check.
 
         Raises:
             Exception: If the path does not exist.
@@ -127,7 +130,7 @@ class DrugsLoader:
         """Load a single drug data file.
 
         Args:
-            fname: Filename of the drug data file to load.
+            fname (str): Filename of the drug data file to load.
 
         Returns:
             pd.DataFrame: Loaded drug data as a DataFrame.
