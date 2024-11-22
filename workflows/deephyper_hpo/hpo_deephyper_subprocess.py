@@ -1,21 +1,7 @@
-"""
-Before running this script, first need to preprocess the data.
-This can be done by running preprocess_example.sh
-
-and the env vars $PYTHONPATH is set:
-export PYTHONPATH=$PYTHONPATH:/path/to/IMPROVE_lib
-
-It also assumes that your processed training and validation data is in ml_data_dir.
-Model output files will be saved in output_dir/{source}/split_{split}.
-
-mpirun -np 10 python hpo_subprocess.py
-"""
-# import copy
 import json
 import subprocess
 import pandas as pd
 import os
-import time
 from pathlib import Path
 import logging
 import mpi4py
@@ -26,8 +12,6 @@ from deephyper.search.hps import CBO
 from mpi4py import MPI
 import socket
 import hpo_deephyper_params_def
-#from hpo_deephyper_hyperparameters import hyperparams
-#from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
 from improvelib.config.base import Config
 
 logging.basicConfig(
@@ -50,9 +34,6 @@ def locate_input(param_to_check, model_scripts_dir):
 @profile
 def run(job, optuna_trial=None):
     model_outdir_job_id = Path(params['output_dir'] + f"/{job.id}")
-    #learning_rate = job.parameters["learning_rate"]
-    #batch_size = job.parameters["batch_size"]
-
     train_run = ["bash", "hpo_deephyper_subprocess_train.sh",
              str(params['model_environment']),
              str(params['script_name']),
