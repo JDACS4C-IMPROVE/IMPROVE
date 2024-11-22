@@ -82,13 +82,13 @@ class DRPPreprocessConfig(PreprocessConfig):
     ]
 
     def __init__(self):
-        """Initialize the DRPPreprocessConfig."""
+        """Initializes the DRPPreprocessConfig."""
         super().__init__()
         self.cli.set_command_line_options(
             options=self._preproc_params,
             group='Drug Response Prediction Preprocessing'
         )
-        
+
 
 class DRPTrainConfig(TrainConfig):
     """Configuration for training drug response models.
@@ -114,7 +114,7 @@ class DRPTrainConfig(TrainConfig):
     ]
 
     def __init__(self):
-        """Initialize the DRPTrainConfig."""
+        """Initializes the DRPTrainConfig."""
         super().__init__()
         self.cli.set_command_line_options(
             options=self._app_train_params,
@@ -146,7 +146,7 @@ class DRPInferConfig(InferConfig):
     ]
 
     def __init__(self):
-        """Initialize the DRPInferConfig."""
+        """Initializes the DRPInferConfig."""
         super().__init__()
         self.cli.set_command_line_options(
             options=self._app_infer_params,
