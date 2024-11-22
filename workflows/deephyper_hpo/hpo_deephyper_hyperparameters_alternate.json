@@ -20,11 +20,5 @@
     "max": 0.5,
     "default": 0,
     "log_uniform": false
-    },
-    {
-    "name": "early_stopping",
-    "type": "categorical",
-    "choices": [true, false], 
-    "default": false
     }
 ]

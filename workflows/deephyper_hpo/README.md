@@ -64,6 +64,13 @@ Examples of additional hyperparamter dictionaries are in
 Insure that the name is a valid parameter for the model
 Insure true/false
 
+    {
+    "name": "early_stopping",
+    "type": "categorical",
+    "choices": [true, false], 
+    "default": false
+    }
+
 ## 6. Perform HPO
 If necesssary (i.e not proceeding directly from above steps), activate environment:
 ```
