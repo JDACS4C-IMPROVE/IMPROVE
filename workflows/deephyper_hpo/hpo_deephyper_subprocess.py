@@ -30,40 +30,12 @@ import hpo_deephyper_params_def
 #from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
 from improvelib.config.base import Config
 
-# ---------------------
-# Enable logging
-# ---------------------
-
 logging.basicConfig(
     # filename=f"deephyper.{rank}.log, # optional if we want to store the logs to disk
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s",
     force=True,
 )
-
-# ---------------------
-# Enable using multiple GPUs
-# ---------------------
-
-mpi4py.rc.initialize = False
-mpi4py.rc.threads = True
-mpi4py.rc.thread_level = "multiple"
-mpi4py.rc.recv_mprobe = False
-
-if not MPI.Is_initialized():
-    MPI.Init_thread()
-
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-
-if params['interactive_session']:
-    num_gpus_per_node = 2
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(rank % num_gpus_per_node)
-    cuda_name = "cuda:" + str(rank % num_gpus_per_node)
-else:
-    # CUDA_VISIBLE_DEVICES is now set via set_affinity_gpu_polaris.sh
-    local_rank = os.environ["PMI_LOCAL_RANK"]
 
 def locate_input(param_to_check, model_scripts_dir):
     checking = param_to_check
@@ -74,33 +46,6 @@ def locate_input(param_to_check, model_scripts_dir):
         if not os.path.exists(param_to_check):
             print(f"Parameter {checking} provided but not found at provided path or in model_scripts_dir.") 
     return param_to_check
-
-
-
-
-
-# ---------------------
-# Hyperparameters
-# ---------------------
-problem = HpProblem()
-
-with open(params['hyperparameter_file']) as f:
-    hyperparams = json.load(f)
-
-for hp in hyperparams:
-    if hp['type'] == "categorical":
-        problem.add_hyperparameter(hp['choices'], hp['name'], default_value=hp['default'])
-    else:
-        if hp['log_uniform']:
-            problem.add_hyperparameter((hp['min'], hp['max'], "log-uniform"), 
-                                       hp['name'], default_value=hp['default'])
-        else:
-            problem.add_hyperparameter((hp['min'], hp['max']), 
-                                       hp['name'], default_value=hp['default'])
-
-params['hyperparams'] = [d['name'] for d in hyperparams]
-
-
 
 @profile
 def run(job, optuna_trial=None):
@@ -169,6 +114,41 @@ if __name__ == "__main__":
     params['model_environment'] = locate_input(params['model_environment'], params['model_scripts_dir'])
     params['hyperparameter_file'] = locate_input(params['hyperparameter_file'], params['model_scripts_dir'])
 
+    # Set hyperparameters
+    problem = HpProblem()
+    with open(params['hyperparameter_file']) as f:
+        hyperparams = json.load(f)
+    for hp in hyperparams:
+        if hp['type'] == "categorical":
+            problem.add_hyperparameter(hp['choices'], hp['name'], default_value=hp['default'])
+        else:
+            if hp['log_uniform']:
+                problem.add_hyperparameter((hp['min'], hp['max'], "log-uniform"), 
+                                        hp['name'], default_value=hp['default'])
+            else:
+                problem.add_hyperparameter((hp['min'], hp['max']), 
+                                        hp['name'], default_value=hp['default'])
+    params['hyperparams'] = [d['name'] for d in hyperparams]
+
+    # Enable using multiple GPUs
+    mpi4py.rc.initialize = False
+    mpi4py.rc.threads = True
+    mpi4py.rc.thread_level = "multiple"
+    mpi4py.rc.recv_mprobe = False
+    if not MPI.Is_initialized():
+        MPI.Init_thread()
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+    if params['interactive_session']:
+        num_gpus_per_node = 2
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(rank % num_gpus_per_node)
+        cuda_name = "cuda:" + str(rank % num_gpus_per_node)
+    else:
+        # CUDA_VISIBLE_DEVICES is now set via set_affinity_gpu_polaris.sh
+        local_rank = os.environ["PMI_LOCAL_RANK"]
+
+    # Run DeepHyper
     with Evaluator.create(
         run, method="mpicomm", method_kwargs={"callbacks": [TqdmCallback()]}
     ) as evaluator:
