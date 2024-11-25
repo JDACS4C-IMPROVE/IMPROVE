@@ -12,7 +12,7 @@ from deephyper.search.hps import CBO
 from mpi4py import MPI
 import socket
 import hpo_deephyper_params_def
-from improvelib.applications.drug_response_prediction.config import DRPTrainConfig
+from improvelib.initializer.config import Config
 
 logging.basicConfig(
     # filename=f"deephyper.{rank}.log, # optional if we want to store the logs to disk
@@ -80,6 +80,7 @@ if __name__ == "__main__":
     cfg = DRPTrainConfig() 
     global params
     params = cfg.initialize_parameters(
+        section="HPO",
         pathToModelDir=filepath,
         default_config="hpo_deephyper_params.ini",
         additional_definitions=hpo_deephyper_params_def.additional_definitions
