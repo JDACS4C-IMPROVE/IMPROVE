@@ -736,7 +736,7 @@ class Config:
         # Create output directory if not exists
         if not os.path.isdir(self.output_dir):
             self.logger.debug("Creating output directory: %s", self.output_dir)
-            os.makedirs(self.output_dir, exist_ok=True)
+            os.makedirs(self.output_dir)
         # Save parameters to file
         self.logger.debug("Saving final parameters to file.")
         # Save final configuration to file
