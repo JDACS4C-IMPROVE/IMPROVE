@@ -77,7 +77,7 @@ def run(job, optuna_trial=None):
 if __name__ == "__main__":
     # Initialize parameters for DeepHyper HPO
     filepath = Path(__file__).resolve().parent
-    cfg = DRPTrainConfig() 
+    cfg = Config() 
     global params
     params = cfg.initialize_parameters(
         section="HPO",
