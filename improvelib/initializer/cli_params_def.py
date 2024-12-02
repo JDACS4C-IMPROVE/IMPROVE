@@ -136,7 +136,7 @@ improve_train_conf = [
      "type": str,
      "default": ".pt", # Note! this default assumes PyTorch model
      # "required": True, # TODO remove default if this is required param
-     "help": "[Dep?] File format to save the trained model."
+     "help": "[Dep?] File format to save/load the trained model."
     },
     # ---------------------------------------
     {"name": "epochs",
@@ -268,13 +268,13 @@ improve_infer_conf = [
     {"name": "model_file_name",  # default expected
      "type": str,
      "default": "model",
-     "help": "[Dep?] Filename to store trained model (str is w/o file_format)."
+     "help": "[Dep?] Filename to save/load trained model (str is w/o file_format)."
      },
     {"name": "model_file_format",  # [Req] depends on the DL/ML framework used by the model
      "type": str,
      "default": ".pt", # Note! this default assumes PyTorch model
      # "required": True, # TODO remove default if this is required param
-     "help": "[Dep?] File format to save the trained model."
+     "help": "[Dep?] File format to save/load the trained model."
     },
     {"name": "loss",  
      "type": str,
