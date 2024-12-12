@@ -8,7 +8,7 @@ Classes:
 
 Functions:
     __init__: Initializes the Config class with default settings.
-    load_config: Loads the configuration from a file. (Potential duplicate with config_new.py)
+    load_config: Loads the configuration from a file.
     load_config_file: Loads the configuration file, setting paths and defaults.
     ini2dict: Converts INI configuration to a dictionary.
     dict: Alias for ini2dict, returns configuration as a dictionary.
