@@ -1,37 +1,55 @@
+"""
+This module handles command-line interface (CLI) operations for the IMPROVE model.
+It provides functionality to parse command-line arguments, set logging levels,
+and manage configuration files for different stages of the model workflow.
+
+Classes:
+    CLI: Manages command-line argument parsing and handling.
+        Methods:
+            __init__(): Initialize the CLI class with default settings.
+            set_command_line_options(options, group): Set command line options.
+            get_command_line_options(): Get command line options.
+            _check_option(option): Check if an option is valid.
+            get_config_file(): Retrieve the configuration file path from arguments.
+"""
+
 import argparse
 import logging
 import os
 import pprint
-import sys
 
-# from improve import config as BaseConfig
 from improvelib.utils import parse_from_dictlist
 
 printfn = pprint.PrettyPrinter(indent=4).pformat
 
 
 class CLI:
-    """Base Class for Command Line Options"""
+    """Base Class for Command Line Options.
 
-    def __init__(self):
+    This class provides methods to parse and manage command-line arguments
+    for the IMPROVE model, including setting default options and retrieving
+    configuration files.
+    """
 
+    def __init__(self) -> None:
+        """Initialize the CLI class with default settings."""
         # Default format for logging
         FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
         logging.basicConfig(format=FORMAT)
 
-        # Class attributes and defautl values
         # Initialize parser
         self.parser = argparse.ArgumentParser(
             description='IMPROVE Command Line Parser',
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
 
         # Initialize logger
         self.logger = logging.getLogger('CLI')
 
-        # Command line options after parsing, results of self.parser.parse_args()
+        # Command line options after parsing
         self.args = None  # placeholder for args from argparse
         self.parser_params = None  # dict of args
-        self.default_params = None # dict of defaults for the parameters
+        self.default_params = None  # dict of defaults for the parameters
         self.cli_explicit = None
         self.cli_params = {}
 
@@ -45,21 +63,24 @@ class CLI:
             metavar='DIR',
             type=str,
             dest="input_dir",
-            default=os.getenv("IMPROVE_INPUT_DIR" , "./"),
-            help='Base directory for input data. Default is IMPROVE_DATA_DIR \
-                 or if not specified current working directory. All additional \
-                 input pathes will be relative to the base input directory.'
+            default=os.getenv("IMPROVE_INPUT_DIR", "./"),
+            help=(
+                'Base directory for input data. Defaults to IMPROVE_DATA_DIR or '
+                'the current working directory if not specified. All additional '
+                'input paths are relative to this directory.'
+            )
         )
         common_options.add_argument(
             '-o', '--output_dir',
             metavar='DIR',
             type=str,
             dest="output_dir",
-            default=os.getenv("IMPROVE_OUTPUT_DIR" , "./"), 
-            help='Base directory for output data. Default is IMPROVE_OUTPUT_DIR \
-                 or if not specified current working directory. All additional \
-                 relative output pathes will be placed into the base output \
-                 directory.'
+            default=os.getenv("IMPROVE_OUTPUT_DIR", "./"),
+            help=(
+                'Base directory for output data. Defaults to IMPROVE_OUTPUT_DIR '
+                'or the current working directory if not specified. All additional '
+                'relative output paths will be placed into this directory.'
+            )
         )
         common_options.add_argument(
             '--log_level',
@@ -68,21 +89,31 @@ class CLI:
             dest="log_level",
             choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "NOTSET"],
             default=os.getenv("IMPROVE_LOG_LEVEL", "WARNING"),
-            help="Set log levels. Default is WARNING. Levels are: DEBUG, INFO, \
-                 WARNING, ERROR, CRITICAL, NOTSET"
-        ) 
+            help=(
+                "Set the logging level. Defaults to WARNING. Available levels: "
+                "DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET."
+            )
+        )
         common_options.add_argument(
             '--config_file',
             metavar='INI_FILE',
-            dest="config_file", 
+            dest="config_file",
             type=str,
             default=None,
-            help="Config file in INI format. Supports all command line options. Values from the command line will overwrite values from the config file."
+            help=(
+                "Path to a config file in INI format. Supports all command-line "
+                "options. Command-line values override those in the config file."
+            )
         )
 
+    def set_command_line_options(self, options: list = [], group: str = None) -> None:
+        """
+        Set Command Line Options, safeguarding standard options.
 
-    def set_command_line_options(self, options=[], group=None):
-        """Set Command Line Options, saveguard standard options."""
+        Args:
+            options (list): A list of dictionaries defining command line options.
+            group (str, optional): The name of the argument group to add options to.
+        """
         self.logger.debug("Setting Command Line Options")
         self.logger.debug(f"Group: {group}")
         if not options:
@@ -96,7 +127,8 @@ class CLI:
                 unique_options[d['name']] = d
             else:
                 self.logger.warning(
-                    "Found duplicate option %s in options. Removing duplicate", d['name'])
+                    "Found duplicate option %s in options. Removing duplicate", d['name']
+                )
 
         # Create list of unique options
         options = list(unique_options.values())
@@ -105,13 +137,13 @@ class CLI:
                               for o in self.parser._option_string_actions]
 
         new_options = []
-        # ['input_dir', 'output_dir', 'log_level', 'config_file']
 
         for d in options:
             if d['name'] in predefined_options:
                 self.logger.warning(
-                    "Found %s in options. This option is predefined and can \
-                    not be overwritten.", d['name'])
+                    "Found %s in options. This option is predefined and cannot "
+                    "be overwritten.", d['name']
+                )
                 self.logger.debug("Removing %s from options", d['name'])
                 options.remove(d)
             else:
@@ -119,7 +151,7 @@ class CLI:
                 new_options.append(d)
 
         self.logger.debug("Unique Options:\n%s", printfn(new_options))
-       
+
         if group:
             group = self.parser.add_argument_group(group)
             self.logger.debug(f"Setting Group to {group}")
@@ -127,10 +159,13 @@ class CLI:
         else:
             parse_from_dictlist(new_options, self.parser)
 
+    def get_command_line_options(self) -> dict:
+        """
+        Get Command Line Options.
 
-    def get_command_line_options(self):
-        """Get Command Line Options"""
-
+        Returns:
+            dict: A dictionary of parsed command line arguments.
+        """
         self.logger.debug("Getting Command Line Options")
         self.args = self.parser.parse_args()
         self.params = vars(self.args)
@@ -138,30 +173,43 @@ class CLI:
 
         return self.params
 
+    def _check_option(self, option: str) -> bool:
+        """
+        Check if an option is valid.
 
-    def _check_option(self, option) -> bool:
+        Args:
+            option (str): The option to check.
+
+        Returns:
+            bool: True if the option is valid, False otherwise.
+        """
         pass
 
+    def get_config_file(self) -> str:
+        """
+        Get the config file from the command line. Expects --config_file option.
 
-    def get_config_file(self):
-        """Get the config file from the command line. Expects --config_file option."""
+        Returns:
+            str: The path to the config file.
+        """
         self.logger.debug("Getting the config file from the command line.")
-        
+
         # Create a new parser to get the config file
         cfg_parser = argparse.ArgumentParser(
-                        description='Get the config file from command line.',
-                        add_help=False,)
+            description='Get the config file from command line.',
+            add_help=False,
+        )
         cfg_parser.add_argument(
-            '--config_file', 
-            metavar='INI_FILE', 
-            type=str , 
+            '--config_file',
+            metavar='INI_FILE',
+            type=str,
             dest="config_file",
             default=None
         )
-    
+
         # Parse the command line arguments
         args_tmp = cfg_parser.parse_known_args()
-        
+
         # Get the config file
         config_file = args_tmp[0].config_file
 
@@ -170,15 +218,16 @@ class CLI:
 
 
 if __name__ == "__main__":
+    # This block is for testing/debugging purposes
     cli = CLI()
     defaults = [{'action': 'store', 'choices': [
         'A', 'B', 'C'], 'type': str, 'name': "dest"}]
     cli.set_command_line_options(options=defaults)
     cli.get_command_line_options()
-    cfg=cli.config("Preprocess")
+    cfg = cli.config("Preprocess")
 
-    for k in cli.params :
-        print("\t".join([k , cli.params[k]]))
+    for k in cli.params:
+        print("\t".join([k, cli.params[k]]))
     print(cfg.dict(section="Preprocess"))
-    setattr(cfg, "version" , "0.1")
+    setattr(cfg, "version", "0.1")
     print(cfg.version)
