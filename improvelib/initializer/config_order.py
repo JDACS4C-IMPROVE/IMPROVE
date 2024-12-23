@@ -28,7 +28,7 @@ Functions:
     check_required: Checks if all required parameters are set. (Empty)
     _validate_parameters: Validates parameters, setting types and checking for required parameters.
     load_parameter_definitions: Loads parameter definitions from a file.
-    validate_parameters: Validates parameters. (Empty)
+    validate_parameters: Validates parameters. (Removed)
     section_parameters: Returns a dictionary of all options in a section.
     initialize_parameters: Initializes parameters from the command line and config file. (Check for overlap)
 
@@ -260,35 +260,76 @@ class Config:
             f.write(str(self.params)) 
             
             
-    # Command Line Interface Methods:
+    # ==========================================================
+    # COMMAND LINE INTERFACE METHODS
     # These methods manage the parsing and handling of command line arguments.
     # They set up command line options, retrieve user inputs, and update defaults,
     # enabling dynamic configuration of the application via the command line.
-    def set_command_line_options(self, options=[] , group=None):
-        """Set command line options."""
+    # ==========================================================
+    def set_command_line_options(self, options: list = [], group: str = None) -> bool:
+        """
+        Set command line options using the CLI class.
+
+        This function delegates the setup of command line options to the CLI class,
+        ensuring that options are properly configured and integrated with the
+        application's configuration management system. After setting the options,
+        it updates the internal `_options` dictionary to reflect these changes,
+        ensuring that all command-line options are tracked and managed.
+
+        Args:
+            options (list): A list of dictionaries defining command line options.
+            group (str, optional): The name of the argument group to add options to.
+
+        Returns:
+            bool: True if the command line options were successfully set.
+        """
         self.cli.set_command_line_options(options) 
         self._update_options()
         return True
     
 
-    def get_command_line_options(self):
-        """Get command line options."""
+    def get_command_line_options(self) -> dict:
+        """
+        Retrieve command line options.
+
+        This function updates the command line defaults with the current configuration
+        and retrieves the parsed command line arguments using the CLI class.
+
+        Returns:
+            dict: A dictionary containing the parsed command line options.
+        """
         self._update_cli_defaults()
         return self.cli.get_command_line_options()
     
-    # Load command line definitions from a file
-    def load_cli_parameters(self, file, section=None):
-        """Load parameters from a file."""
+    
+    def load_cli_parameters(self, file: str, section: str = None) -> dict:
+        """
+        Load command line parameters from a file.
+
+        This function reads parameter definitions from a specified file, which can be in JSON or YAML format.
+        It validates the parameters and returns them as a dictionary.
+
+        Args:
+            file (str): The path to the file containing parameter definitions.
+            section (str, optional): The section of the file to load parameters from, if applicable.
+
+        Returns:
+            dict: A dictionary containing the loaded parameters.
+
+        Raises:
+            SystemExit: If the file cannot be found or is in an unsupported format.
+        """
         self.logger.debug("Loading parameters from %s", file)
 
-        # Convert Path to string
+        # Convert Path to string if necessary
         if file and isinstance(file, Path):
             file = str(file)
 
         if os.path.isfile(file):
-            # check if yaml or json file and load
+            # Initialize params to None
             params = None
 
+            # Check if the file is in JSON or YAML format and load it
             if file.endswith('.json'):
                 with open(file, 'r') as f:
                     params = json.load(f)
@@ -296,22 +337,40 @@ class Config:
                 with open(file, 'r') as f:
                     params = yaml.safe_load(f)
             else:
+                # Log an error if the file format is unsupported
                 self.logger.error("Unsupported file format")
+            
+            # Validate the loaded parameters
             self._validate_parameters(params)
             return params
         else:
+            # Log a critical error and exit if the file is not found
             print(isinstance(file, str))
             self.logger.critical("Can't find file %s", file)
             sys.exit(1)
             return None
     
     
-    # Update the default values for the command line arguments with the new defaults
-    def update_defaults(self, cli_definitions=None, new_defaults=None):
+    def update_defaults(self, cli_definitions: list = None, new_defaults: dict = None) -> list:
+        """
+        Update the default values for command line arguments.
 
+        This function updates the default values for command line arguments based on
+        new defaults provided. It modifies the command line definitions and updates
+        the parser's defaults if the options already exist.
+
+        Args:
+            cli_definitions (list): A list of dictionaries defining command line options.
+            new_defaults (dict): A dictionary containing new default values for the options.
+
+        Returns:
+            list: A list of updated command line definitions with new default values.
+
+        Raises:
+            json.JSONDecodeError: If a default value cannot be converted to a list.
+        """
         # Get the list of added options from the parser
-        existing_options = [o.lstrip('-')
-                              for o in self.cli.parser._option_string_actions]
+        existing_options = [o.lstrip('-') for o in self.cli.parser._option_string_actions]
 
         if not new_defaults:
             self.logger.error("No new defaults provided.")
@@ -361,18 +420,33 @@ class Config:
     # Extract config file name from command line arguments and load config file
     # Seed defaults for command line arguments with values from config file
 
-    def update_cli_definitions(self, definitions=None):
+    def update_cli_definitions(self, definitions: list = None) -> list:
         """
         Update the command line argument definitions with values from the config file.
-        Use this before self.cli.set_command_line_options(options=updated_parameters)
-        """
 
+        This function extracts the config file name from command line arguments and loads
+        the config file. It then updates the provided command line argument definitions
+        with values from the config file. This should be used before calling
+        `self.cli.set_command_line_options(options=updated_parameters)`.
+
+        Args:
+            definitions (list, optional): A list of dictionaries defining command line options
+                to be updated with values from the config file.
+
+        Returns:
+            list: A list of updated command line definitions with values from the config file.
+
+        Notes:
+            - The config file can be specified as a command line argument or set as a default
+              in the code. If neither is provided, the function will log a debug message and return.
+            - This function relies on the `ini2dict` method to convert the config file into a
+              dictionary format suitable for updating the command line definitions.
+        """
         # Config file can be provided as a command line argument or as a default in the code
         # Get the config file from the command line arguments otherwise use the default from self.file
         config_file_from_cli = self.cli.get_config_file()
         
-            
-        # Set self.file ; the config will be loaded from self.file
+        # Set self.file; the config will be loaded from self.file
         if config_file_from_cli is not None:
             self.file = config_file_from_cli
         else:
@@ -433,12 +507,25 @@ class Config:
         return True
     
     
-    # Update _options with options from the command line (argparse)
-    # Call everytime a new option is added to the command line, e.g. after set_command_line_options
-    def _update_options(self):
+
+    def _update_options(self) -> bool:
+        """
+        Update internal options with command line arguments.
+
+        This function updates the internal `_options` dictionary with the current
+        command line arguments parsed by the CLI class. It should be called every
+        time a new option is added to the command line, such as after calling
+        `set_command_line_options`.
+
+        Returns:
+            bool: True if the options were successfully updated.
+        """
+        # Iterate over all actions in the CLI parser
         for action in self.cli.parser._actions:
+            # Add each action's destination and attributes to the internal options
             self._add_option(action.dest, action.__dict__)
-        return True       
+        
+        return True
     
     # Update command line defaults with values from _options
     def _update_cli_defaults(self):
@@ -643,9 +730,7 @@ class Config:
             return None
 
 
-    def validate_parameters(self, params, required=None):
-        """Validate parameters."""
-        pass
+
     
 
     def section_parameters(self, section=None) -> dict:
@@ -790,82 +875,91 @@ class Config:
     
     
 if __name__ == "__main__":
+    # ==========================================================
+    # TEST/DEBUGGING BLOCK
+    # This section is used for testing and debugging the Config class functionality.
+    # It demonstrates how to initialize the Config class, load parameters, and
+    # interact with command line options.
+    # ==========================================================
+    
+    # Initialize the Config class
     cfg = Config()
-    # cfg.file = "./Tests/Data/default.cfg"
-    # cfg.output_dir = "./tmp"
-    # cfg.load_config()
-    # print(cfg.params)
-    # print(cfg.dict())
-    # print(cfg.param(None, 'weights', None))
-    # cfg.param('Infer', 'weights', 'default.weights')
-    # for section in cfg.config.items():
-    #     print(section)
-    #     for item in cfg.config.items(section[0], raw=False):
-    #         print(item)
-    # print(cfg.param("Infer", 'weights', None))
-    # print(cfg.dict('Infer'))
-    # cfg.save_config("./tmp/saved.config", config=cfg.config['DEFAULT'])
-
+    
+    # Define common parameters for testing
+    # These parameters simulate command-line options with various types and defaults
     common_parameters = [
         {
             "name": "list_of_int",
             "dest": "loint",
             "help": "Need help to display default value",
-            "nargs" :"+",
-            "type" :  int,
+            "nargs": "+",
+            "type": int,
             "default": [100],
             "section": "DEFAULT"
         },
         {
             "name": "list_of_strings",
             "dest": "lostr",
-            "nargs" : "+",
-            "type" :  str,
+            "nargs": "+",
+            "type": str,
             "default": ['100'],
             "section": "DEFAULT"
         },
         {
             "name": "list_of_lists",
-            "nargs" : "+",
+            "nargs": "+",
             "metavar": "lol",
             "dest": "l",
             "action": "append",
-            "type" :  str,
-            "default": [[1,2,3],[4,5,6]],
+            "type": str,
+            "default": [[1, 2, 3], [4, 5, 6]],
             "section": "DEFAULT"
         },
     ]
-
-    # create path from current directory, keep everything before improvelib
+    
+    # Define directories for loading additional parameters and configuration files
     current_dir = Path(__file__).resolve().parent
     test_dir = current_dir.parents[1] / "tests"
 
+    # Load additional command line parameters from a file
+    # This tests the ability to read and parse external parameter definitions
     params = cfg.load_cli_parameters(
         test_dir / "data/additional_command_line_parameters.yml")
     print(params)
 
-    # updated additional_definitions with values from config file
-    # cfg.cli.set_command_line_options(options=params)
+    # Example of setting command line options
+    # Demonstrates defining and adding command-line options programmatically
     import argparse
     cfg_parser = argparse.ArgumentParser(
-                    description='Get the config file from command line.',
-                    add_help=False,)
-    cfg_parser.add_argument('--config_file', metavar='INI_FILE', type=str , dest="config_file")
-    # parse command line and grab config file
-    sys.argv.append( "--config_file" )
-    sys.argv.append( str( test_dir / "data/default.cfg") )
- 
+        description='Get the config file from command line.',
+        add_help=False,)
+    cfg_parser.add_argument('--config_file', metavar='INI_FILE', type=str, dest="config_file")
+
+    # Simulate command line arguments for testing
+    # Allows the script to behave as if run with specific arguments
+    sys.argv.append("--config_file")
+    sys.argv.append(str(test_dir / "data/default.cfg"))
+
+    # Add a test command line option
+    # Tests integration of argparse with the Config class
     cfg.cli.parser.add_argument('--test', metavar='TEST_COMMAND_LINE_OPTION', dest="test",
                                 nargs='+',
                                 type=int,
                                 default=[1], help="Test command line option.")
-    
-    # cfg.cli.parser.set_defaults(test=100)
-    
+
+    # Initialize parameters with common and additional definitions
+    # Tests comprehensive parameter initialization, including merging and overriding defaults
     print(
         cfg.initialize_parameters(
-        "./", additional_definitions=common_parameters + params)
+            "./", additional_definitions=common_parameters + params)
     )
+    
+    # Output the results to verify correct processing and storage of parameters
+    # Print the items in the 'DEFAULT' section of the configuration
     print(cfg.config.items('DEFAULT', raw=False))
+    
+    # Print the parsed command-line arguments as a namespace object
     print(cfg.cli.args)
+    
+    # Print the final set of parameters after merging all sources
     print(cfg.params)
