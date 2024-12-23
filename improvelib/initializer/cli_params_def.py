@@ -1,7 +1,15 @@
-"""
-This module defines parameter configurations for different stages of the IMPROVE model,
-including preprocessing, training, and inference. It includes parameters that are
-common across all stages as well as those specific to each stage.
+"""Parameter configurations for the IMPROVE model stages.
+
+This module defines parameter configurations for preprocessing, training, and inference
+stages of the IMPROVE model. It includes both common parameters shared across all stages
+and stage-specific parameters.
+
+Variables:
+    improve_basic_conf (list): Common parameters for all IMPROVE model stages.
+    improve_preprocess_conf (list): Parameters specific to preprocessing stage.
+    improve_train_conf (list): Parameters specific to training stage.
+    improve_infer_conf (list): Parameters specific to inference stage.
+    cli_param_definitions (list): Combined list of all parameter definitions.
 """
 
 import argparse

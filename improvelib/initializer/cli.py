@@ -1,16 +1,10 @@
-"""
-This module handles command-line interface (CLI) operations for the IMPROVE model.
-It provides functionality to parse command-line arguments, set logging levels,
+"""Command-line interface operations for the IMPROVE model.
+
+This module provides functionality to parse command-line arguments, set logging levels,
 and manage configuration files for different stages of the model workflow.
 
 Classes:
     CLI: Manages command-line argument parsing and handling.
-        Methods:
-            __init__(): Initialize the CLI class with default settings.
-            set_command_line_options(options, group): Set command line options.
-            get_command_line_options(): Get command line options.
-            _check_option(option): Check if an option is valid.
-            get_config_file(): Retrieve the configuration file path from arguments.
 """
 
 import argparse
@@ -24,15 +18,24 @@ printfn = pprint.PrettyPrinter(indent=4).pformat
 
 
 class CLI:
-    """Base Class for Command Line Options.
+    """Handles command-line argument parsing and configuration.
 
     This class provides methods to parse and manage command-line arguments
     for the IMPROVE model, including setting default options and retrieving
     configuration files.
+
+    Attributes:
+        parser (ArgumentParser): The argument parser instance.
+        logger (Logger): Logger instance for CLI operations.
+        args: Parsed command line arguments.
+        parser_params (dict): Dictionary of parsed arguments.
+        default_params (dict): Dictionary of default parameter values.
+        cli_explicit: Explicitly set CLI parameters.
+        cli_params (dict): Dictionary of CLI parameters.
     """
 
     def __init__(self) -> None:
-        """Initialize the CLI class with default settings."""
+        """Initialize the CLI with default settings."""
         # Default format for logging
         FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
         logging.basicConfig(format=FORMAT)
@@ -107,12 +110,11 @@ class CLI:
         )
 
     def set_command_line_options(self, options: list = [], group: str = None) -> None:
-        """
-        Set Command Line Options, safeguarding standard options.
+        """Set command line options, safeguarding standard options.
 
         Args:
-            options (list): A list of dictionaries defining command line options.
-            group (str, optional): The name of the argument group to add options to.
+            options (list): List of dictionaries defining command line options.
+            group (str): Name of the argument group to add options to. Defaults to None.
         """
         self.logger.debug("Setting Command Line Options")
         self.logger.debug(f"Group: {group}")
@@ -160,11 +162,10 @@ class CLI:
             parse_from_dictlist(new_options, self.parser)
 
     def get_command_line_options(self) -> dict:
-        """
-        Get Command Line Options.
+        """Get command line options.
 
         Returns:
-            dict: A dictionary of parsed command line arguments.
+            dict: Dictionary of parsed command line arguments.
         """
         self.logger.debug("Getting Command Line Options")
         self.args = self.parser.parse_args()
@@ -174,23 +175,23 @@ class CLI:
         return self.params
 
     def _check_option(self, option: str) -> bool:
-        """
-        Check if an option is valid.
+        """Check if an option is valid.
 
         Args:
-            option (str): The option to check.
+            option (str): Option to check.
 
         Returns:
-            bool: True if the option is valid, False otherwise.
+            bool: True if option is valid, False otherwise.
         """
         pass
 
     def get_config_file(self) -> str:
-        """
-        Get the config file from the command line. Expects --config_file option.
+        """Get the config file path from command line arguments.
+
+        Expects --config_file option to be present in command line arguments.
 
         Returns:
-            str: The path to the config file.
+            str: Path to the config file.
         """
         self.logger.debug("Getting the config file from the command line.")
 
