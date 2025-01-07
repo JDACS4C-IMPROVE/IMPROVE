@@ -96,7 +96,7 @@ class Config:
         else:
             pass
 
-        if not "IMPOVE_OUTPUT_DIR" in os.environ:
+        if not "IMPROVE_OUTPUT_DIR" in os.environ:
             self.logger.debug('Setting output directory')
             os.environ["IMPROVE_OUTPUT_DIR"] = os.environ.get(
                 "IMPROVE_DATA_DIR", "./")
@@ -150,7 +150,7 @@ class Config:
                             relative to model directory")
                         self.file = pathToModelDir + default_config
                     else:
-                        self.logger.warning("Default config not releative to \
+                        self.logger.warning("Default config not relative to \
                                             model directory. Using as is.")
                         self.file = default_config
                         
@@ -610,7 +610,7 @@ class Config:
             if self.config.has_section(section):
                 self.config[section][key]=value
             else:
-                error="Unknow section " + str(section)
+                error="Unknown section " + str(section)
                 self.logger.error(error)
 
         if self.config.has_option(section, key):
@@ -651,7 +651,7 @@ class Config:
 
         if key:
             if not self.config.has_section(section) and not section == "DEFAULT":
-                msg = "Unknow section " + str(section)
+                msg = "Unknown section " + str(section)
                 self.logger.debug(msg)
                 self.config[section] = {}
 
@@ -779,7 +779,7 @@ class Config:
         self.__class__ = Config
 
         # Set section - DEFAULT, Preprocess, Train, Infer - maybe move to init
-        # section is neeed for reading config file
+        # section is needed for reading config file
         self.section = section
 
         # Check if default config file is provided and reachable
