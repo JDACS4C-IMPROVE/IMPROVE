@@ -140,13 +140,13 @@ improve_train_conf = [
         "name": "model_file_name",
         "type": str,
         "default": "model",
-        "help": "Filename to store the trained model (string is without file format).",
+        "help": "File name (without extension) used for saving or loading the trained model.",
     },
     {
         "name": "model_file_format",
         "type": str,
         "default": ".pt",
-        "help": "File format to save the trained model.",
+        "help": "File extension used for saving or loading the trained model.",
     },
     {
         "name": "epochs",
@@ -222,13 +222,13 @@ improve_infer_conf = [
         "name": "model_file_name",
         "type": str,
         "default": "model",
-        "help": "Filename to store the trained model (string is without file format).",
+        "help": "File name (without extension) used for saving or loading the trained model.",
     },
     {
         "name": "model_file_format",
         "type": str,
         "default": ".pt",
-        "help": "File format to save the trained model.",
+        "help": "File extension used for saving or loading the trained model.",
     },
     {
         "name": "loss",
