@@ -15,7 +15,7 @@ import logging
 import os
 from pathlib import Path
 import pprint
-import sys
+from typing import Union
 
 from improvelib.initializer.cli_params_def import (
     improve_basic_conf,
@@ -78,8 +78,8 @@ class SectionConfig(Config):
                               pathToModelDir: str,
                               default_config: str = 'default.cfg',
                               additional_cli_section: str = None,
-                              additional_definitions: str | Path = None,
-                              required: list = None) -> dict:
+                              additional_definitions: Union[str, Path] = None,
+                              required: Union[list, None] = None) -> dict:
         """Initialize command line interface and configuration parameters.
 
         Args:
