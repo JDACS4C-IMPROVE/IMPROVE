@@ -1,7 +1,7 @@
 """Command-line interface operations for the IMPROVE model.
 
 This module provides functionality to parse command-line arguments, set logging levels,
-and manage configuration files for different stages of the model workflow.
+and manage configuration files for different stages of the ML pipeline.
 
 Classes:
     CLI: Manages command-line argument parsing and handling.
