@@ -122,9 +122,8 @@ if __name__ == "__main__":
     rank = comm.Get_rank()
     size = comm.Get_size()
     if params['interactive_session']:
-        num_gpus_per_node = 2
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(rank % num_gpus_per_node)
-        cuda_name = "cuda:" + str(rank % num_gpus_per_node)
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(rank % params['num_gpus_per_node'])
+        cuda_name = "cuda:" + str(rank % params['num_gpus_per_node'])
     else:
         # CUDA_VISIBLE_DEVICES is now set via set_affinity_gpu_polaris.sh
         local_rank = os.environ["PMI_LOCAL_RANK"]
