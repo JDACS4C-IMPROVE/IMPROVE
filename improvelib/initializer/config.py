@@ -55,7 +55,7 @@ class Config:
         else:
             pass
 
-        if not "IMPOVE_OUTPUT_DIR" in os.environ:
+        if not "IMPROVE_OUTPUT_DIR" in os.environ:
             self.logger.debug('Setting output directory')
             os.environ["IMPROVE_OUTPUT_DIR"] = os.environ.get(
                 "IMPROVE_DATA_DIR", "./")
