@@ -46,6 +46,7 @@ import configparser
 import yaml
 import json
 from pathlib import Path
+from typing import Optional, Union
 
 from improvelib.utils import str2bool, cast_value
 from improvelib.initializer.cli import CLI
@@ -106,43 +107,70 @@ class Config:
         self.config.set("DEFAULT", "output_dir",
                         os.environ.get("IMPROVE_OUTPUT_DIR", "./"))
         
-    # Configuration File Methods:
+    # ==========================================================
+    # CONFIGURATION FILE METHODS
     # These methods handle the loading, saving, and management of configuration files.
     # They ensure that configuration data is correctly read from and written to files,
     # allowing the application to persist settings across sessions.
+    # ==========================================================
         
         
-    def load_config(self):
-        """ TODO ... """
+    def load_config(self) -> None:
+        """Loads the configuration from a file.
+
+        This method attempts to read the configuration settings from a specified
+        file. If the file exists and is accessible, the configuration is loaded
+        into the `config` attribute. If the file does not exist or cannot be
+        accessed, an error is logged and the `DEFAULT` section of the configuration
+        is initialized as an empty dictionary.
+        """
+        # Check if the file path is set and the file exists
         if self.file and os.path.isfile(self.file):
+            # Log the action of loading the configuration
             self.logger.info("Loading config from %s", self.file)
+            # Read the configuration file into the config attribute
             self.config.read(self.file)
         else:
+            # Log an error if the file cannot be loaded
             self.logger.error("Can't load config from %s", str(self.file))
+            # Initialize the DEFAULT section as an empty dictionary
             self.config['DEFAULT'] = {}
-    
-    def load_config_file(self, pathToModelDir=None, default_config=None):
+
+
+    def load_config_file(self, pathToModelDir: Optional[Union[str, Path]] = None, default_config: Optional[Union[str, Path]] = None) -> None:
+        """Determines and loads the configuration file.
+
+        This method sets the configuration file path based on the provided
+        `pathToModelDir` and `default_config`, or from command-line arguments.
+        It checks if the input directory exists and constructs the full path to
+        the configuration file, storing it in the `self.file` attribute. If the
+        file path is valid, it calls `load_config` to load the configuration.
+
+        Args:
+            pathToModelDir (Optional[Union[str, Path]]): The directory path to the model.
+            default_config (Optional[Union[str, Path]]): The default configuration file name.
         """
-        Loads the configuration file. 
-        """
+        # Check if the input directory exists
         if self.input_dir and os.path.isdir(self.input_dir):
 
-            # Set config file name
+            # Check if a config file is specified via command-line arguments
             if self.cli.args.config_file:
                 self.file = self.cli.args.config_file
             else:
-                # Make pathToModelDir and default_config same type. Possible types are: str, Path
+                # Ensure pathToModelDir and default_config are strings
                 if isinstance(pathToModelDir, Path):
                     pathToModelDir = str(pathToModelDir)
                 if isinstance(default_config, Path):
                     default_config = str(default_config)
 
+                # Ensure pathToModelDir ends with a slash
                 if pathToModelDir is not None:
                     if not pathToModelDir.endswith("/"):
                         pathToModelDir += "/"
                 else:
                     pathToModelDir = "./"
 
+                # Determine the configuration file path
                 if default_config is not None:
                     if not os.path.abspath(default_config):
                         self.logger.debug(
@@ -153,112 +181,127 @@ class Config:
                         self.logger.warning("Default config not relative to \
                                             model directory. Using as is.")
                         self.file = default_config
-                        
                 else:
                     self.logger.warning("No default config file provided")
 
                 self.logger.debug("No config file provided. Using default: %s", self.file)
 
-            # Set full path for config
+            # Construct the full path for the config file if necessary
             if self.file and not os.path.abspath(self.file):
                 self.logger.debug(
                     "Not absolute path for config file. Should be relative to input_dir")
                 self.file = self.input_dir + "/" + self.file
                 self.logger.debug("New file path: %s", self.file)
 
-            # Load config if file exists
+            # Attempt to load the config file if it exists
             if self.file and os.path.isfile(self.file):
                 self.load_config()
             else:
                 self.logger.warning("Can't find config file: %s", self.file)
                 self.config[section] = {}
         else:
+            # Log a critical error if the input directory does not exist
             self.logger.critical("No input directory: %s", self.input_dir)
             
-    def ini2dict(self, section=None , flat=False) -> dict:
-        """
-        Return a dictionary of all options in the config file. If section is provided,
-        return a dictionary of options in that section. If flat is True, return a flat
-        dictionary without sections.
-        """
+            
+    def ini2dict(self, section: Optional[str] = None, flat: bool = False) -> dict:
+        """Converts INI configuration to a dictionary.
 
+        This method returns a dictionary representation of the configuration
+        options. If a specific section is provided, it returns the options
+        within that section. If `flat` is set to True, it returns a flat
+        dictionary without sections, combining all options.
+
+        Args:
+            section (Optional[str]): The section of the configuration to convert.
+                If None, all sections are included.
+            flat (bool): If True, returns a flat dictionary without sections.
+
+        Returns:
+            dict: A dictionary containing the configuration options.
+        """
         params = {}
-        sections=[]
 
-        if section :
-            sections=[section]
-        else:
-            sections=self.config.sections()
-        
+        # Determine which sections to process
         if section:
-            # check if section exists
+            # Check if the specified section exists
             if self.config.has_section(section):
-                for i in self.config.items(section):
-                    params[i[0]]=i[1]
+                sections = [section]
             else:
+                # Log an error if the section does not exist and return an empty dictionary
                 self.logger.error("Can't find section %s", section)
-
+                return params
         else:
+            # If no specific section is provided, process all sections
+            sections = self.config.sections()
+
+        # Iterate over the determined sections
+        for s in sections:
             if flat:
-                for s in self.config.sections():
-                    for i in self.config.items(s):
-                        params[i[0]]=i[1]
+                # If flat is True, add all items to a single dictionary without section keys
+                for key, value in self.config.items(s):
+                    params[key] = value
             else:
-                for s in self.config.sections():
-                    params[s]={}
-                    for i in self.config.items(s):
-                        params[s][i[0]]=i[1]
+                # Otherwise, organize items under their respective section keys
+                params[s] = {key: value for key, value in self.config.items(s)}
 
         return params
 
 
-    def dict(self, section=None) -> dict : # rename to ini2dict ; keep dict as alias
-        """
-        Return a dictionary of all options in the config file. If section is provided,
-        return a dictionary of options in that section
+    def dict(self, section: Optional[str] = None) -> dict:
+        """Returns a dictionary of configuration options.
+
+        This method serves as an alias for `ini2dict`, providing a dictionary
+        representation of the configuration options. If a specific section is
+        provided, it returns the options within that section.
+
+        Args:
+            section (Optional[str]): The section of the configuration to convert.
+                If None, all sections are included.
+
+        Returns:
+            dict: A dictionary containing the configuration options for the specified
+            section, or all sections if no section is specified.
         """
         return self.ini2dict(section=section)
 
 
-    def save_parameter_file(self, file_name):
-        """ 
-        Saves final parameters to a file. 
-        Saves in output_dir if file name given or anywhere with absolute path
-        TODO: file name needs to be a general parameter (see initialize_param crazy name)
-        TODO: would be nice to specifiy output format
+    def save_parameter_file(self, file_name: Optional[str]) -> None:
+        """Saves the final parameters to a file.
+
+        This method writes the current parameters to a specified file. If the
+        file name is an absolute path, it saves directly to that location.
+        Otherwise, it saves the file in the `output_dir`. If the directory
+        does not exist, it is created.
+
+        Args:
+            file_name (Optional[str]): The name of the file to save the parameters to.
         """
         if file_name is None:
+            # Log a warning if no file name is provided
             self.logger.warning("No file name provided to save parameters.")
             return
         else:
+            # Log the action of saving parameters
             self.logger.debug("Saving parameters to %s", file_name)
             if os.path.isabs(file_name):
+                # Use the absolute path if provided
                 path = file_name
             else:
+                # Construct the path in the output directory
                 path = Path(self.output_dir, file_name)
+                # Create the directory if it does not exist
                 if not Path(path.parent).exists():
                     self.logger.debug(
                         "Creating directory %s for saving config file.", path.parent)
                     Path(path.parent).mkdir(parents=True, exist_ok=True)
 
+            # Write the parameters to the file
             with path.open("w") as f:
-                f.write(str(self.params)) 
+                f.write(str(self.params))
 
 
-    def save_config(self, file_name, config=None):
-        if os.path.isabs(file_name):
-            with open(file_name, 'w') as out_file:
-                self.config.write(out_file)
-        else:
-            path = Path(self.output_dir, file_name)
-            if not Path(path.parent).exists():
-                self.logger.debug(
-                    "Creating directory %s for saving config file.", path.parent)
-                Path(path.parent).mkdir(parents=True, exist_ok=True)
 
-        with path.open("w") as f:
-            f.write(str(self.params)) 
-            
             
     # ==========================================================
     # COMMAND LINE INTERFACE METHODS
@@ -591,10 +634,12 @@ class Config:
 
         return True
     
-    # Parameter Management Methods:
+    # ==========================================================
+    # PARAMETER MANAGEMENT METHODS
     # These methods handle the retrieval, setting, and validation of configuration parameters.
     # They provide functionality to access and modify parameter values, ensuring that
     # the application's configuration is consistent and meets required criteria.
+    # ==========================================================
     
     
     def param(self, section="DEFAULT" , key=None , value=None) -> (str,str):
@@ -958,6 +1003,11 @@ if __name__ == "__main__":
     # Print the items in the 'DEFAULT' section of the configuration
     print(cfg.config.items('DEFAULT', raw=False))
     
+    # Print the parsed command-line arguments as a namespace object
+    print(cfg.cli.args)
+    
+    # Print the final set of parameters after merging all sources
+    print(cfg.params)
     # Print the parsed command-line arguments as a namespace object
     print(cfg.cli.args)
     
