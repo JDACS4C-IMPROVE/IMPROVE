@@ -1,7 +1,15 @@
-"""
-This module defines parameter configurations for different stages of the IMPROVE model,
-including preprocessing, training, and inference. It includes parameters that are
-common across all stages as well as those specific to each stage.
+"""Parameter configurations for the IMPROVE model stages.
+
+This module defines parameter configurations for preprocessing, training, and inference
+stages of the IMPROVE model. It includes both common parameters shared across all stages
+and stage-specific parameters.
+
+Variables:
+    improve_basic_conf (list): Common parameters for all IMPROVE model stages.
+    improve_preprocess_conf (list): Parameters specific to preprocessing stage.
+    improve_train_conf (list): Parameters specific to training stage.
+    improve_infer_conf (list): Parameters specific to inference stage.
+    cli_param_definitions (list): Combined list of all parameter definitions.
 """
 
 import argparse
@@ -132,13 +140,13 @@ improve_train_conf = [
         "name": "model_file_name",
         "type": str,
         "default": "model",
-        "help": "Filename to store the trained model (string is without file format).",
+        "help": "File name (without extension) used for saving or loading the trained model.",
     },
     {
         "name": "model_file_format",
         "type": str,
         "default": ".pt",
-        "help": "File format to save the trained model.",
+        "help": "File extension used for saving or loading the trained model.",
     },
     {
         "name": "epochs",
@@ -214,13 +222,13 @@ improve_infer_conf = [
         "name": "model_file_name",
         "type": str,
         "default": "model",
-        "help": "Filename to store the trained model (string is without file format).",
+        "help": "File name (without extension) used for saving or loading the trained model.",
     },
     {
         "name": "model_file_format",
         "type": str,
         "default": ".pt",
-        "help": "File format to save the trained model.",
+        "help": "File extension used for saving or loading the trained model.",
     },
     {
         "name": "loss",

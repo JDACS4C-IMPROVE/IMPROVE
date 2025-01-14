@@ -1,10 +1,11 @@
-"""
-This module defines configuration classes for different stages of the application,
-including preprocessing, training, and inference. It extends the base Config class
-to handle stage-specific configuration parameters and command-line interface options.
+"""Module for configuration classes for different application stages.
+
+This module defines configuration classes for preprocessing, training, and inference 
+stages. It extends the base Config class to handle stage-specific configuration 
+parameters and command-line interface options.
 
 Classes:
-    SectionConfig: Base class for handling configuration for different sections.
+    SectionConfig(Config): Base class for handling configuration for different sections.
     PreprocessConfig(SectionConfig): Configuration for the preprocessing stage.
     TrainConfig(SectionConfig): Configuration for the training stage.
     InferConfig(SectionConfig): Configuration for the inference stage.
@@ -14,7 +15,7 @@ import logging
 import os
 from pathlib import Path
 import pprint
-import sys
+from typing import Union
 
 from improvelib.initializer.cli_params_def import (
     improve_basic_conf,
@@ -33,11 +34,15 @@ printfn = pprint.PrettyPrinter(indent=4).pformat
 
 
 class SectionConfig(Config):
-    """Handles configuration for different sections of the application.
+    """Base class for handling section-specific configurations.
 
     This class extends the base Config class to provide additional functionality
     for managing configuration parameters specific to different stages of the
     application workflow.
+    
+    Attributes:
+        section (str): The name of the section (e.g., "Preprocess", "Train").
+        options (list): Combined list of global and stage-specific configuration parameters.
 
     Args:
         section (str): The section name.
@@ -46,6 +51,9 @@ class SectionConfig(Config):
 
     def __init__(self, section: str, stage_config_parameters: list) -> None:
         """Initializes the SectionConfig with section-specific parameters.
+        
+        Sets up logging for the section, combines basic and stage-specific configuration
+        parameters, and configures command line options.
 
         Args:
             section (str): The section name.
@@ -70,19 +78,20 @@ class SectionConfig(Config):
                               pathToModelDir: str,
                               default_config: str = 'default.cfg',
                               additional_cli_section: str = None,
-                              additional_definitions: [str, Path] = None,
-                              required: list = None) -> dict:
-        """Initialize Command Line Interface and Config.
+                              additional_definitions: Union[str, Path] = None,
+                              required: Union[list, None] = None) -> dict:
+        """Initialize command line interface and configuration parameters.
 
         Args:
             pathToModelDir (str): Path to the model directory.
-            default_config (str, optional): Default configuration file. Defaults to 'default.cfg'.
-            additional_cli_section (str, optional): Additional CLI section name. Defaults to None.
-            additional_definitions (str or Path, optional): Additional parameter definitions. Defaults to None.
-            required (list, optional): Required parameters. Defaults to None.
+            default_config (str): Default configuration file. Defaults to 'default.cfg'.
+            additional_cli_section (str): Additional CLI section name. Defaults to None.
+            additional_definitions (str or Path): Additional parameter definitions. 
+                Defaults to None.
+            required (list): Required parameters. Defaults to None.
 
         Returns:
-            dict: Initialized parameters.
+            dict: Dictionary of initialized parameters.
         """
         self.logger.debug(f"Initializing parameters for {self.section}.")
 

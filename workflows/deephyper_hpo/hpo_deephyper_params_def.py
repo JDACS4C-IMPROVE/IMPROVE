@@ -48,5 +48,10 @@ additional_definitions = [
      "type": str,
      "default": './hpo_deephyper_hyperparameters.json',
      "help": "JSON file containing hyperparameters and ranges to test."
+    }, 
+    {"name": "num_gpus_per_node",
+     "type": int,
+     "default": 2,
+     "help": "Number of GPUs per node."
     }
     ]
