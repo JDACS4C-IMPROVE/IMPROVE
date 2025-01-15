@@ -8,12 +8,14 @@ Classes:
 
 Functions:
     __init__: Initializes the Config class with default settings.
-    load_config: Loads the configuration from a file.
-    load_config_file: Loads the configuration file, setting paths and defaults.
-    ini2dict: Converts INI configuration to a dictionary.
-    dict: Alias for ini2dict, returns configuration as a dictionary.
-    save_parameter_file: Saves final parameters to a file.
-    save_config: Saves the configuration to a file.
+    
+    load_config: Loads the configuration from a file. [used]
+    load_config_file: Loads the configuration file, setting paths and defaults. [not used]
+    ini2dict: Converts INI configuration to a dictionary. [used]
+    dict: Alias for ini2dict, returns configuration as a dictionary. [used]
+    save_parameter_file: Saves final parameters to a file. [used]
+    save_config: Saves the configuration to a file. [removed]
+    
     set_command_line_options: Sets up command line options. (Potential duplicate with cli.py)
     get_command_line_options: Retrieves parsed command line arguments. (Potential duplicate with cli.py)
     load_cli_parameters: Loads command line parameter definitions from a file. (Potential duplicate with cli.py)
@@ -32,9 +34,8 @@ Functions:
     section_parameters: Returns a dictionary of all options in a section.
     initialize_parameters: Initializes parameters from the command line and config file. (Check for overlap)
 
-Notes:
-    - `check_required` and `validate_parameters` are placeholders and need implementation.
-    - `initialize_parameters` may overlap with similar methods in other files.
+
+
     - `set_command_line_options`, `get_command_line_options`, and `load_cli_parameters` may overlap with similar methods in `cli.py`.
 """
 
@@ -136,73 +137,6 @@ class Config:
             # Initialize the DEFAULT section as an empty dictionary
             self.config['DEFAULT'] = {}
 
-
-    def load_config_file(self, pathToModelDir: Optional[Union[str, Path]] = None, default_config: Optional[Union[str, Path]] = None) -> None:
-        """Determines and loads the configuration file.
-
-        This method sets the configuration file path based on the provided
-        `pathToModelDir` and `default_config`, or from command-line arguments.
-        It checks if the input directory exists and constructs the full path to
-        the configuration file, storing it in the `self.file` attribute. If the
-        file path is valid, it calls `load_config` to load the configuration.
-
-        Args:
-            pathToModelDir (Optional[Union[str, Path]]): The directory path to the model.
-            default_config (Optional[Union[str, Path]]): The default configuration file name.
-        """
-        # Check if the input directory exists
-        if self.input_dir and os.path.isdir(self.input_dir):
-
-            # Check if a config file is specified via command-line arguments
-            if self.cli.args.config_file:
-                self.file = self.cli.args.config_file
-            else:
-                # Ensure pathToModelDir and default_config are strings
-                if isinstance(pathToModelDir, Path):
-                    pathToModelDir = str(pathToModelDir)
-                if isinstance(default_config, Path):
-                    default_config = str(default_config)
-
-                # Ensure pathToModelDir ends with a slash
-                if pathToModelDir is not None:
-                    if not pathToModelDir.endswith("/"):
-                        pathToModelDir += "/"
-                else:
-                    pathToModelDir = "./"
-
-                # Determine the configuration file path
-                if default_config is not None:
-                    if not os.path.abspath(default_config):
-                        self.logger.debug(
-                            "Not absolute path for config file. Should be \
-                            relative to model directory")
-                        self.file = pathToModelDir + default_config
-                    else:
-                        self.logger.warning("Default config not relative to \
-                                            model directory. Using as is.")
-                        self.file = default_config
-                else:
-                    self.logger.warning("No default config file provided")
-
-                self.logger.debug("No config file provided. Using default: %s", self.file)
-
-            # Construct the full path for the config file if necessary
-            if self.file and not os.path.abspath(self.file):
-                self.logger.debug(
-                    "Not absolute path for config file. Should be relative to input_dir")
-                self.file = self.input_dir + "/" + self.file
-                self.logger.debug("New file path: %s", self.file)
-
-            # Attempt to load the config file if it exists
-            if self.file and os.path.isfile(self.file):
-                self.load_config()
-            else:
-                self.logger.warning("Can't find config file: %s", self.file)
-                self.config[section] = {}
-        else:
-            # Log a critical error if the input directory does not exist
-            self.logger.critical("No input directory: %s", self.input_dir)
-            
             
     def ini2dict(self, section: Optional[str] = None, flat: bool = False) -> dict:
         """Converts INI configuration to a dictionary.
@@ -240,6 +174,9 @@ class Config:
             if flat:
                 # If flat is True, add all items to a single dictionary without section keys
                 for key, value in self.config.items(s):
+                    if key in params:
+                        # Log a warning if a key collision is detected
+                        self.logger.warning("Key collision detected for key: %s", key)
                     params[key] = value
             else:
                 # Otherwise, organize items under their respective section keys
@@ -276,29 +213,35 @@ class Config:
 
         Args:
             file_name (Optional[str]): The name of the file to save the parameters to.
+
+        Raises:
+            IOError: If there is an error writing the parameters to the file.
         """
         if file_name is None:
             # Log a warning if no file name is provided
             self.logger.warning("No file name provided to save parameters.")
             return
-        else:
-            # Log the action of saving parameters
-            self.logger.debug("Saving parameters to %s", file_name)
-            if os.path.isabs(file_name):
-                # Use the absolute path if provided
-                path = file_name
-            else:
-                # Construct the path in the output directory
-                path = Path(self.output_dir, file_name)
-                # Create the directory if it does not exist
-                if not Path(path.parent).exists():
-                    self.logger.debug(
-                        "Creating directory %s for saving config file.", path.parent)
-                    Path(path.parent).mkdir(parents=True, exist_ok=True)
 
+        # Log the action of saving parameters
+        self.logger.debug("Saving parameters to %s", file_name)
+        if os.path.isabs(file_name):
+            # Use the absolute path if provided
+            path = file_name
+        else:
+            # Construct the path in the output directory
+            path = Path(self.output_dir, file_name)
+            # Create the directory if it does not exist
+            if not Path(path.parent).exists():
+                self.logger.debug("Creating directory %s for saving config file.", path.parent)
+                Path(path.parent).mkdir(parents=True, exist_ok=True)
+
+        try:
             # Write the parameters to the file
             with path.open("w") as f:
                 f.write(str(self.params))
+        except IOError as e:
+            # Log an error if file writing fails
+            self.logger.error("Failed to save parameters to %s: %s", path, e)
 
 
 
@@ -346,52 +289,55 @@ class Config:
     
     
     def load_cli_parameters(self, file: str, section: str = None) -> dict:
-        """
-        Load command line parameters from a file.
+        """Loads command line parameters from a file.
 
         This function reads parameter definitions from a specified file, which can be in JSON or YAML format.
-        It validates the parameters and returns them as a dictionary.
+        It validates the parameters to ensure they meet expected criteria and returns them as a dictionary.
 
         Args:
             file (str): The path to the file containing parameter definitions.
             section (str, optional): The section of the file to load parameters from, if applicable.
 
         Returns:
-            dict: A dictionary containing the loaded parameters.
+            dict: A dictionary containing the loaded parameters, where each key is a parameter name
+            and the value is the parameter's configuration.
 
         Raises:
-            SystemExit: If the file cannot be found or is in an unsupported format.
+            FileNotFoundError: If the file cannot be found.
+            ValueError: If the file is in an unsupported format.
         """
+        # Log the start of the parameter loading process
         self.logger.debug("Loading parameters from %s", file)
 
-        # Convert Path to string if necessary
+        # Convert Path to string if necessary for compatibility
         if file and isinstance(file, Path):
             file = str(file)
 
+        # Check if the file exists
         if os.path.isfile(file):
-            # Initialize params to None
-            params = None
+            params = None  # Initialize params to None
 
-            # Check if the file is in JSON or YAML format and load it
+            # Load parameters based on file extension
             if file.endswith('.json'):
+                # Load JSON file
                 with open(file, 'r') as f:
                     params = json.load(f)
             elif file.endswith('.yaml') or file.endswith('.yml'):
+                # Load YAML file
                 with open(file, 'r') as f:
                     params = yaml.safe_load(f)
             else:
-                # Log an error if the file format is unsupported
+                # Log an error and raise an exception for unsupported formats
                 self.logger.error("Unsupported file format")
+                raise ValueError("Unsupported file format")
             
-            # Validate the loaded parameters
+            # Validate the loaded parameters to ensure they meet expected criteria
             self._validate_parameters(params)
             return params
         else:
-            # Log a critical error and exit if the file is not found
-            print(isinstance(file, str))
+            # Log a critical error and raise an exception if the file is not found
             self.logger.critical("Can't find file %s", file)
-            sys.exit(1)
-            return None
+            raise FileNotFoundError(f"Can't find file {file}")
     
     
     def update_defaults(self, cli_definitions: list = None, new_defaults: dict = None) -> list:
