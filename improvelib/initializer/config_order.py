@@ -16,52 +16,65 @@ Functions:
     save_parameter_file: Saves final parameters to a file. [used]
     save_config: Saves the configuration to a file. [removed]
     
-    set_command_line_options: Sets up command line options. (Potential duplicate with cli.py)
-    get_command_line_options: Retrieves parsed command line arguments. (Potential duplicate with cli.py)
-    load_cli_parameters: Loads command line parameter definitions from a file. (Potential duplicate with cli.py)
-    update_defaults: Updates default values for command line arguments.
-    update_cli_definitions: Updates CLI argument definitions with values from the config file.
-    _add_option: Adds a command line option definition to _options.
-    _update_options: Updates _options with options from the command line.
-    _update_cli_defaults: Updates command line defaults with values from _options.
-    param: Gets or sets a value for a given option.
-    get_param: Gets a value for a given option.
-    set_param: Sets a value for a given option.
-    check_required: Checks if all required parameters are set. (Empty)
-    _validate_parameters: Validates parameters, setting types and checking for required parameters.
+    set_command_line_options: Sets up command line options. [used]
+    get_command_line_options: Retrieves parsed command line arguments. [keep]
+    load_cli_parameters: Loads command line parameter definitions from a file. [keep]
+    update_defaults: Updates default values for command line arguments. [used]
+    update_cli_definitions: Updates CLI argument definitions with values from the config file. [keep]
+    _add_option: Adds a command line option definition to _options. [used]
+    _update_options: Updates _options with options from the command line. [used]
+    _update_cli_defaults: Updates command line defaults with values from _options. [used]
+    
+    param: Gets or sets a value for a given option. [removed]
+    get_param: Gets a value for a given option. [used]
+    set_param: Sets a value for a given option. [keep]
+    check_required: Checks if all required parameters are set. (Empty) [removed]
+    _validate_parameters: Validates parameters, setting types and checking for required parameters. [used]
     load_parameter_definitions: Loads parameter definitions from a file.
     validate_parameters: Validates parameters. (Removed)
     section_parameters: Returns a dictionary of all options in a section.
     initialize_parameters: Initializes parameters from the command line and config file. (Check for overlap)
-
-
-
-    - `set_command_line_options`, `get_command_line_options`, and `load_cli_parameters` may overlap with similar methods in `cli.py`.
 """
-
-
-import os
-import sys
-import logging
 import configparser
-import yaml
 import json
+import logging
+import os
 from pathlib import Path
-from typing import Optional, Union
+import sys
+from typing import Optional, List, Dict
 
-from improvelib.utils import str2bool, cast_value
+import yaml
+
 from improvelib.initializer.cli import CLI
+from improvelib.utils import cast_value, str2bool
 
-BREAK=os.getenv("IMPROVE_DEV_DEBUG", None)
+
 
 
 class Config:
-    """Class to handle configuration files."""
-    # ConfigError = str
+    """Handles configuration files and command-line options.
+
+    This class is responsible for managing configuration settings for the application.
+    It provides methods to load, save, and update configuration parameters from files
+    and command-line arguments.
+
+    Attributes:
+        config_sections (list of str): Sections of the configuration file.
+        params (dict): Stores configuration parameters.
+        file (str): Path to the configuration file.
+        logger (logging.Logger): Logger for the class.
+        log_level (int): Logging level.
+        required (list of str): Required configuration parameters.
+        config (configparser.ConfigParser): Parser for configuration files.
+        cli (CLI): Command-line interface handler.
+        input_dir (str): Input directory path.
+        output_dir (str): Output directory path.
+        _options (dict): Internal storage for command-line options.
+    """
+
     config_sections = ['DEFAULT', 'Preprocess', 'Train', 'Infer']
 
     def __init__(self) -> None:
-
         # Default format
         FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
         logging.basicConfig(format=FORMAT)
@@ -69,7 +82,7 @@ class Config:
         required = ["input_dir", "output_dir", "log_level", 'config_file']
 
         self.params = {}
-        self.file = None # change to config_file
+        self.file = None  # change to config_file
         self.logger = logging.getLogger('Config')
         self.log_level = os.getenv("IMPROVE_LOG_LEVEL", logging.INFO)
         self.logger.setLevel(self.log_level)
@@ -80,33 +93,28 @@ class Config:
         # Default values are set in command line parser
         self.input_dir = None
         self.output_dir = None
-        self.params = {}
         self._options = {}
 
-        # Set Defaults and conventions
+        # Set default directory paths based on environment variables.
+        # Ensure that IMPROVE_DATA_DIR and CANDLE_DATA_DIR are identical if both are set.
+        # Default IMPROVE_OUTPUT_DIR to IMPROVE_DATA_DIR or the current directory if not set.
         if "CANDLE_DATA_DIR" in os.environ and "IMPROVE_DATA_DIR" in os.environ:
-            if not os.getenv('IMPROVE_DATA_DIR') == os.getenv("CANDLE_DATA_DIR"):
-                self.logger.error(
-                    "Found CANDLE_DATA_DIR and IMPROVE_DATA_DIR but not identical.")
+            if os.getenv('IMPROVE_DATA_DIR') != os.getenv("CANDLE_DATA_DIR"):
+                self.logger.error("Found CANDLE_DATA_DIR and IMPROVE_DATA_DIR but not identical.")
                 raise ValueError('Alias not identical')
             else:
-                self.config.set("DEFAULT", "input_dir",
-                                os.getenv("IMPROVE_DATA_DIR", "./"))
+                self.config.set("DEFAULT", "input_dir", os.getenv("IMPROVE_DATA_DIR", "./"))
 
         elif "CANDLE_DATA_DIR" in os.environ:
+            self.logger.debug("Setting IMPROVE_DATA_DIR to CANDLE_DATA_DIR")
             os.environ["IMPROVE_DATA_DIR"] = os.environ["CANDLE_DATA_DIR"]
-        else:
-            pass
 
-        if not "IMPROVE_OUTPUT_DIR" in os.environ:
-            self.logger.debug('Setting output directory')
-            os.environ["IMPROVE_OUTPUT_DIR"] = os.environ.get(
-                "IMPROVE_DATA_DIR", "./")
+        if "IMPROVE_OUTPUT_DIR" not in os.environ:
+            self.logger.debug('Setting IMPROVE_OUTPUT_DIR to IMPROVE_DATA_DIR or default')
+            os.environ["IMPROVE_OUTPUT_DIR"] = os.environ.get("IMPROVE_DATA_DIR", "./")
 
-        self.config.set("DEFAULT", "input_dir",
-                        os.environ.get("IMPROVE_DATA_DIR", "./"))
-        self.config.set("DEFAULT", "output_dir",
-                        os.environ.get("IMPROVE_OUTPUT_DIR", "./"))
+        self.config.set("DEFAULT", "input_dir", os.environ.get("IMPROVE_DATA_DIR", "./"))
+        self.config.set("DEFAULT", "output_dir", os.environ.get("IMPROVE_OUTPUT_DIR", "./"))
         
     # ==========================================================
     # CONFIGURATION FILE METHODS
@@ -252,7 +260,7 @@ class Config:
     # They set up command line options, retrieve user inputs, and update defaults,
     # enabling dynamic configuration of the application via the command line.
     # ==========================================================
-    def set_command_line_options(self, options: list = [], group: str = None) -> bool:
+    def set_command_line_options(self, options: Optional[list] = None, group: Optional[str] = None) -> bool:
         """Set command line options using the CLI class.
 
         This function delegates the setup of command line options to the CLI class,
@@ -268,9 +276,16 @@ class Config:
         Returns:
             bool: True if the command line options were successfully set.
         """
-        self.cli.set_command_line_options(options) 
-        self._update_options()
-        return True
+        if options is None:
+            options = []
+
+        try:
+            self.cli.set_command_line_options(options)
+            self._update_options()
+            return True
+        except Exception as e:
+            self.logger.error("Failed to set command line options: %s", e)
+            return False
     
 
     def get_command_line_options(self) -> dict:
@@ -284,8 +299,12 @@ class Config:
         Returns:
             dict: A dictionary containing the parsed command line options.
         """
-        self._update_cli_defaults()
-        return self.cli.get_command_line_options()
+        try:
+            self._update_cli_defaults()
+            return self.cli.get_command_line_options()
+        except Exception as e:
+            self.logger.error("Failed to retrieve command line options: %s", e)
+            return {}
     
     
     def load_cli_parameters(self, file: str, section: str = None) -> dict:
@@ -341,8 +360,7 @@ class Config:
     
     
     def update_defaults(self, cli_definitions: list = None, new_defaults: dict = None) -> list:
-        """
-        Update the default values for command line arguments.
+        """Update the default values for command line arguments.
 
         This function updates the default values for command line arguments based on
         new defaults provided. It modifies the command line definitions and updates
@@ -363,10 +381,10 @@ class Config:
 
         if not new_defaults:
             self.logger.error("No new defaults provided.")
-            return
+            return []
         if not cli_definitions:
             self.logger.error("No command line definitions provided.")
-            return
+            return []
 
         # Initialize the target dictionary
         updated_parameters = []
@@ -406,12 +424,9 @@ class Config:
         
         return updated_parameters
 
-    # Extract config file name from command line arguments and load config file
-    # Seed defaults for command line arguments with values from config file
 
     def update_cli_definitions(self, definitions: list = None) -> list:
-        """
-        Update the command line argument definitions with values from the config file.
+        """Update the command line argument definitions with values from the config file.
 
         This function extracts the config file name from command line arguments and loads
         the config file. It then updates the provided command line argument definitions
@@ -424,12 +439,6 @@ class Config:
 
         Returns:
             list: A list of updated command line definitions with values from the config file.
-
-        Notes:
-            - The config file can be specified as a command line argument or set as a default
-              in the code. If neither is provided, the function will log a debug message and return.
-            - This function relies on the `ini2dict` method to convert the config file into a
-              dictionary format suitable for updating the command line definitions.
         """
         # Config file can be provided as a command line argument or as a default in the code
         # Get the config file from the command line arguments otherwise use the default from self.file
@@ -443,7 +452,7 @@ class Config:
 
         if self.file is None:
             self.logger.debug("No config file provided at all.")
-            return
+            return []
         
         # Load the config file
         self.load_config()
@@ -452,16 +461,33 @@ class Config:
         return self.update_defaults(cli_definitions=definitions, new_defaults=self.ini2dict(flat=True))
     
     
-    # Method to add a command line option definition to _options
-    # This is used to check type and default values later
-    def _add_option(self, name, option):
+    def _add_option(self, name: str, option: dict) -> bool:
+        """Adds a command line option definition to the internal _options dictionary.
 
-        # check if option is a dictionary
+        This method checks the validity of the option definition, ensuring it is a
+        dictionary with the required keys and that the name matches the expected
+        values. It also verifies that the type and default values are supported.
+        If the option is valid, it is added to the internal _options dictionary.
+
+        Args:
+            name (str): The name of the command line option.
+            option (dict): A dictionary defining the command line option, including
+                keys such as 'name', 'type', 'default', and 'help'.
+
+        Returns:
+            bool: True if the option was successfully added, False if the option
+            was already defined.
+
+        Raises:
+            SystemExit: If the option is not a dictionary, if the name does not
+            match the expected values, or if the type is unsupported.
+        """
+        # Check if option is a dictionary
         if not isinstance(option, dict):
             self.logger.error("Option %s is not a dictionary", name)
             sys.exit(1)
         
-        # check if name is identical to the name in the dictionary
+        # Check if name is identical to the name in the dictionary
         if "name" in option:
             if not name == option['name']:
                 self.logger.error("Option name %s is not identical to name in dictionary %s", name, option['name'])
@@ -470,36 +496,36 @@ class Config:
             self.logger.error("Option name %s is not identical to name in dictionary %s", name, option['dest'])
             sys.exit(1)
 
-        # check if name is already in _options
+        # Check if name is already in _options
         if name in self._options:
             self.logger.error("Option %s is already defined. Skipping.", name)
             return False
 
-        # check if all required keys are present
+        # Check if all required keys are present
         if not all(k in option for k in ('name', 'type', 'default', 'help')):
             self.logger.warning("Option %s is missing required keys.", name)
 
-        # check if type and default are supported 
+        # Check if type and default are supported 
         if "type" not in option:
             self.logger.error("Option %s is missing type. Setting to str.", name)
             option['type'] = str
         if "default" not in option:
             self.logger.error("Option %s is missing default. Setting to None.", name)
             option['default'] = None
-            
-        if not option['type'] in ['str', 'int', 'float', 'bool', 'str2bool', None, str , int, float, bool, str2bool]:
+
+        # Use a set for supported types
+        supported_types = {str, int, float, bool, str2bool, 'str', 'int', 'float', 'bool', 'str2bool', None}
+        if option['type'] not in supported_types:
             self.logger.error("Unsupported type %s for option %s", option['type'], name)
             sys.exit(1)
 
-        # add option to _options    
+        # Add option to _options    
         self._options[name] = option
         return True
     
     
-
     def _update_options(self) -> bool:
-        """
-        Update internal options with command line arguments.
+        """Update internal options with command line arguments.
 
         This function updates the internal `_options` dictionary with the current
         command line arguments parsed by the CLI class. It should be called every
@@ -507,58 +533,67 @@ class Config:
         `set_command_line_options`.
 
         Returns:
-            bool: True if the options were successfully updated.
+            bool: True if all options were successfully updated, False if any option
+            failed to be added.
         """
+        self.logger.debug("Starting to update internal options with command line arguments.")
+        
         # Iterate over all actions in the CLI parser
         for action in self.cli.parser._actions:
             # Add each action's destination and attributes to the internal options
-            self._add_option(action.dest, action.__dict__)
+            if not self._add_option(action.dest, action.__dict__):
+                self.logger.error("Failed to add option: %s", action.dest)
+                return False
         
+        self.logger.debug("Successfully updated all internal options.")
         return True
     
-    # Update command line defaults with values from _options
-    def _update_cli_defaults(self):
+    def _update_cli_defaults(self) -> bool:
+        """Update command line defaults with values from the configuration file.
 
-        # Read config
-        
-        # Config file can be provided as a command line argument or as a default in the code
-        # Get the config file from the command line arguments otherwise use the default from self.file
+        This function updates the command line defaults in the CLI parser with values
+        from the configuration file. It reads the configuration file specified by the
+        command line or a default file and updates the defaults for each option.
+
+        Returns:
+            bool: True if the defaults were successfully updated.
+        """
+        # Attempt to retrieve the config file from command line arguments
         config_file = self.cli.get_config_file()
-        
-            
-        # Set self.file ; the config will be loaded from self.file
+
+        # If a config file is specified via command line, use it; otherwise, use the default
         if config_file is not None:
             self.file = config_file
         else:
-            self.logger.debug("No config file provided in command line arguments.")    
+            self.logger.debug("No config file provided in command line arguments.")
 
+        # If no config file is available, log a message and exit the function
         if self.file is None:
             self.logger.debug("No config file provided at all.")
-            return
-        
-        # Load the config file
-        self.load_config()
-        
-        # Loop through config file and update command line defaults
-        for section in self.config.sections():
-            if self.section is None or self.section == section:
-                for option in self.config.items(section):
-                    print(option)
-                    (key, value) = option
-                    if key in self._options:
+            return False
 
-                        # check if type is set and cast option[1] to python type
+        # Load the configuration from the specified file
+        self.load_config()
+
+        # Iterate over each section in the configuration file
+        for section in self.config.sections():
+            # Check if the current section is the one we are interested in, or if no specific section is set
+            if self.section is None or self.section == section:
+                # Iterate over each option in the current section
+                for option in self.config.items(section):
+                    key, value = option
+                    # Check if the option is defined in the internal _options dictionary
+                    if key in self._options:
+                        # If the option expects a list, attempt to parse the value as JSON
                         if 'nargs' in self._options[key] and \
-                            self._options[key]['nargs'] and \
-                            self._options[key]['nargs'] not in [None, 0, 1 , "0", "1"]:
-                            if BREAK :
-                                breakpoint()
+                                self._options[key]['nargs'] and \
+                                self._options[key]['nargs'] not in [None, 0, 1, "0", "1"]:
                             try:
                                 value = json.loads(value)
                             except json.JSONDecodeError:
                                 self.logger.error("Can't convert %s to list", value)
-                                self.logger.critical(json.JSONDecodeError)
-                                sys.exit(1)
+                                raise ValueError(f"Invalid JSON format for {key}: {value}")
+                        # If a specific type is set for the option, convert the value to that type
                         elif 'type' in self._options[key]:
                             t = self._options[key]['type']
                             if t == 'str' or t == str:
@@ -572,12 +607,13 @@ class Config:
                             elif t == 'str2bool':
                                 value = str2bool(value)
                             else:
-                                self.logger.error("Unsupported type %s",
-                                                  self._options[option[0]]['type'])
+                                self.logger.error("Unsupported type %s", self._options[key]['type'])
                                 value = str(value)
 
+                        # Update the default value for the option in the CLI parser
                         self.cli.parser.set_defaults(**{key: value})
 
+        # Return True to indicate that the defaults were successfully updated
         return True
     
     # ==========================================================
@@ -588,89 +624,117 @@ class Config:
     # ==========================================================
     
     
-    def param(self, section="DEFAULT" , key=None , value=None) -> (str,str):
-        """
-        Get or set value for given option. Gets or sets value in DEFAULT section
-        if section is not provided. 
-        Allowed section names are: Preprocess, Train and Infer
-        """
-        
-        error=None
-
-        if value is not None:
-            if self.config.has_section(section):
-                self.config[section][key]=value
-            else:
-                error="Unknown section " + str(section)
-                self.logger.error(error)
-
-        if self.config.has_option(section, key):
-            value=self.config[section][key]
-        else:
-            error="Can't find option " + str(key)
-            self.logger.error(error)
-            value=None
-
-        return (value, error)
-
+ 
 
     def get_param(self, section="DEFAULT", key=None) -> str:
-        """
-        Get value for given option. Gets or sets value in DEFAULT section if section is not provided. 
-        Allowed section names are: Preprocess, Train and Infer
-        """
+        """Retrieves the value for a given configuration option.
 
-        error = None
+        This method retrieves the value of a configuration option within a specified
+        section. If no section is provided, the 'DEFAULT' section is used. Allowed
+        section names are: 'Preprocess', 'Train', and 'Infer'.
 
+        Args:
+            section (str): The section of the configuration to access. Defaults to 'DEFAULT'.
+            key (str): The key of the configuration option.
+
+        Returns:
+            str: The value of the configuration option.
+
+        Raises:
+            ValueError: If the key is not provided or the option is not found in the section.
+        """
+        # Validate key is provided
+        if key is None:
+            raise ValueError("Key must be provided.")
+
+        # Attempt to retrieve the value for the specified key in the section
         if self.config.has_option(section, key):
             value = self.config[section][key]
         else:
-            error = "Can't find option " + str(key)
+            # Log an error and raise an exception if the key does not exist
+            error = f"Can't find option: {key}"
             self.logger.error(error)
-            value = None
+            raise ValueError(error)
 
         return value
 
 
     def set_param(self, section="DEFAULT", key=None, value=None) -> (str, str):
+        """Sets a value for a given configuration option.
+
+        This method sets the value of a configuration option within a specified
+        section. If no section is provided, the 'DEFAULT' section is used. Allowed
+        section names are: 'Preprocess', 'Train', and 'Infer'.
+
+        Args:
+            section (str): The section of the configuration to access. Defaults to 'DEFAULT'.
+            key (str): The key of the configuration option.
+            value (str, optional): The value to set for the given key. If None, an empty string is set.
+
+        Returns:
+            tuple: A tuple containing the value of the configuration option and a message.
+                If the operation is successful, the message will be None.
+
+        Raises:
+            ValueError: If the key is not provided.
         """
-        Set value for given option. Gets or sets value in DEFAULT section if section is not provided. 
-        Allowed section names are: Preprocess, Train and Infer
-        """
-    
+        # Initialize message as None
         msg = None
 
-        if key:
-            if not self.config.has_section(section) and not section == "DEFAULT":
-                msg = "Unknown section " + str(section)
-                self.logger.debug(msg)
-                self.config[section] = {}
-
-            if value is None:
-                value = ''
-
-            self.logger.debug("Key:%s\tValue:%s", key, value)
-            self.config[section][key] = str(value)
-
-        else:
+        # Validate key is provided
+        if key is None:
             msg = "Can't update config, empty key"
             self.logger.error(msg)
-            return (None, msg)
+            raise ValueError(msg)
 
+        # Check if the section exists, create it if it doesn't and it's not "DEFAULT"
+        if not self.config.has_section(section) and section != "DEFAULT":
+            msg = "Unknown section " + str(section)
+            self.logger.debug(msg)
+            self.config.add_section(section)
+
+        # Set the value, defaulting to an empty string if None
+        if value is None:
+            value = ''
+
+        # Log the key and value being set
+        self.logger.debug("Key:%s\tValue:%s", key, value)
+        self.config[section][key] = str(value)
+
+        # Return the set value and any message
         return (self.config[section][key], msg)
     
     
 
 
 
-    def _validate_parameters(self, params, required=None):
-        """Validate parameters. Set types and check for required parameters."""
+    def _validate_parameters(self, params: Optional[List[Dict[str, any]]], required: Optional[List[str]] = None) -> None:
+        """Validates and sets types for configuration parameters.
 
+        This method checks each parameter in the provided list to ensure it has a valid
+        type and converts it to the corresponding Python type. It also checks for any
+        required parameters if specified.
+
+        Args:
+            params (list of dict): A list of parameter dictionaries to validate. Each
+                dictionary should contain a 'type' key indicating the expected type.
+            required (list of str, optional): A list of required parameter names. If
+                provided, the method checks that these parameters are present in the
+                params list.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If a required parameter is missing or if an unsupported type is encountered.
+        """
+        # Return early if no parameters are provided
         if params is None:
             return
 
+        # Iterate over each parameter dictionary in the list
         for p in params:
-            # check if type is set and convert to python type
+            # Check if 'type' is specified and convert to the corresponding Python type
             if 'type' in p:
                 if p['type'] == 'str':
                     p['type'] = str
@@ -683,8 +747,16 @@ class Config:
                 elif p['type'] == 'str2bool':
                     p['type'] = str2bool
                 else:
+                    # Log an error and raise an exception for unsupported types
                     self.logger.error("Unsupported type %s", p['type'])
-                    p['type'] = str
+                    raise ValueError(f"Unsupported type: {p['type']}")
+            
+            # Check for required parameters if the 'required' list is provided
+            if required:
+                for req in required:
+                    if req not in [param.get('name') for param in params]:
+                        self.logger.error("Missing required parameter: %s", req)
+                        raise ValueError(f"Missing required parameter: {req}")
 
 
     def load_parameter_definitions(self, file, section=None):
@@ -870,12 +942,11 @@ if __name__ == "__main__":
     # It demonstrates how to initialize the Config class, load parameters, and
     # interact with command line options.
     # ==========================================================
-    
+
     # Initialize the Config class
     cfg = Config()
-    
+
     # Define common parameters for testing
-    # These parameters simulate command-line options with various types and defaults
     common_parameters = [
         {
             "name": "list_of_int",
@@ -905,55 +976,32 @@ if __name__ == "__main__":
             "section": "DEFAULT"
         },
     ]
-    
+
     # Define directories for loading additional parameters and configuration files
     current_dir = Path(__file__).resolve().parent
     test_dir = current_dir.parents[1] / "tests"
 
     # Load additional command line parameters from a file
-    # This tests the ability to read and parse external parameter definitions
-    params = cfg.load_cli_parameters(
-        test_dir / "data/additional_command_line_parameters.yml")
-    print(params)
+    params = cfg.load_cli_parameters(test_dir / "data/additional_command_line_parameters.yml")
+    print("Loaded CLI Parameters:", params)
 
-    # Example of setting command line options
-    # Demonstrates defining and adding command-line options programmatically
+    # Set up argparse for testing command line options
     import argparse
-    cfg_parser = argparse.ArgumentParser(
-        description='Get the config file from command line.',
-        add_help=False,)
+    cfg_parser = argparse.ArgumentParser(description='Get the config file from command line.', add_help=False)
     cfg_parser.add_argument('--config_file', metavar='INI_FILE', type=str, dest="config_file")
 
     # Simulate command line arguments for testing
-    # Allows the script to behave as if run with specific arguments
-    sys.argv.append("--config_file")
-    sys.argv.append(str(test_dir / "data/default.cfg"))
+    sys.argv.extend(["--config_file", str(test_dir / "data/default.cfg")])
 
     # Add a test command line option
-    # Tests integration of argparse with the Config class
     cfg.cli.parser.add_argument('--test', metavar='TEST_COMMAND_LINE_OPTION', dest="test",
-                                nargs='+',
-                                type=int,
-                                default=[1], help="Test command line option.")
+                                nargs='+', type=int, default=[1], help="Test command line option.")
 
     # Initialize parameters with common and additional definitions
-    # Tests comprehensive parameter initialization, including merging and overriding defaults
-    print(
-        cfg.initialize_parameters(
-            "./", additional_definitions=common_parameters + params)
-    )
-    
+    final_params = cfg.initialize_parameters("./", additional_definitions=common_parameters + params)
+    print("Initialized Parameters:", final_params)
+
     # Output the results to verify correct processing and storage of parameters
-    # Print the items in the 'DEFAULT' section of the configuration
-    print(cfg.config.items('DEFAULT', raw=False))
-    
-    # Print the parsed command-line arguments as a namespace object
-    print(cfg.cli.args)
-    
-    # Print the final set of parameters after merging all sources
-    print(cfg.params)
-    # Print the parsed command-line arguments as a namespace object
-    print(cfg.cli.args)
-    
-    # Print the final set of parameters after merging all sources
-    print(cfg.params)
+    print("Config Items in 'DEFAULT':", cfg.config.items('DEFAULT', raw=False))
+    print("Parsed CLI Arguments:", cfg.cli.args)
+    print("Final Parameters:", cfg.params)
