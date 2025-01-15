@@ -310,8 +310,7 @@ class Config:
     # enabling dynamic configuration of the application via the command line.
     # ==========================================================
     def set_command_line_options(self, options: list = [], group: str = None) -> bool:
-        """
-        Set command line options using the CLI class.
+        """Set command line options using the CLI class.
 
         This function delegates the setup of command line options to the CLI class,
         ensuring that options are properly configured and integrated with the
@@ -332,11 +331,12 @@ class Config:
     
 
     def get_command_line_options(self) -> dict:
-        """
-        Retrieve command line options.
+        """Retrieve command line options.
 
         This function updates the command line defaults with the current configuration
-        and retrieves the parsed command line arguments using the CLI class.
+        by calling `_update_cli_defaults`, ensuring that any changes in the configuration
+        are reflected in the command line options. It then retrieves the parsed command
+        line arguments using the CLI class.
 
         Returns:
             dict: A dictionary containing the parsed command line options.
@@ -714,9 +714,7 @@ class Config:
         return (self.config[section][key], msg)
     
     
-    def check_required(self):
-        """Check if all required parameters are set."""
-        pass
+
 
 
     def _validate_parameters(self, params, required=None):
