@@ -15,6 +15,7 @@ from improvelib.metrics import compute_metrics
 
 def splits_generator():
     """ Generates data splits for cross-study analysis. """
+    # TODO
     return None
 
 
@@ -112,7 +113,9 @@ def csa_postprocess(res_dir_path,
             for split_dir in split_dirs:
                 preds_file_path = split_dir / preds_file_name
                 try:
-                    preds = pd.read_csv(preds_file_path, sep=sep)
+                    columns_to_load = [f"{y_col_name}_true", f"{y_col_name}_pred"]
+                    preds = pd.read_csv(preds_file_path, sep=sep,
+                                        usecols=columns_to_load)
 
                     # Compute scores
                     y_true = preds[f"{y_col_name}_true"].values
