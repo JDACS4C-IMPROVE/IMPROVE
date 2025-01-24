@@ -4,4 +4,4 @@ on: [push]
 jobs:
   Explore-GitHub-Actions:
     runs-on: lambda
-    steps:
+    steps: run echo "Starting GH Actions" 
