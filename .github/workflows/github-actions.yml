@@ -1,0 +1,7 @@
+name: GitHub Actions for the IMPROVE project
+run-name: Testing out IMPROVE library using the different models.
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: lambda
+    steps:
