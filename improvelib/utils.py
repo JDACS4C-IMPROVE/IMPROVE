@@ -615,6 +615,7 @@ def compute_performance_scores(y_true: np.array,
     :rtype: dict
     """
     # Compute multiple performance scores
+    print("yprob", y_prob)
     scores = compute_metrics(y_true, y_pred, metric_type, y_prob)
 
     # Add val_loss metric
