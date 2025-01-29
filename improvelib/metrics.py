@@ -270,8 +270,10 @@ def aupr(y_true: np.ndarray, y_prob: np.ndarray) -> float:
     Returns:
         float: The computed Precision-Recall curve AUC.
     """
+    print("S", y_prob)
     precision, recall, threshold = precision_recall_curve(y_true, y_prob)
     pr_auc = auc(recall, precision)
+    print('pr auc', pr_auc)
     return pr_auc
 
 
