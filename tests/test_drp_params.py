@@ -41,28 +41,28 @@ class TestOrderPreprocessConfigs(unittest.TestCase):
         sys.argv = ['python model_preprocess_improve.py']
         preprocess_params = model_preprocess_improve.main(sys.argv[1:])
         self.assertTrue(preprocess_params['preprocess_test_var'] == 'prep', msg=f"Parameter value '{preprocess_params['preprocess_test_var']}' does not match the config file value in {config_file_1}.")
-        self.assertTrue(preprocess_params['splits_dir'] == 'test_splits', msg=f"Parameter value '{preprocess_params['splits_dir']}' does not match the config file value in {config_file_1}.")
+        self.assertTrue(preprocess_params['splits_dir'] == 'splits', msg=f"Parameter value '{preprocess_params['splits_dir']}' does not match the config file value in {config_file_1}.")
         
     def test_preprocess_cli_values(self):
         """PREPROCESS: Check CLI values of parameters with config_file_1 set as default config file."""
-        sys.argv = ['python model_preprocess_improve.py', '--splits_dir', 'test_splits_cli']
+        sys.argv = ['python model_preprocess_improve.py', '--splits_dir', 'splits']
         preprocess_params = model_preprocess_improve.main(sys.argv[1:])
         self.assertTrue(preprocess_params['preprocess_test_var'] == 'prep', msg=f"Parameter value '{preprocess_params['preprocess_test_var']}' does not match the config file value in {config_file_1}.")
-        self.assertTrue(preprocess_params['splits_dir'] == 'test_splits_cli', msg=f"Parameter value '{preprocess_params['splits_dir']}' does not match the CLI value: test_splits_cli.")
+        self.assertTrue(preprocess_params['splits_dir'] == 'splits', msg=f"Parameter value '{preprocess_params['splits_dir']}' does not match the CLI value: test_splits_cli.")
         
     def test_preprocess_nondefault_config_values(self):
         """PREPROCESS: Check config values of parameters listed in config_file_2 when this file is set using the CLI argument."""
         sys.argv = ['python model_preprocess_improve.py', '--config_file', config_file_2]
         preprocess_params = model_preprocess_improve.main(sys.argv[1:])
         self.assertTrue(preprocess_params['preprocess_test_var'] == '', msg="Parameter value is not the default value.") 
-        self.assertTrue(preprocess_params['splits_dir'] == 'test_splits_b', msg=f"Parameter value '{preprocess_params['splits_dir']}' does not match the config file value in {config_file_2}.")
+        self.assertTrue(preprocess_params['splits_dir'] == 'splits', msg=f"Parameter value '{preprocess_params['splits_dir']}' does not match the config file value in {config_file_2}.")
         
     def test_preprocess_nondefault_config_and_cli_values(self):
         """PREPROCESS: Check CLI values of parameters when using non-default config file, config_file_2."""
         sys.argv = ['python model_preprocess_improve.py', '--config_file', config_file_2, '--variable_name', 'cli_test']
         preprocess_params = model_preprocess_improve.main(sys.argv[1:])
         self.assertTrue(preprocess_params['preprocess_test_var'] == '', msg="Parameter value is not the default value.") 
-        self.assertTrue(preprocess_params['splits_dir'] == 'test_splits_b', msg=f"Parameter value '{preprocess_params['splits_dir']}' does not match the config file value in {config_file_2}.")
+        self.assertTrue(preprocess_params['splits_dir'] == 'splits', msg=f"Parameter value '{preprocess_params['splits_dir']}' does not match the config file value in {config_file_2}.")
         self.assertTrue(preprocess_params['variable_name'] == 'cli_test', msg=f"Parameter value '{preprocess_params['variable_name']}' does not match the CLI value: cli_test.")
         
 class TestOrderTrainConfigs(unittest.TestCase):
@@ -117,7 +117,7 @@ class TestOrderInferConfigs(unittest.TestCase):
         """INFER: Check default values of parameters when config_file_1 is set as default config file."""
         sys.argv = ['python model_infer_improve.py']
         infer_params = model_infer_improve.main(sys.argv[1:])
-        self.assertEqual(infer_params['test_batch'], 64, msg="Parameter value is not the default value.")
+        self.assertEqual(infer_params['infer_batch'], 64, msg="Parameter value is not the default value.")
         self.assertTrue(infer_params['infer_test_var'] == "infer", msg="Parameter value is not the default value.")
         
     def test_infer_config_values(self):
@@ -137,7 +137,7 @@ class TestOrderInferConfigs(unittest.TestCase):
         sys.argv = ['python model_infer_improve.py', '--config_file', config_file_2]
         infer_params = model_infer_improve.main(sys.argv[1:])
         self.assertTrue(infer_params['infer_test_var'] == 'test_infer', msg=f"Parameter value '{infer_params['infer_test_var']}' does not match the config file value in {config_file_2}.")
-        self.assertTrue(infer_params['json_scores_suffix'] == "scores", msg="Parameter value is not the default value.")
+        self.assertTrue(infer_params['json_scores_suffix'] == "test_scores", msg="Parameter value is not the default value.")
 
     def test_infer_nondefault_config_and_cli_values(self):
         """INFER: Check CLI values of parameters when using non-default config file, config_file_2."""
@@ -451,7 +451,6 @@ class TestTypeInferConfigs(unittest.TestCase):
         sys.argv = ['python model_infer_improve.py', '--train_percent', '0.9','--train_percent', '0.9']
         infer_params = model_infer_improve.main(sys.argv[1:])
         self.assertIsInstance(infer_params['train_percent'], float)
-
 
 class TestSeparationConfigs(unittest.TestCase):
     

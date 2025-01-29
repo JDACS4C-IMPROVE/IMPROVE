@@ -41,6 +41,11 @@ test_model_infer_params = [
             "type": str,
             "default": "",
         },
+        {
+            "name": "json_scores_suffix",
+            "type": str,
+            "default": "",
+        }
     ]
 
 def main(args):
