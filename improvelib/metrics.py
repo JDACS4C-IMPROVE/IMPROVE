@@ -72,6 +72,10 @@ def compute_metrics(y_true: np.ndarray,
     """
     scores = {}
 
+    print("YTRUE:", y_true)
+    print("YPRED:", y_pred)
+    print("YPROB:", y_prob)
+
     if metric_type == "classification":
         if y_prob is not None:
             metrics = ["mse", "acc", "recall", "precision", "f1", "kappa", "bacc", "roc_auc", "aupr"]
