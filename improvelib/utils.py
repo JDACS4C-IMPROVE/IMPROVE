@@ -596,7 +596,8 @@ def compute_performance_scores(y_true: np.array,
                                y_pred: np.array,
                                stage: str, 
                                metric_type: str, 
-                               output_dir: str):
+                               output_dir: str,
+                               y_prob=None):
     """Evaluate predictions according to specified metrics.
 
     Metrics are evaluated. Scores are stored in specified path and returned.
@@ -608,12 +609,13 @@ def compute_performance_scores(y_true: np.array,
             validation or testing set.
     :params str metric_type: Either classification or regression.
     :params str output_dir: Directory to write results.
+    :params: array y_prob: Array with target scores from classification model, defaults to None.
 
     :return: Python dictionary with metrics evaluated and corresponding scores.
     :rtype: dict
     """
     # Compute multiple performance scores
-    scores = compute_metrics(y_true, y_pred, metric_type)
+    scores = compute_metrics(y_true, y_pred, metric_type, y_prob)
 
     # Add val_loss metric
     #key = f"{stage}_loss"
