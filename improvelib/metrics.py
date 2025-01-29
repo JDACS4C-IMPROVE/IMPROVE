@@ -72,14 +72,7 @@ def compute_metrics(y_true: np.ndarray,
     """
     scores = {}
 
-    print("YTRUE:", y_true)
-    print("YPRED:", y_pred)
-    print("YPROB:", y_prob)
-
     if metric_type == "classification":
-        if y_prob is not None:
-            metrics = ["mse", "acc", "recall", "precision", "f1", "kappa", "bacc", "roc_auc", "aupr"]
-        else:
             metrics = ["mse", "acc", "recall", "precision", "f1", "kappa", "bacc"]
     elif metric_type == "regression":
         metrics = ["mse", "rmse", "pcc", "scc", "r2"]
@@ -96,6 +89,11 @@ def compute_metrics(y_true: np.ndarray,
         elif mapstr == "r2":
             mapstr = "r_square"
         scores[mtstr] = str2Class(mapstr)(y_true, y_pred)
+
+    if metric_type == "classification":
+        if y_prob is not None:
+            scores["roc_auc"] = roc_auc(y_true, y_prob)
+            scores["aupr"] = aupr(y_true, y_prob)
 
     scores = {k: float(v) for k, v in scores.items()}
     return scores
@@ -274,10 +272,8 @@ def aupr(y_true: np.ndarray, y_prob: np.ndarray) -> float:
     Returns:
         float: The computed Precision-Recall curve AUC.
     """
-    print("S", y_prob)
     precision, recall, threshold = precision_recall_curve(y_true, y_prob)
     pr_auc = auc(recall, precision)
-    print('pr auc', pr_auc)
     return pr_auc
 
 
