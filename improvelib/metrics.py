@@ -18,8 +18,9 @@ if sklearn.__version__ < "1.4.0":
         precision_score,
         recall_score,
         roc_auc_score,
-        average_precision_score,
         cohen_kappa_score,
+        precision_recall_curve,
+        auc
     )
 else:
     from sklearn.metrics import (
@@ -32,8 +33,9 @@ else:
         precision_score,
         recall_score,
         roc_auc_score,
-        average_precision_score,
         cohen_kappa_score,
+        precision_recall_curve,
+        auc
     )
 
 
@@ -72,7 +74,7 @@ def compute_metrics(y_true: np.ndarray,
 
     if metric_type == "classification":
         if y_prob is not None:
-            metrics = ["mse", "acc", "recall", "precision", "f1", "kappa", "bacc", "auc", "aupr"]
+            metrics = ["mse", "acc", "recall", "precision", "f1", "kappa", "bacc", "roc_auc", "aupr"]
         else:
             metrics = ["mse", "acc", "recall", "precision", "f1", "kappa", "bacc"]
     elif metric_type == "regression":
@@ -245,7 +247,7 @@ def recall(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return recall_score(y_true, y_pred)
 
 
-def auc(y_true: np.ndarray, y_prob: np.ndarray) -> float:
+def roc_auc(y_true: np.ndarray, y_prob: np.ndarray) -> float:
     """Compute Receiver Operating Characteristic AUC.
 
     Args:
@@ -268,4 +270,8 @@ def aupr(y_true: np.ndarray, y_prob: np.ndarray) -> float:
     Returns:
         float: The computed Precision-Recall curve AUC.
     """
-    return average_precision_score(y_true, y_prob)
+    precision, recall, threshold = precision_recall_curve(y_true, y_prob)
+    pr_auc = auc(recall, precision)
+    return pr_auc
+
+
