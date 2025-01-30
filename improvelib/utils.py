@@ -629,13 +629,24 @@ def compute_performance_scores(y_true: np.array,
 
     # Performance scores for Supervisor HPO
     # TODO. do we still need to print IMPROVE_RESULT?
-    if stage == "val":
-        print("\nIMPROVE_RESULT val_loss:\t{}\n".format(scores["mse"]))
-        print("Validation scores:\n\t{}".format(scores))
-    elif stage == "test":
-        print("Inference scores:\n\t{}".format(scores))
-    else:
-        print("Invalid stage: must be 'val' or 'test'.")
+    if metric_type == "regression":
+        if stage == "val":
+            print("\nIMPROVE_RESULT val_loss:\t{}\n".format(scores["mse"]))
+            print("Validation scores:\n\t{}".format(scores))
+        elif stage == "test":
+            print("Inference scores:\n\t{}".format(scores))
+        else:
+            print("Invalid stage: must be 'val' or 'test'.")
+    elif metric_type == "classification":
+        if stage == "val":
+            print("Validation scores:\n\t{}".format(scores))
+        elif stage == "test":
+            print("Inference scores:\n\t{}".format(scores))
+        else:
+            print("Invalid stage: must be 'val' or 'test'.")
+    else: 
+        print("Invalid metric_type provided. Choose 'classification' or 'regression'.")
+
     return scores
 
 

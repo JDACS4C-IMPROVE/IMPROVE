@@ -74,7 +74,7 @@ def compute_metrics(y_true: np.ndarray,
     scores = {}
 
     if metric_type == "classification":
-            metrics = ["mse", "acc", "recall", "precision", "f1", "kappa", "bacc"]
+            metrics = ["acc", "recall", "precision", "f1", "kappa", "bacc"]
     elif metric_type == "regression":
         metrics = ["mse", "rmse", "pcc", "scc", "r2"]
     else:
