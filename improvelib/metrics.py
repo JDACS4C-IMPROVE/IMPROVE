@@ -18,7 +18,9 @@ if sklearn.__version__ < "1.4.0":
         precision_score,
         recall_score,
         roc_auc_score,
-        average_precision_score,
+        cohen_kappa_score,
+        precision_recall_curve,
+        auc
     )
 else:
     from sklearn.metrics import (
@@ -31,7 +33,9 @@ else:
         precision_score,
         recall_score,
         roc_auc_score,
-        average_precision_score,
+        cohen_kappa_score,
+        precision_recall_curve,
+        auc
     )
 
 
@@ -50,7 +54,8 @@ def str2Class(str) -> Any:
 
 def compute_metrics(y_true: np.ndarray,
                     y_pred: np.ndarray,
-                    metric_type: str
+                    metric_type: str, 
+                    y_prob = None
                     ) -> Dict[str, float]:
     """Compute the specified set of metrics.
 
@@ -58,6 +63,7 @@ def compute_metrics(y_true: np.ndarray,
         y_true (np.ndarray): True values to predict.
         y_pred (np.ndarray): Predictions made by the model.
         metric_type (str): Type of metrics to compute ('classification' or 'regression').
+        y_prob (np.ndaprray): Target scores made by the classification model. Optional, defaults to None.
 
     Returns:
         dict: A dictionary of evaluated metrics.
@@ -68,7 +74,7 @@ def compute_metrics(y_true: np.ndarray,
     scores = {}
 
     if metric_type == "classification":
-        metrics = ["acc", "recall", "precision", "f1", "auc", "aupr"]
+            metrics = ["acc", "recall", "precision", "f1", "kappa", "bacc"]
     elif metric_type == "regression":
         metrics = ["mse", "rmse", "pcc", "scc", "r2"]
     else:
@@ -84,6 +90,11 @@ def compute_metrics(y_true: np.ndarray,
         elif mapstr == "r2":
             mapstr = "r_square"
         scores[mtstr] = str2Class(mapstr)(y_true, y_pred)
+
+    if metric_type == "classification":
+        if y_prob is not None:
+            scores["roc_auc"] = roc_auc(y_true, y_prob)
+            scores["aupr"] = aupr(y_true, y_prob)
 
     scores = {k: float(v) for k, v in scores.items()}
     return scores
@@ -187,6 +198,18 @@ def bacc(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
     return balanced_accuracy_score(y_true, y_pred)
 
+def kappa(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Compute Cohen's kappa.
+
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
+
+    Returns:
+        float: The computed kappa.
+    """
+    return cohen_kappa_score(y_true, y_pred)
+
 
 def f1(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute the F1 score.
@@ -227,27 +250,31 @@ def recall(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return recall_score(y_true, y_pred)
 
 
-def auc(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+def roc_auc(y_true: np.ndarray, y_prob: np.ndarray) -> float:
     """Compute Receiver Operating Characteristic AUC.
 
     Args:
         y_true (np.ndarray): True values to predict.
-        y_pred (np.ndarray): Predictions made by the model.
+        y_prob (np.ndarray): Target scores made by the model.
 
     Returns:
         float: The computed ROC AUC.
     """
-    return roc_auc_score(y_true, y_pred)
+    return roc_auc_score(y_true, y_prob)
 
 
-def aupr(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+def aupr(y_true: np.ndarray, y_prob: np.ndarray) -> float:
     """Compute Precision-Recall curve AUC.
 
     Args:
         y_true (np.ndarray): True values to predict.
-        y_pred (np.ndarray): Predictions made by the model.
+        y_prob (np.ndarray): Target scores made by the model.
 
     Returns:
         float: The computed Precision-Recall curve AUC.
     """
-    return average_precision_score(y_true, y_pred)
+    precision, recall, threshold = precision_recall_curve(y_true, y_prob)
+    pr_auc = auc(recall, precision)
+    return pr_auc
+
+
