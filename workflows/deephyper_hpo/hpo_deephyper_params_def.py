@@ -29,10 +29,10 @@ additional_definitions = [
      "default": '',
      "help": "Singularity image file of the model"
     },
-    {"name": "val_loss",
+    {"name": "val_metric",
      "type": str,
      "default": 'mse',
-     "help": "Type of loss for validation"
+     "help": "Type of metric for validation to improve. 'mse' and 'rmse' will be minimized, all others will be maximized."
     },
     {"name": "max_evals",
      "type": int,

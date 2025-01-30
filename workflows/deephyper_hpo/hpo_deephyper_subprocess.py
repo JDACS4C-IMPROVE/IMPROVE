@@ -61,10 +61,13 @@ def run(job, optuna_trial=None):
     with open(result_file_name_stdout, 'w') as file:
         file.write(subprocess_res.stdout)
 
-    # Load val_scores and get val_loss
-    f = open(model_outdir_job_id / "val_scores.json")
+    # Load val_scores and get val_metric. Minimizes mse/rmse, maximizes all else.
+    f = open(model_outdir_job_id / 'val_scores.json')
     val_scores = json.load(f)
-    objective = -val_scores[params['val_loss']]
+    if params['val_metric'] in ('mse', 'rmse'):
+        objective = -val_scores[params['val_metric']]
+    elif params['val_metric'] in ('pcc', 'scc', 'r2', 'acc', 'recall', 'precision', 'f1', 'kappa', 'bacc', 'roc_auc', 'aupr'):
+        objective = val_scores[params['val_metric']]
 
     # Checkpoint the model weights
     with open(f"{params['output_dir']}/model_{job.id}.pkl", "w") as f:
