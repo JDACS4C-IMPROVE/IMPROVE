@@ -7,8 +7,7 @@ import logging
 import mpi4py
 from deephyper.evaluator import Evaluator, profile
 from deephyper.evaluator.callback import TqdmCallback
-from deephyper.problem import HpProblem
-from deephyper.search.hps import CBO
+from deephyper.hpo import HpProblem, CBO
 from mpi4py import MPI
 import socket
 import hpo_deephyper_params_def
