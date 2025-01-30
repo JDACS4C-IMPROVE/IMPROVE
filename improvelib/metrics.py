@@ -255,7 +255,7 @@ def roc_auc(y_true: np.ndarray, y_prob: np.ndarray) -> float:
 
     Args:
         y_true (np.ndarray): True values to predict.
-        y_pred (np.ndarray): Target scores made by the model.
+        y_prob (np.ndarray): Target scores made by the model.
 
     Returns:
         float: The computed ROC AUC.
@@ -268,7 +268,7 @@ def aupr(y_true: np.ndarray, y_prob: np.ndarray) -> float:
 
     Args:
         y_true (np.ndarray): True values to predict.
-        y_pred (np.ndarray): Target scores made by the model.
+        y_prob (np.ndarray): Target scores made by the model.
 
     Returns:
         float: The computed Precision-Recall curve AUC.
