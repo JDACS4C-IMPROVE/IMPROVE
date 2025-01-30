@@ -63,6 +63,7 @@ def compute_metrics(y_true: np.ndarray,
         y_true (np.ndarray): True values to predict.
         y_pred (np.ndarray): Predictions made by the model.
         metric_type (str): Type of metrics to compute ('classification' or 'regression').
+        y_prob (np.ndaprray): Target scores made by the classification model. Optional, defaults to None.
 
     Returns:
         dict: A dictionary of evaluated metrics.
