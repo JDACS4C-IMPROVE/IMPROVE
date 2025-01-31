@@ -59,11 +59,6 @@ additional_definitions = [
      "default": "ET",
      "help": "Surrogate model used by the Bayesian optimization. Can be a value in ['RF', 'GP', 'ET', 'MF', 'GBRT', 'DUMMY'] or a sklearn regressor."
     }, 
-    {"name": "CBO_surrogate_model_kwargs",
-     "type": dict,
-     "default": None,
-     "help": "Additional parameters to pass to the surrogate model. Defaults to None."
-    }, 
     {"name": "CBO_acq_func",
      "type": str,
      "default": "UCB",
