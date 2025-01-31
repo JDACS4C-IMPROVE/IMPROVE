@@ -150,7 +150,7 @@ if __name__ == "__main__":
                 kappa = params['CBO_kappa'],
             )
             results = search.search(max_evals=params['max_evals'])
-            results = results.sort_values(f"m:{params['val_loss']}", ascending=True)
+            results = results.sort_values(f"m:{params['val_metric']}", ascending=True)
             results.to_csv(f"{params['output_dir']}/hpo_results.csv", index=False)
     print("current node: ", socket.gethostname(), "; current rank: ", rank, "; CUDA_VISIBLE_DEVICE is set to: ", os.environ["CUDA_VISIBLE_DEVICES"])
     print("Finished deephyper HPO.")
