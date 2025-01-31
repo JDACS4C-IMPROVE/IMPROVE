@@ -53,5 +53,35 @@ additional_definitions = [
      "type": int,
      "default": 2,
      "help": "Number of GPUs per node."
+    }, 
+    {"name": "CBO_surrogate_model",
+     "type": str,
+     "default": "ET",
+     "help": "Surrogate model used by the Bayesian optimization. Can be a value in ['RF', 'GP', 'ET', 'MF', 'GBRT', 'DUMMY'] or a sklearn regressor."
+    }, 
+    {"name": "CBO_surrogate_model_kwargs",
+     "type": dict,
+     "default": None,
+     "help": "Additional parameters to pass to the surrogate model. Defaults to None."
+    }, 
+    {"name": "CBO_acq_func",
+     "type": str,
+     "default": "UCB",
+     "help": "Acquisition function used by the Bayesian optimization. Can be a value in ['UCB', 'EI', 'PI', 'gp_hedge']. Defaults to 'UCB'."
+    }, 
+    {"name": "CBO_acq_optimizer",
+     "type": str,
+     "default": "auto",
+     "help": "Method used to minimze the acquisition function. Can be a value in ['sampling', 'lbfgs', 'ga', 'mixedga']. Defaults to 'auto'."
+    }, 
+    {"name": "CBO_acq_optimizer_freq",
+     "type": int,
+     "default": 10,
+     "help": "Frequency of optimization calls for the acquisition function. Defaults to 10, using optimizer every 10 surrogate model updates."
+    }, 
+    {"name": "CBO_kappa",
+     "type": float,
+     "default": 1.96,
+     "help": "Manage the exploration/exploitation tradeoff for the “UCB” acquisition function. Defaults to 1.96 which corresponds to 95 percent of the confidence interval."
     }
     ]

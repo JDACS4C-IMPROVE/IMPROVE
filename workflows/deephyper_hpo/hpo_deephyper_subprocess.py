@@ -142,6 +142,12 @@ if __name__ == "__main__":
                 evaluator,
                 log_dir=params['output_dir'],
                 verbose=1,
+                surrogate_model = params['CBO_surrogate_model'],
+                surrogate_model_kwargs = params['CBO_surrogate_model_kwargs'],
+                acq_func = params['CBO_acq_func'],
+                acq_optimizer = params['CBO_acq_optimizer'],
+                acq_optimizer_freq = params['CBO_acq_optimizer_freq'],
+                kappa = params['CBO_kappa'],
             )
             results = search.search(max_evals=params['max_evals'])
             results = results.sort_values(f"m:{params['val_loss']}", ascending=True)
