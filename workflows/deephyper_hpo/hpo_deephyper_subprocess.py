@@ -147,6 +147,14 @@ if __name__ == "__main__":
                 acq_optimizer = params['CBO_acq_optimizer'],
                 acq_optimizer_freq = params['CBO_acq_optimizer_freq'],
                 kappa = params['CBO_kappa'],
+                xi = params['CBO_xi'],
+                update_prior = params['CBO_update_prior'],
+                update_prior_quantile = params['CBO_update_prior_quantile'],
+                n_jobs = params['CBO_n_jobs'],
+                n_initial_points = params['CBO_n_initial_points'],
+                initial_point_generator = params['CBO_initial_point_generator'],
+                filter_failures = params['CBO_filter_failures'],
+                max_failures = params['CBO_max_failures'],
             )
             results = search.search(max_evals=params['max_evals'])
             results = results.sort_values(f"m:{params['val_metric']}", ascending=True)

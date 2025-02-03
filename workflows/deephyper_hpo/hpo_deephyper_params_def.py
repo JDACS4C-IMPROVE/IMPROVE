@@ -1,3 +1,5 @@
+from improvelib.utils import str2bool
+
 additional_definitions = [
     {"name": "model_name",
      "type": str,
@@ -78,5 +80,45 @@ additional_definitions = [
      "type": float,
      "default": 1.96,
      "help": "Manage the exploration/exploitation tradeoff for the “UCB” acquisition function. Defaults to 1.96 which corresponds to 95 percent of the confidence interval."
-    }
+    }, 
+    {"name": "CBO_xi",
+     "type": float,
+     "default": 0.001,
+     "help": "Manage the exploration/exploitation tradeoff of 'EI' and 'PI' acquisition function. Defaults to 0.001."
+    }, 
+    {"name": "CBO_update_prior",
+     "type": str2bool,
+     "default": False,
+     "help": "Update the prior of the surrogate model with the new evaluated points. Defaults to False. Should be set to True when all objectives and parameters are continuous."
+    }, 
+    {"name": "CBO_update_prior_quantile",
+     "type": float,
+     "default": 0.1,
+     "help": "The quantile used to update the prior. Defaults to 0.1."
+    }, 
+    {"name": "CBO_n_jobs",
+     "type": int,
+     "default": 1,
+     "help": "Number of parallel processes used to fit the surrogate model of the Bayesian optimization. A value of -1 will use all available cores. Not used in surrogate_model if passed as own sklearn regressor. Defaults to 1."
+    }, 
+    {"name": "CBO_n_initial_points",
+     "type": int,
+     "default": 10,
+     "help": "Number of collected objectives required before fitting the surrogate-model. Defaults to 10."
+    }, 
+    {"name": "CBO_initial_point_generator",
+     "type": str,
+     "default": "random",
+     "help": "Sets an initial points generator. Can be either ['random', 'sobol', 'halton', 'hammersly', 'lhs', 'grid']. Defaults to 'random'."
+    }, 
+    {"name": "CBO_filter_failures",
+     "type": str,
+     "default": "min",
+     "help": "Replace objective of failed configurations by 'min' or 'mean'. If 'ignore' is passed then failed configurations will be filtered-out and not passed to the surrogate model. For multiple objectives, failure of any single objective will lead to treating that configuration as failed and each of these multiple objective will be replaced by their individual 'min' or 'mean' of past configurations. Defaults to 'min' to replace failed configurations objectives by the running min of all objectives."
+    }, 
+    {"name": "CBO_max_failures",
+     "type": int,
+     "default": 100,
+     "help": "Maximum number of failed configurations allowed before observing a valid objective value when filter_failures is not equal to 'ignore'. Defaults to 100."
+    }, 
     ]
