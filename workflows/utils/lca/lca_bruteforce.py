@@ -42,9 +42,9 @@ print("MAIN_MODEL_DIR:   ", MAIN_MODEL_DIR)
 print("MAIN_INFER_DIR:   ", MAIN_INFER_DIR)
 #print("MAIN_LOG_DIR:     ", MAIN_LOG_DIR)
 # Note! Here input_dir is the location of benchmark data
-splits_dir = Path(params['input_dir']) / params['splits_dir']
-print("Created splits path.")
-print("splits_dir: ", splits_dir)
+#splits_dir = Path(params['input_dir']) / params['splits_dir']
+#print("Created splits path.")
+#print("splits_dir: ", splits_dir)
 
 
 try:
