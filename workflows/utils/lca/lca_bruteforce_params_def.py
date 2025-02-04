@@ -41,5 +41,15 @@ additional_definitions = [
      "default": 'auc',
      "help": "y col name"
     },
+    {"name": "uses_cuda_name",
+     "type": str2bool,
+     "default": True,
+     "help": "Change to false if the model doesn't have a cuda_name parameter."
+    },
+    {"name": "cuda_name",
+     "type": str,
+     "default": "cuda:0",
+     "help": "Cuda device name.",
+    },
 
     ]

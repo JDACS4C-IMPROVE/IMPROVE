@@ -1,9 +1,29 @@
 import os
 import glob
+import json
+import time
 from pathlib import Path
+import subprocess
 import lca_bruteforce_params_def
 from improvelib.initializer.config import Config
 
+def save_log(dir, result):
+    result_file_name_stdout = dir / 'logs.txt'
+    if dir.exists() is False: 
+        os.makedirs(dir, exist_ok=True)
+    with open(result_file_name_stdout, 'w') as file:
+        file.write(result.stdout)
+
+def save_time(dir, start):
+    time_diff = time.time() - start
+    hours = int(time_diff // 3600)
+    minutes = int((time_diff % 3600) // 60)
+    seconds = time_diff % 60
+    time_diff_dict = {'hours': hours,
+                    'minutes': minutes,
+                    'seconds': seconds}
+    with open(Path(dir) / 'runtime.json', 'w') as json_file:
+        json.dump(time_diff_dict, json_file, indent=4)
 
 
 
@@ -77,7 +97,10 @@ test_split_file = f"{params['dataset']}_split_{params['split_num']}_test.txt"
 # preprocess
 for lca in lca_split_files:
     lca_train_path = params['lca_splits_dir'] + '/' + lca
+    print(f"Running IMPROVE scripts with {lca} for training...")
+    ### PREPROCESS
     ml_data_dir = MAIN_ML_DATA_DIR / lca.split('.')[0]
+    preprocess_start = time.time()
     preprocess_run = ["python", preprocess_python_script,
             "--train_split_file", str(lca_train_path),
             "--val_split_file", str(val_split_file),
@@ -87,7 +110,74 @@ for lca in lca_split_files:
             "--y_col_name", str(params['y_col_name']),
             "--input_supp_data_dir", str(supp_data_dir)
     ]
-    print(preprocess_run)
-# train
+    preprocess_result = subprocess.run(preprocess_run,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    universal_newlines=True)
+            
+    # Log and Time
+    print(f"preprocess returncode = {preprocess_result.returncode}")
+    save_log(ml_data_dir, preprocess_result)
+    save_time(ml_data_dir, preprocess_start)
 
-# inference
+    ### TRAIN
+    train_start = time.time()
+    model_dir = MAIN_MODEL_DIR / lca.split('.')[0]
+    if params["uses_cuda_name"]:
+        train_run = ["python", train_python_script,
+            "--input_dir", str(ml_data_dir),
+            "--output_dir", str(model_dir),
+            "--epochs", str(params["epochs"]),
+            "--cuda_name", params["cuda_name"],
+            "--y_col_name", str(params['y_col_name'])
+        ]
+    else:
+        train_run = ["python", train_python_script,
+            "--input_dir", str(ml_data_dir),
+            "--output_dir", str(model_dir),
+            "--epochs", str(params["epochs"]),
+            "--y_col_name", str(params['y_col_name'])
+        ]
+    train_result = subprocess.run(train_run,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            universal_newlines=True)
+    # Log and Time
+    print(f"train returncode = {train_result.returncode}")
+    save_log(model_dir, train_result)
+    save_time(model_dir, train_start)
+
+    ### INFER
+    infer_start = time.time()
+    infer_dir = MAIN_INFER_DIR / lca.split('.')[0]
+    if params["uses_cuda_name"]:
+        infer_run = ["python", infer_python_script,
+            "--input_data_dir", str(ml_data_dir),
+            "--input_model_dir", str(model_dir),
+            "--output_dir", str(infer_dir),
+            "--cuda_name", params["cuda_name"],
+            "--y_col_name", str(params['y_col_name']),
+            "--calc_infer_scores", "true"
+        ]
+    else:
+        infer_run = ["python", infer_python_script,
+            "--input_data_dir", str(ml_data_dir),
+            "--input_model_dir", str(model_dir),
+            "--output_dir", str(infer_dir),
+            "--y_col_name", str(params['y_col_name']),
+            "--calc_infer_scores", "true"
+        ]
+    infer_result = subprocess.run(infer_run,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            universal_newlines=True)
+    # Log and Time
+    print(f"infer returncode = {infer_result.returncode}")
+    save_log(infer_dir, infer_result)
+    save_time(infer_dir, infer_start)
+    print(f"Finished IMPROVE scripts with {lca} for training.")
+
+print(f"Finished LCA. Results are in {params['output_dir']}")
+
+ 
+
