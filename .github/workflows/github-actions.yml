@@ -23,5 +23,5 @@ jobs:
           cd tests
       - name: run test_drp_params.py
         run: |
-          python test_drp_params.py
+          python tests/test_drp_params.py
       - run: echo "🍏 This job's status is ${{ job.status }}."
