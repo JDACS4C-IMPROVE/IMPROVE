@@ -15,4 +15,13 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
+      - name: install improvelib
+        run: |
+          pip install improvelib
+      - name: Change to the tests directory
+        run: |
+          cd tests
+      - name: run test_drp_params.py
+        run: |
+          python test_drp_params.py
       - run: echo "🍏 This job's status is ${{ job.status }}."
