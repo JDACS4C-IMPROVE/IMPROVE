@@ -36,5 +36,10 @@ additional_definitions = [
      "default": '0',
      "help": "Split num to use (0-9)."
     },
+    {"name": "y_col_name",
+     "type": str,
+     "default": 'auc',
+     "help": "y col name"
+    },
 
     ]
