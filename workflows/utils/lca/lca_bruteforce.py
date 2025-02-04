@@ -64,7 +64,7 @@ except KeyError:
 
 # get splits
 
-lca_split_files = list((params['lca_splits_dir']).glob(f"{params['dataset']}_split_{params['split_num']}_sz_*.txt"))
+lca_split_files = list(Path(params['lca_splits_dir']).glob(f"{params['dataset']}_split_{params['split_num']}_sz_*.txt"))
 print(lca_split_files)
 print("length of lca: ", len(lca_split_files))
 #split_nums = [str(s).split("split_")[1].split("_")[0] for s in split_files]
