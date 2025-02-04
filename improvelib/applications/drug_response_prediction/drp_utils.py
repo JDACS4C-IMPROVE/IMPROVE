@@ -104,7 +104,10 @@ class DrugResponseLoader:
         self.drug_col_name = params["drug_col_name"]
 
         self.y_data_path = params["y_data_path"]
-        self.split_fpath = Path(params["splits_path"]) / split_file
+        if os.path.exists(split_file):
+                self.split_fpath = split_file
+        else:
+                self.split_fpath = Path(params["splits_path"]) / split_file
         self.dfs = {}
         self.verbose = verbose
 
