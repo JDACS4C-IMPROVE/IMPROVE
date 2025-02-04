@@ -46,8 +46,11 @@ You will need to change the following parameters for your model:
 `output_dir` should be set to path you would like the output to be saved to. We highly recommend that the name of this directory includes the source and split (e.g. ./deephyper/CCLE/split_0)
 `epochs` should be set to the maximum number of epochs to train for.
 `max_evals` should be set to the maximum number of evaluations to check for before launching additional training runs.
-`interactive_session` should be set to True to run on Lambda. Other implementations have not yet been tested.
+`interactive_session` should be set to True to run on Lambda, Polaris, and Biowulf. Other implementations have not yet been tested.
 `hyperparameter_file` can be set to an alternate .json file containing hyperparameters. You can provide a complete or relative path, or the name of the directory if it is in `model_scripts_dir`. See below (step 5) for how to change hyperparameters.
+`val_metric` can be set to any IMPROVE metric you would like to optimize. 'mse' and 'rmse' are minimized, all other metrics are maximized. Note that this does not change what val loss is used by the model, only what HPO tries to optimize. Default is 'mse'.
+`num_gpus_per_node` should be set to the number of GPUs per node on your system. Default is 2.
+Parameters beginning with `CBO_` can be used to change the optimization protocol. The names of these parameters can be found by running `python hpo_deephyper_subprocess.py --help` or looking in `hpo_deephyper_params_def.py`. Documentation of the DeepHyper CBO can be found here: https://deephyper.readthedocs.io/en/stable/_autosummary/deephyper.hpo.CBO.html#deephyper.hpo.CBO
 
 
 ## 5. Modify hyperparameters file
@@ -94,19 +97,39 @@ mpirun -np 10 python hpo_deephyper_subprocess.py --config <ALTERNATE_CONFIG_FILE
 ```
 
 
+To submit a job on Polaris:
+```
+#!/bin/bash -l
+#PBS -l select=2:system=polaris
+#PBS -l place=scatter
+#PBS -l walltime=0:30:00
+#PBS -q debug
+#PBS -A IMPROVE_Aim1
+#PBS -l filesystems=home:grand:eagle
+
+module use /soft/modulefiles
+module load nvhpc-mixed craype-accel-nvidia80
+module load conda
+conda activate
+
+cd ${PBS_O_WORKDIR}
+
+# MPI example w/ 4 MPI ranks per node spread evenly across cores
+NNODES=`wc -l < $PBS_NODEFILE`
+NRANKS_PER_NODE=4
+NDEPTH=8
+NTHREADS=1
+
+NTOTRANKS=$(( NNODES * NRANKS_PER_NODE ))
+echo "NUM_OF_NODES= ${NNODES} TOTAL_NUM_RANKS= ${NTOTRANKS} RANKS_PER_NODE= ${NRANKS_PER_NODE} THREADS_PER_RANK= ${NTHREADS}"
+
+
+export PYTHONPATH=/lus/eagle/your/path/to/IMPROVE/
+
+export MPICH_GPU_SUPPORT_ENABLED=1
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+mpirun -n ${NTOTRANKS} --ppn ${NRANKS_PER_NODE} --depth=${NDEPTH} --cpu-bind depth --env OMP_NUM_THREADS=${NTHREADS} python hpo_deephyper_subprocess.py
+```
 
 
 
-
-
-
-
-
-
-
-
-TODO:
-Run HPO using DeepHyper on Polaris with conda
-Run HPO using DeepHyper on Polaris with singularity
-Needs to maximize loss sometimes (R2, etc)
-Should losses match?

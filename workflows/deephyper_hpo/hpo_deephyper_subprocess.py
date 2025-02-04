@@ -7,8 +7,7 @@ import logging
 import mpi4py
 from deephyper.evaluator import Evaluator, profile
 from deephyper.evaluator.callback import TqdmCallback
-from deephyper.problem import HpProblem
-from deephyper.search.hps import CBO
+from deephyper.hpo import HpProblem, CBO
 from mpi4py import MPI
 import socket
 import hpo_deephyper_params_def
@@ -61,10 +60,13 @@ def run(job, optuna_trial=None):
     with open(result_file_name_stdout, 'w') as file:
         file.write(subprocess_res.stdout)
 
-    # Load val_scores and get val_loss
-    f = open(model_outdir_job_id / "val_scores.json")
+    # Load val_scores and get val_metric. Minimizes mse/rmse, maximizes all else.
+    f = open(model_outdir_job_id / 'val_scores.json')
     val_scores = json.load(f)
-    objective = -val_scores[params['val_loss']]
+    if params['val_metric'] in ('mse', 'rmse'):
+        objective = -val_scores[params['val_metric']]
+    elif params['val_metric'] in ('pcc', 'scc', 'r2', 'acc', 'recall', 'precision', 'f1', 'kappa', 'bacc', 'roc_auc', 'aupr'):
+        objective = val_scores[params['val_metric']]
 
     # Checkpoint the model weights
     with open(f"{params['output_dir']}/model_{job.id}.pkl", "w") as f:
@@ -140,9 +142,22 @@ if __name__ == "__main__":
                 evaluator,
                 log_dir=params['output_dir'],
                 verbose=1,
+                surrogate_model = params['CBO_surrogate_model'],
+                acq_func = params['CBO_acq_func'],
+                acq_optimizer = params['CBO_acq_optimizer'],
+                acq_optimizer_freq = params['CBO_acq_optimizer_freq'],
+                kappa = params['CBO_kappa'],
+                xi = params['CBO_xi'],
+                update_prior = params['CBO_update_prior'],
+                update_prior_quantile = params['CBO_update_prior_quantile'],
+                n_jobs = params['CBO_n_jobs'],
+                n_initial_points = params['CBO_n_initial_points'],
+                initial_point_generator = params['CBO_initial_point_generator'],
+                filter_failures = params['CBO_filter_failures'],
+                max_failures = params['CBO_max_failures'],
             )
             results = search.search(max_evals=params['max_evals'])
-            results = results.sort_values(f"m:{params['val_loss']}", ascending=True)
+            results = results.sort_values(f"m:{params['val_metric']}", ascending=True)
             results.to_csv(f"{params['output_dir']}/hpo_results.csv", index=False)
     print("current node: ", socket.gethostname(), "; current rank: ", rank, "; CUDA_VISIBLE_DEVICE is set to: ", os.environ["CUDA_VISIBLE_DEVICES"])
     print("Finished deephyper HPO.")
