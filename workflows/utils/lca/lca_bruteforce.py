@@ -77,7 +77,7 @@ test_split_file = f"{params['dataset']}_split_{params['split_num']}_test.txt"
 # preprocess
 for lca in lca_split_files:
     lca_train_path = params['lca_splits_dir'] + '/' + lca
-    ml_data_dir = MAIN_ML_DATA_DIR  + "/" + lca.split('.')[0]
+    ml_data_dir = MAIN_ML_DATA_DIR / lca.split('.')[0]
     preprocess_run = ["python", preprocess_python_script,
             "--train_split_file", str(lca_train_path),
             "--val_split_file", str(val_split_file),
