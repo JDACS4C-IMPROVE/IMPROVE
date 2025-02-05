@@ -82,100 +82,107 @@ except KeyError:
     supp_data_dir = ""
 
 
-# get splits
 
-lca_split_paths = list(Path(params['lca_splits_dir']).glob(f"{params['dataset']}_split_{params['split_num']}_sz_*.txt"))
-lca_split_files = [os.path.basename(x) for x in lca_split_paths]
-print(lca_split_files)
-print("length of lca: ", len(lca_split_files))
-#split_nums = [str(s).split("split_")[1].split("_")[0] for s in split_files]
-#split_nums = sorted(set(split_nums))
+## Loops through all splits specified in the parameters
+for split_num in params['split_nums']:
 
-val_split_file = f"{params['dataset']}_split_{params['split_num']}_val.txt"
-test_split_file = f"{params['dataset']}_split_{params['split_num']}_test.txt"
+    split_name = "split_" + split_num
+    print(f"Running LCA with {params['dataset']} {split_name}...")
 
-# preprocess
-for lca in lca_split_files:
-    lca_train_path = params['lca_splits_dir'] + '/' + lca
-    print(f"Running IMPROVE scripts with {lca} for training...")
-    ### PREPROCESS
-    ml_data_dir = MAIN_ML_DATA_DIR / lca.split('.')[0]
-    preprocess_start = time.time()
-    preprocess_run = ["python", preprocess_python_script,
-            "--train_split_file", str(lca_train_path),
-            "--val_split_file", str(val_split_file),
-            "--test_split_file", str(test_split_file),
-            "--input_dir", params['input_dir'], # str("./csa_data/raw_data"),
-            "--output_dir", str(ml_data_dir),
-            "--y_col_name", str(params['y_col_name']),
-            "--input_supp_data_dir", str(supp_data_dir)
-    ]
-    preprocess_result = subprocess.run(preprocess_run,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT,
-                                    universal_newlines=True)
-            
-    # Log and Time
-    print(f"preprocess returncode = {preprocess_result.returncode}")
-    save_log(ml_data_dir, preprocess_result)
-    save_time(ml_data_dir, preprocess_start)
+    # Determines files for training shards from the lca_splits_dir
+    lca_split_paths = list(Path(params['lca_splits_dir']).glob(f"{params['dataset']}_split_{split_num}_sz_*.txt"))
+    lca_split_files = [os.path.basename(x) for x in lca_split_paths]
+    print(f"Running LCA on {len(lca_split_files)} shards with the following training splits:", lca_split_files)
 
-    ### TRAIN
-    train_start = time.time()
-    model_dir = MAIN_MODEL_DIR / lca.split('.')[0]
-    if params["uses_cuda_name"]:
-        train_run = ["python", train_python_script,
-            "--input_dir", str(ml_data_dir),
-            "--output_dir", str(model_dir),
-            "--epochs", str(params["epochs"]),
-            "--cuda_name", params["cuda_name"],
-            "--y_col_name", str(params['y_col_name'])
+    # Sets val and test names
+    val_split_file = f"{params['dataset']}_split_{split_num}_val.txt"
+    test_split_file = f"{params['dataset']}_split_{split_num}_test.txt"
+
+    ## Loops through all shards for the specified split
+    for lca in lca_split_files:
+        lca_train_path = params['lca_splits_dir'] + '/' + lca
+        lca_name = "sz_" + lca.split('.')[0].split('_')[4]
+        print(f"Running IMPROVE scripts with {lca} for training...")
+        ### PREPROCESS
+        ml_data_dir = MAIN_ML_DATA_DIR / split_name / lca_name
+        preprocess_start = time.time()
+        preprocess_run = ["python", preprocess_python_script,
+                "--train_split_file", str(lca_train_path),
+                "--val_split_file", str(val_split_file),
+                "--test_split_file", str(test_split_file),
+                "--input_dir", params['input_dir'], # str("./csa_data/raw_data"),
+                "--output_dir", str(ml_data_dir),
+                "--y_col_name", str(params['y_col_name']),
+                "--input_supp_data_dir", str(supp_data_dir)
         ]
-    else:
-        train_run = ["python", train_python_script,
-            "--input_dir", str(ml_data_dir),
-            "--output_dir", str(model_dir),
-            "--epochs", str(params["epochs"]),
-            "--y_col_name", str(params['y_col_name'])
-        ]
-    train_result = subprocess.run(train_run,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            universal_newlines=True)
-    # Log and Time
-    print(f"train returncode = {train_result.returncode}")
-    save_log(model_dir, train_result)
-    save_time(model_dir, train_start)
+        preprocess_result = subprocess.run(preprocess_run,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT,
+                                        universal_newlines=True)
+                
+        # Log and Time
+        print(f"preprocess returncode = {preprocess_result.returncode}")
+        save_log(ml_data_dir, preprocess_result)
+        save_time(ml_data_dir, preprocess_start)
 
-    ### INFER
-    infer_start = time.time()
-    infer_dir = MAIN_INFER_DIR / lca.split('.')[0]
-    if params["uses_cuda_name"]:
-        infer_run = ["python", infer_python_script,
-            "--input_data_dir", str(ml_data_dir),
-            "--input_model_dir", str(model_dir),
-            "--output_dir", str(infer_dir),
-            "--cuda_name", params["cuda_name"],
-            "--y_col_name", str(params['y_col_name']),
-            "--calc_infer_scores", "true"
-        ]
-    else:
-        infer_run = ["python", infer_python_script,
-            "--input_data_dir", str(ml_data_dir),
-            "--input_model_dir", str(model_dir),
-            "--output_dir", str(infer_dir),
-            "--y_col_name", str(params['y_col_name']),
-            "--calc_infer_scores", "true"
-        ]
-    infer_result = subprocess.run(infer_run,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            universal_newlines=True)
-    # Log and Time
-    print(f"infer returncode = {infer_result.returncode}")
-    save_log(infer_dir, infer_result)
-    save_time(infer_dir, infer_start)
-    print(f"Finished IMPROVE scripts with {lca} for training.")
+        ### TRAIN
+        train_start = time.time()
+        model_dir = MAIN_MODEL_DIR / split_name / lca_name
+        if params["uses_cuda_name"]:
+            train_run = ["python", train_python_script,
+                "--input_dir", str(ml_data_dir),
+                "--output_dir", str(model_dir),
+                "--epochs", str(params["epochs"]),
+                "--cuda_name", params["cuda_name"],
+                "--y_col_name", str(params['y_col_name'])
+            ]
+        else:
+            train_run = ["python", train_python_script,
+                "--input_dir", str(ml_data_dir),
+                "--output_dir", str(model_dir),
+                "--epochs", str(params["epochs"]),
+                "--y_col_name", str(params['y_col_name'])
+            ]
+        train_result = subprocess.run(train_run,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                universal_newlines=True)
+        # Log and Time
+        print(f"train returncode = {train_result.returncode}")
+        save_log(model_dir, train_result)
+        save_time(model_dir, train_start)
+
+        ### INFER
+        infer_start = time.time()
+        infer_dir = MAIN_INFER_DIR / split_name / lca_name
+        if params["uses_cuda_name"]:
+            infer_run = ["python", infer_python_script,
+                "--input_data_dir", str(ml_data_dir),
+                "--input_model_dir", str(model_dir),
+                "--output_dir", str(infer_dir),
+                "--cuda_name", params["cuda_name"],
+                "--y_col_name", str(params['y_col_name']),
+                "--calc_infer_scores", "true"
+            ]
+        else:
+            infer_run = ["python", infer_python_script,
+                "--input_data_dir", str(ml_data_dir),
+                "--input_model_dir", str(model_dir),
+                "--output_dir", str(infer_dir),
+                "--y_col_name", str(params['y_col_name']),
+                "--calc_infer_scores", "true"
+            ]
+        infer_result = subprocess.run(infer_run,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                universal_newlines=True)
+        # Log and Time
+        print(f"infer returncode = {infer_result.returncode}")
+        save_log(infer_dir, infer_result)
+        save_time(infer_dir, infer_start)
+        print(f"Finished IMPROVE scripts with {lca} for training.")
+
+    print(f"Finished LCA with {params['dataset']} {split_name}.")
 
 print(f"Finished LCA. Results are in {params['output_dir']}")
 

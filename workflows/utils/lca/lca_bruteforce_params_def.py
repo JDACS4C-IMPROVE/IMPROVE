@@ -31,10 +31,11 @@ additional_definitions = [
      "default": 'CCLE',
      "help": "Dataset to use."
     },
-    {"name": "split_num",
+    {"name": "split_nums",
+     "nargs" : "+",
      "type": str,
-     "default": '0',
-     "help": "Split num to use (0-9)."
+     "default": ['0', '1'],
+     "help": "Split of the datasets for LCA"
     },
     {"name": "y_col_name",
      "type": str,
