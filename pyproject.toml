@@ -1,14 +1,13 @@
 [build-system]
-requires = ['setuptools', 'setuptools-scm']
+requires = ['setuptools>=61.0', 'setuptools-scm']  # Require setuptools >= 61.0
 build-backend = 'setuptools.build_meta'
 
-[tool.setuptools.packages.find]
-include = ["improvelib*"]
-namespaces = false
+[tool.setuptools]
+packages = ["improvelib"]
 
 [project]
 name = 'improvelib'
-version = '0.1'
+version = '0.1.0'  # Corrected version format
 authors = [
   { name='Alex Partin', email='apartin@anl.gov' },
 ]
