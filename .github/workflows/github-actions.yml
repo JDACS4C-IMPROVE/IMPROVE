@@ -17,11 +17,15 @@ jobs:
           ls ${{ github.workspace }}
       - name: install improvelib
         run: |
-          pip install improvelib
-      - name: Change to the tests directory
-        run: |
-          cd tests
+          pip install .
       - name: run test_drp_params.py
         run: |
+          cd tests
+          mkdir candle_data
+          mkdir candle_data/x_data
+          mkdir candle_data/y_data
+          mkdir candle_data/splits
+          data_dir=candle_data
+          export CANDLE_DATA_DIR="./$data_dir/"
           python tests/test_drp_params.py
       - run: echo "🍏 This job's status is ${{ job.status }}."
