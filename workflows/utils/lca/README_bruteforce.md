@@ -1,14 +1,31 @@
 ## 1. Install conda environment for the curated model 
-Install model, IMPROVE, and datasets:
+Install model, set up environment, install IMPROVE, and download datasets:
 ```
 cd <WORKING_DIR>
 git clone https://github.com/JDACS4C-IMPROVE/<MODEL>
 cd <MODEL>
+conda env create -f <MODEL_ENV>.yml -n <NAME_OF_ENV>
+conda activate <NAME_OF_ENV>
 source setup_improve.sh
 ```
 
-Install model environment (get the name of the yml file from model repo readme):
-The workflow will need to know the ./<MODEL_ENV_NAME>/.
+Set up parameters for brute force Learning Curve Analysis
 ```
-conda env create -f <MODEL_ENV>.yml -p ./<MODEL_ENV_NAME>/
+cd <YOUR/PATH/TO/>IMPROVE/workflows/utils/lca
 ```
+
+Parameters
+
+
+
+
+Run brute force Learning Curve Analysis
+```
+python lca_bruteforce.py
+```
+
+To specify a different config file:
+```
+python lca_bruteforce.py --config <YOUR_CONFIG>
+```
+
