@@ -28,5 +28,5 @@ jobs:
           data_dir=candle_data
           ls .
           export CANDLE_DATA_DIR="./$data_dir/"
-          python tests/test_drp_params.py
+          python test_drp_params.py
       - run: echo "🍏 This job's status is ${{ job.status }}."
