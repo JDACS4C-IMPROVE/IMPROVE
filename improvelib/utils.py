@@ -596,7 +596,8 @@ def compute_performance_scores(y_true: np.array,
                                y_pred: np.array,
                                stage: str, 
                                metric_type: str, 
-                               output_dir: str):
+                               output_dir: str,
+                               y_prob=None):
     """Evaluate predictions according to specified metrics.
 
     Metrics are evaluated. Scores are stored in specified path and returned.
@@ -608,12 +609,13 @@ def compute_performance_scores(y_true: np.array,
             validation or testing set.
     :params str metric_type: Either classification or regression.
     :params str output_dir: Directory to write results.
+    :params: array y_prob: Array with target scores from classification model, defaults to None.
 
     :return: Python dictionary with metrics evaluated and corresponding scores.
     :rtype: dict
     """
     # Compute multiple performance scores
-    scores = compute_metrics(y_true, y_pred, metric_type)
+    scores = compute_metrics(y_true, y_pred, metric_type, y_prob)
 
     # Add val_loss metric
     #key = f"{stage}_loss"
@@ -627,13 +629,24 @@ def compute_performance_scores(y_true: np.array,
 
     # Performance scores for Supervisor HPO
     # TODO. do we still need to print IMPROVE_RESULT?
-    if stage == "val":
-        print("\nIMPROVE_RESULT val_loss:\t{}\n".format(scores["mse"]))
-        print("Validation scores:\n\t{}".format(scores))
-    elif stage == "test":
-        print("Inference scores:\n\t{}".format(scores))
-    else:
-        print("Invalid stage: must be 'val' or 'test'.")
+    if metric_type == "regression":
+        if stage == "val":
+            print("\nIMPROVE_RESULT val_loss:\t{}\n".format(scores["mse"]))
+            print("Validation scores:\n\t{}".format(scores))
+        elif stage == "test":
+            print("Inference scores:\n\t{}".format(scores))
+        else:
+            print("Invalid stage: must be 'val' or 'test'.")
+    elif metric_type == "classification":
+        if stage == "val":
+            print("Validation scores:\n\t{}".format(scores))
+        elif stage == "test":
+            print("Inference scores:\n\t{}".format(scores))
+        else:
+            print("Invalid stage: must be 'val' or 'test'.")
+    else: 
+        print("Invalid metric_type provided. Choose 'classification' or 'regression'.")
+
     return scores
 
 
