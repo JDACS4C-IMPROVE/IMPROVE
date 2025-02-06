@@ -25,10 +25,20 @@ def main():
     parser_lca_scores = subparsers.add_parser('lca_scores', parents=[common_args])
     parser_lca_scores.set_defaults(func=lca_scores)
 
+    parser_plot_learning_curve = subparsers.add_parser('plot_learning_curve', parents=[common_args])
+    parser_plot_learning_curve.set_defaults(func=plot_learning_curve)
+
+    parser_whole_analysis = subparsers.add_parser('whole_analysis', parents=[common_args])
+    parser_whole_analysis.set_defaults(func=whole_analysis)
+
     args = main_parser.parse_args()
     args.func(**vars(args))
 
 
+def whole_analysis(input_dir, output_dir, y_col_name, metric_type, model_name, dataset, **kwargs):
+    runtimes(input_dir, output_dir, model_name, dataset, **kwargs)
+    lca_scores(input_dir, output_dir, y_col_name, metric_type, model_name, dataset, **kwargs)
+    plot_learning_curve(output_dir, model_name, dataset, **kwargs)
 
 
 def runtimes(input_dir, output_dir, model_name, dataset, **kwargs):
@@ -145,24 +155,36 @@ def lca_scores(input_dir, output_dir, y_col_name, metric_type, model_name, datas
                     line = 'infer' + str(line).split('infer')[1]
                     f.write(line + "\n")
 
-def plot_learning_curve(**kwargs):
+def plot_learning_curve(output_dir, model_name, dataset, **kwargs):
     import seaborn as sns
     import matplotlib.pyplot as plt
-    print("Not implemented yet")
-    # Plot the heatmap
-    #plt.figure(figsize=(10, 8))
-    #ax = sns.heatmap()
-
-    # Set the labels and title
-    #ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
-    #ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+    scores_path = output_dir + "/all_scores.csv"
+    scores = pd.read_csv(scores_path)
+    mae_scores = scores[scores['metric'] == 'mae']
+    plt.figure(figsize=(10, 8))
+    p = sns.scatterplot(data=mae_scores, x='shard', y='value', hue='split')
+    p.set_xlabel("Training Dataset Size (Log2 Scale)")
+    p.set_ylabel("Mean Absolute Error (Log2 Scale)")
+    plt.xscale('log', base=2)
+    plt.yscale('log', base=2)
 
     # Set the title
-    #plt.title(title)
+    if model_name is not None:
+        if dataset is not None:
+            title = model_name + ", " + dataset
+        else:
+            title = model_name
+    else:
+        if dataset is not None:
+            title = dataset
+        else:
+            title = ""
+    plt.title(title)
 
     # Save the plot
-    #plt.savefig(filepath, bbox_inches='tight', dpi=150)
-    #plt.close()
+    filepath = output_dir + "/fig"
+    plt.savefig(filepath, bbox_inches='tight', dpi=150)
+    plt.close()
     
 
 
