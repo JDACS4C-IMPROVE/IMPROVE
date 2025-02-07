@@ -1,0 +1,15 @@
+name: IMPROVE UnitTest Bruteforce CSA workflow
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and check
+        run: |
+          pip install -e .
+          python -c "import improvelib; print(improvelib.__version__)"
+          export PYTHONPATH=$PYTHONPATH:.
+          cd tests
+          wget --cut-dirs=8 -P ./ -nH -np -m https://web.cels.anl.gov/projects/IMPROVE_FTP/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/
+          python test_bruteforce_csa.py
