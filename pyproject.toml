@@ -9,7 +9,15 @@ packages = ["improvelib"]
 name = 'improvelib'
 version = '0.1.0'  # Corrected version format
 authors = [
-  { name='Alex Partin', email='apartin@anl.gov' },
+    { name = "Andreas Wilke", email = "wilke@anl.gov" },
+    { name = "Alexander Partin", email = "apartin@anl.gov" },
+    { name = "Natasha Koussa" },
+    { name = "Sara Jones" },
+    { name = "Priyanka Vasanthakumari", email = "pvasanthakumari@anl.gov" },
+    { name = "Oleksandr Narykov", email = "onarykov@anl.gov" },
+    { name = "Rajeev Jain", email = "rajeeja@gmail.com" },
+    { name = "Justin M Wozniak", email = "woz@anl.gov" },
+    { name = "Rylie Weaver" }
 ]
 description = 'Open-source package for model standardization and comparison in Python'
 readme = 'README_PyPi.md'
