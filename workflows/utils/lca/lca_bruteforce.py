@@ -42,11 +42,12 @@ if output_dir.exists() is False:
     os.makedirs(output_dir, exist_ok=True)
 
 
-#Model scripts - this should be fine
+# Model scripts - this should be fine
 preprocess_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_preprocess_improve.py")
 train_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
 infer_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_infer_improve.py")
 print("Created script names.")
+
 
 
 # Specify dirs - need to fix this
