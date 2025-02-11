@@ -57,7 +57,7 @@ class CLI:
         self.cli_params = {}
 
         # Set logger level
-        self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.DEBUG))
+        self.logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.ERROR))
 
         # Set common options for all model scripts
         common_options = self.parser.add_argument_group('Standard Options')

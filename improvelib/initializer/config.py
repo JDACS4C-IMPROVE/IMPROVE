@@ -13,7 +13,7 @@ BREAK=os.getenv("IMPROVE_DEV_DEBUG", None)
 
 
 class Config:
-    """Class to handle configuration files."""
+    """Base class to handle configuration files."""
     # ConfigError = str
     config_sections = ['DEFAULT', 'Preprocess', 'Train', 'Infer']
 
@@ -28,7 +28,7 @@ class Config:
         self.params = {}
         self.file = None # change to config_file
         self.logger = logging.getLogger('Config')
-        self.log_level = os.getenv("IMPROVE_LOG_LEVEL", logging.INFO)
+        self.log_level = os.getenv("IMPROVE_LOG_LEVEL", logging.ERROR)
         self.logger.setLevel(self.log_level)
 
         self.required = required
@@ -72,26 +72,31 @@ class Config:
 
         # check if option is a dictionary
         if not isinstance(option, dict):
-            self.logger.error("Option %s is not a dictionary", name)
-            sys.exit(1)
+            raise TypeError(f"Expected a dictionary, but got {type(obj).__name__} instead.")
+      
         
         # check if name is identical to the name in the dictionary
         if "name" in option:
             if not name == option['name']:
-                self.logger.error("Option name %s is not identical to name in dictionary %s", name, option['name'])
-                sys.exit(1)
+                raise ValueError("Option name %s is not identical to name in dictionary %s", name, option['name'])
+                
         elif not name == option['dest']:
-            self.logger.error("Option name %s is not identical to name in dictionary %s", name, option['dest'])
-            sys.exit(1)
+            raise ValueError("Option name %s is not identical to name in dictionary %s", name, option['dest'])
+
 
         # check if name is already in _options
         if name in self._options:
             self.logger.error("Option %s is already defined. Skipping.", name)
+            raise ValueError("Option %s already defined", name)
             return False
 
         # check if all required keys are present
-        if not all(k in option for k in ('name', 'type', 'default', 'help')):
-            self.logger.warning("Option %s is missing required keys.", name)
+        # if not all(k in option for k in ('name', 'type', 'default', 'help')):
+        # 'name' is not in help, thus ignoring it for now
+        for k in ( 'type', 'default', 'help'):
+            if k not in option:
+                self.logger.warning("Option %s is missing required key %s.", name, k)
+                raise ValueError("Option %s is missing required keys.", name, k)
 
         # check if type and default are supported 
         if "type" not in option:
@@ -102,8 +107,7 @@ class Config:
             option['default'] = None
             
         if not option['type'] in ['str', 'int', 'float', 'bool', 'str2bool', None, str , int, float, bool, str2bool]:
-            self.logger.error("Unsupported type %s for option %s", option['type'], name)
-            sys.exit(1)
+            raise TypeError("Unsupported type %s for option %s", option['type'], name)
 
         # add option to _options    
         self._options[name] = option
@@ -131,10 +135,10 @@ class Config:
         if config_file is not None:
             self.file = config_file
         else:
-            self.logger.debug("No config file provided in command line arguments.")    
+            self.logger.debug("No config file provided on the command line.")    
 
         if self.file is None:
-            self.logger.debug("No config file provided at all.")
+            self.logger.debug("Config not passed through cli nor as default. Skipping load config.")
             return
         
         # Load the config file
@@ -159,7 +163,7 @@ class Config:
                             except json.JSONDecodeError:
                                 self.logger.error("Can't convert %s to list", value)
                                 self.logger.critical(json.JSONDecodeError)
-                                sys.exit(1)
+                                raise ValueError(json.JSONDecodeError)
                         elif 'type' in self._options[key]:
                             t = self._options[key]['type']
                             if t == 'str' or t == str:
@@ -196,7 +200,7 @@ class Config:
 
 
     def load_config(self):
-        """ TODO ... """
+        """ Load configuration file in ini format. If config file is not provided, create empty config."""
         if self.file and os.path.isfile(self.file):
             self.logger.info("Loading config from %s", self.file)
             self.config.read(self.file)
