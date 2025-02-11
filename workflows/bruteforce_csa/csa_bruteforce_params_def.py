@@ -1,10 +1,4 @@
-import sys
-from pathlib import Path
-
 from improvelib.utils import str2bool
-
-# Global variables
-filepath = Path(__file__).resolve().parent  # [Req]
 
 csa_bruteforce_params = [
     {"name": "cuda_name",
