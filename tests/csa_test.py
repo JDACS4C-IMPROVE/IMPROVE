@@ -36,7 +36,7 @@ class Bruteforce_CSA_test(unittest.TestCase):
         self.assertEqual(params['model_name'], 'GraphDRP')
         self.assertEqual(params['epochs'], 5)
         self.assertEqual(params['uses_cuda_name'], True)
-        # self.assertEqual(params['model_scripts_dir'], './')
+    
         
 if __name__ == '__main__':
     unittest.main()
