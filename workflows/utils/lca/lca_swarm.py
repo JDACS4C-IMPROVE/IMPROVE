@@ -52,7 +52,7 @@ try:
             print("Parameter input_supp_data_dir provided but not found at provided bath or in model_scripts_dir.")
 except KeyError:
     # if no input_supp_data_dir provided, set to empty string
-    supp_data_dir = ""
+    supp_data_dir = None
 
 preprocess_list = []
 train_list = []
@@ -78,10 +78,12 @@ for split_num in params['split_nums']:
     for lca in lca_split_files:
         lca_train_path = params['lca_splits_dir'] + '/' + lca
         lca_name = "sz_" + lca.split('.')[0].split('_')[4]
-        print(f"Running IMPROVE scripts with {lca} for training...")
         ### PREPROCESS
         ml_data_dir = MAIN_ML_DATA_DIR / split_name / lca_name
-        preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(lca_train_path)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)} --y_col_name {str(params['y_col_name'])} --input_supp_data_dir {str(supp_data_dir)}"]
+        if supp_data_dir is not None:
+            preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(lca_train_path)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)} --y_col_name {str(params['y_col_name'])} --input_supp_data_dir {str(supp_data_dir)}"]
+        else:
+            preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(lca_train_path)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)} --y_col_name {str(params['y_col_name'])}"]
         preprocess_list = preprocess_list + preprocess_run
 
         ### TRAIN
@@ -99,9 +101,7 @@ for split_num in params['split_nums']:
         else:
             infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --y_col_name {str(params['y_col_name'])} --calc_infer_scores true"]
         infer_list = infer_list + infer_run
-        print(f"Finished IMPROVE scripts with {lca} for training.")
 
-    print(f"Finished LCA with {params['dataset']} {split_name}.")
 
 with open("preprocess.swarm", "w") as file:
     for item in preprocess_list:
@@ -115,7 +115,7 @@ with open("infer.swarm", "w") as file:
     for item in infer_list:
         file.write(prefix + item + "\n")
 
-print(f"Finished LCA. Results are in {params['output_dir']}")
+print(f"Finished swarm files. Results will be in {params['output_dir']}")
 
  
 
