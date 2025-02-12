@@ -1,11 +1,13 @@
+Draft readme
 ## Requirements
 
 IMPROVE general env
 An IMPROVE compliant model
 A system with swarm
 
+## Usage
 
-## Install model
+### Install model
 
 Requires conda env to be installed in the model repo location
 
@@ -27,7 +29,11 @@ Assumes conda env is located in the model dir, which can be anywhere as long as 
 
 Currently just writes swarm files to pwd because output dir is used for the output of the swarm files.
 
-## Running swarm files
+### Setup Configuration File
+
+Currently same as bruteforce, but with `swarm_file_prefix`
+
+### Running swarm files
 
 Example usage for Biowulf
 

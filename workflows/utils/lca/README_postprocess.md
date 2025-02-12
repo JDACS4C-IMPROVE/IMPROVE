@@ -1,5 +1,13 @@
 ## Postprocessing of LCA
 
+## Requirements
+
+improvelib
+scikit-learn
+pandas
+seaborn (for plotting only)
+matplotlib (for plotting only)
+
 ## Usage
 
 **Python script**: `lca_postprocess.py`
@@ -39,4 +47,5 @@ This will run the run-time analysis, aggregate scores, and plot the learning cur
 * `--dataset`: Name of the dataset, if you would like it saved in the data / title of the plot (default: `None`).
 
 
+## Output
 
