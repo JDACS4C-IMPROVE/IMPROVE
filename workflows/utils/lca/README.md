@@ -1,10 +1,10 @@
 # Learning Curve Split Generator
 
 This repository contains scripts to generate data splits for learning curve
-analysis using drug response response data from various sources. The scripts
-provide the ability to create progressive sizes of training sets, allowing
-researchers to analyze model performance as a function of the amount of
-training data.
+analysis (LCA) using drug response response data from various sources. The
+scripts provide the ability to create progressive sizes of training sets,
+allowing to analyze model performance as a function of the amount of training
+data.
 
 
 ## Scripts
@@ -35,7 +35,9 @@ To run the bash script, navigate to the directory where it is located and execut
 bash gen_lc_splits.sh PATH_TO_DATA_FILE PATH_TO_SPLITD_DIR
 ```
 
-The script invokes the Python script `generate_lc_split_files.py` with parameters such as the data file path, splits directory, LC sizes, min LC size, max LC size, and the scaling method for size increments.
+The script invokes the Python script `generate_lc_split_files.py` with parameters
+such as the data file path, splits directory, LC sizes, min LC size, max LC size,
+and the scaling method for size increments.
 
 **Python script**: `generate_lc_split_files.py`
 This script generates learning curve data splits based on the provided parameters.
@@ -43,7 +45,7 @@ This script generates learning curve data splits based on the provided parameter
 Command-Line Arguments
 You can also run the Python script directly with command-line arguments:
 
-```python
+```bash
 python generate_lc_split_files.py --data_file_path <path_to_data_file> \
     --splits_dir <path_to_splits_directory> \
     --lc_sizes <number_of_sizes> \
@@ -61,12 +63,17 @@ python generate_lc_split_files.py --data_file_path <path_to_data_file> \
 
 
 ## Example
-python generate_lc_split_files.py --data_file_path ../../../csa_data/raw_data/y_data/response.tsv \
+```bash
+python generate_lc_split_files.py \
+    --data_file_path ../../../csa_data/raw_data/y_data/response.tsv \
     --splits_dir ../../../csa_data/raw_data/splits \
     --lc_sizes 10 \
     --min_size 1024 \
     --lc_step_scale log
-    
-    
+```
+
+
 ## Output
-The output consists of multiple text files in the specified splits directory. Each file contains indices of rows corresponding to the specified learning curve sizes.
+The output consists of multiple text files in the specified splits directory.
+Each file contains indices of rows corresponding to the specified learning curve
+sizes.

@@ -1,45 +1,85 @@
-"""Functionality for Computing Metrics in IMPROVE."""
-
+"""prediction performance metrics."""
 import sys
-import sklearn
 from math import sqrt
+from typing import Dict, Any
 
+import sklearn
+import numpy as np
 from scipy.stats.mstats import pearsonr, spearmanr
 
+# Import metrics from sklearn based on version
 if sklearn.__version__ < "1.4.0":
-    from sklearn.metrics import r2_score, mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
+    from sklearn.metrics import (
+        r2_score,
+        mean_squared_error,
+        accuracy_score,
+        balanced_accuracy_score,
+        f1_score,
+        precision_score,
+        recall_score,
+        roc_auc_score,
+        cohen_kappa_score,
+        precision_recall_curve,
+        auc
+    )
 else:
-    from sklearn.metrics import r2_score, mean_squared_error, root_mean_squared_error, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
+    from sklearn.metrics import (
+        r2_score,
+        mean_squared_error,
+        root_mean_squared_error,
+        accuracy_score,
+        balanced_accuracy_score,
+        f1_score,
+        precision_score,
+        recall_score,
+        roc_auc_score,
+        cohen_kappa_score,
+        precision_recall_curve,
+        auc
+    )
 
 
-def str2Class(str):
+# TODO: rename str2Class to str_to_class
+def str2Class(str) -> Any:
+    """Convert a string to a class reference.
+
+    Args:
+        class_name (str): The name of the class to retrieve.
+
+    Returns:
+        Any: The class reference corresponding to the class name.
+    """
     return getattr(sys.modules[__name__], str)
 
 
-def compute_metrics(y_true, y_pred, metric_type):
+def compute_metrics(y_true: np.ndarray,
+                    y_pred: np.ndarray,
+                    metric_type: str, 
+                    y_prob = None
+                    ) -> Dict[str, float]:
     """Compute the specified set of metrics.
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
-    metrics: python list
-        List of metrics to compute.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
+        metric_type (str): Type of metrics to compute ('classification' or 'regression').
+        y_prob (np.ndaprray): Target scores made by the classification model. Optional, defaults to None.
 
-    Returns
-    -------
-    eval: python dictionary
-        A dictionary of evaluated metrics.
+    Returns:
+        dict: A dictionary of evaluated metrics.
+
+    Raises:
+        ValueError: If an invalid metric_type is provided.
     """
     scores = {}
+
     if metric_type == "classification":
-        metrics = ["acc", "recall", "precision", "f1", "auc", "aupr"]
+            metrics = ["acc", "recall", "precision", "f1", "kappa", "bacc"]
     elif metric_type == "regression":
         metrics = ["mse", "rmse", "pcc", "scc", "r2"]
     else:
-        print("Invalid metric_type")
+        raise ValueError(f"Invalid metric_type provided: {metric_type}. \
+                         Choose 'classification' or 'regression'.")
 
     for mtstr in metrics:
         mapstr = mtstr
@@ -51,44 +91,38 @@ def compute_metrics(y_true, y_pred, metric_type):
             mapstr = "r_square"
         scores[mtstr] = str2Class(mapstr)(y_true, y_pred)
 
-    scores = {k: float(v) for k, v in scores.items()}
+    if metric_type == "classification":
+        if y_prob is not None:
+            scores["roc_auc"] = roc_auc(y_true, y_prob)
+            scores["aupr"] = aupr(y_true, y_prob)
 
+    scores = {k: float(v) for k, v in scores.items()}
     return scores
 
 
-def mse(y_true, y_pred):
+def mse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute Mean Squared Error (MSE).
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to MSE. If several outputs, errors of all outputs are averaged with uniform weight.
+    Returns:
+        float: The computed MSE.
     """
-    mse = mean_squared_error(y_true, y_pred)
-    return mse
+    return mean_squared_error(y_true, y_pred)
 
 
-def rmse(y_true, y_pred):
+def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute Root Mean Squared Error (RMSE).
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to RMSE. If several outputs, errors of all outputs are averaged with uniform weight.
+    Returns:
+        float: The computed RMSE.
     """
-    #rmse = root_mean_squared_error(y_true, y_pred)
     if sklearn.__version__ >= "1.4.0":
         rmse = root_mean_squared_error(y_true, y_pred) # squared is deprecated
     elif sklearn.__version__ < "1.4.0" and sklearn.__version__ >= "0.22.0":
@@ -98,181 +132,149 @@ def rmse(y_true, y_pred):
     return rmse
 
 
-def pearson(y_true, y_pred):
+def pearson(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute Pearson Correlation Coefficient (PCC).
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to PCC.
+    Returns:
+        float: The computed PCC.
     """
     pcc = pearsonr(y_true, y_pred)[0]
     return pcc
 
 
-def spearman(y_true, y_pred):
+def spearman(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute Spearman Correlation Coefficient (SCC).
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to SCC.
+    Returns:
+        float: The computed SCC.
     """
     scc = spearmanr(y_true, y_pred)[0]
     return scc
 
 
-def r_square(y_true, y_pred):
+def r_square(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute R2 Coefficient.
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to R2. If several outputs, scores of all outputs are averaged with uniform weight.
+    Returns:
+        float: The computed R2.
     """
-
     return r2_score(y_true, y_pred)
 
 
-def acc(y_true, y_pred):
+def acc(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute accuracy.
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to accuracy.
+    Returns:
+        float: The computed accuracy.
     """
-
     return accuracy_score(y_true, y_pred)
 
 
-def bacc(y_true, y_pred):
+def bacc(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute balanced accuracy.
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to balanced accuracy.
+    Returns:
+        float: The computed balanced accuracy.
     """
-
     return balanced_accuracy_score(y_true, y_pred)
 
+def kappa(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Compute Cohen's kappa.
 
-def f1(y_true, y_pred):
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
+
+    Returns:
+        float: The computed kappa.
+    """
+    return cohen_kappa_score(y_true, y_pred)
+
+
+def f1(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute the F1 score.
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to the F1 score.
+    Returns:
+        float: The computed F1 score.
     """
-
     return f1_score(y_true, y_pred)
 
 
-def precision(y_true, y_pred):
+def precision(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute precision.
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to precision.
+    Returns:
+        float: The computed precision.
     """
-
     return precision_score(y_true, y_pred)
 
 
-def recall(y_true, y_pred):
+def recall(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute recall.
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_pred (np.ndarray): Predictions made by the model.
 
-    Returns
-    -------
-        float value corresponding to recall.
+    Returns:
+        float: The computed recall.
     """
-
     return recall_score(y_true, y_pred)
 
 
-def auc(y_true, y_pred):
+def roc_auc(y_true: np.ndarray, y_prob: np.ndarray) -> float:
     """Compute Receiver Operating Characteristic AUC.
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_prob (np.ndarray): Target scores made by the model.
 
-    Returns
-    -------
-        float value corresponding to ROC AUC.
+    Returns:
+        float: The computed ROC AUC.
     """
+    return roc_auc_score(y_true, y_prob)
 
-    return roc_auc_score(y_true, y_pred)
 
-
-def aupr(y_true, y_pred):
+def aupr(y_true: np.ndarray, y_prob: np.ndarray) -> float:
     """Compute Precision-Recall curve AUC.
 
-    Parameters
-    ----------
-    y_true : numpy array
-        True values to predict.
-    y_pred : numpy array
-        Prediction made by the model.
+    Args:
+        y_true (np.ndarray): True values to predict.
+        y_prob (np.ndarray): Target scores made by the model.
 
-    Returns
-    -------
-        float value corresponding to Precision-Recall curve AUC.
+    Returns:
+        float: The computed Precision-Recall curve AUC.
     """
+    precision, recall, threshold = precision_recall_curve(y_true, y_prob)
+    pr_auc = auc(recall, precision)
+    return pr_auc
 
-    return average_precision_score(y_true, y_pred)
+
