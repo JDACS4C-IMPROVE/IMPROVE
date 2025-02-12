@@ -3,7 +3,7 @@ import glob
 import json
 import time
 from pathlib import Path
-import lca_bruteforce_params_def
+import lca_swarm_params_def
 from improvelib.initializer.config import Config
 
 # parameters
@@ -13,7 +13,7 @@ params = cfg.initialize_parameters(
     section="LCA",
     pathToModelDir=filepath,
     default_config="lca_bruteforce_params.ini",
-    additional_definitions=lca_bruteforce_params_def.additional_definitions
+    additional_definitions=lca_swarm_params_def.additional_definitions
 )
 
 output_dir = Path(params['output_dir'])
@@ -102,20 +102,24 @@ for split_num in params['split_nums']:
             infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --y_col_name {str(params['y_col_name'])} --calc_infer_scores true"]
         infer_list = infer_list + infer_run
 
+if params['swarm_file_prefix'] is not None:
+    swarm_file_prefix = params['swarm_file_prefix']
+else:
+    swarm_file_prefix = params['model_name'] + "_" + params['dataset'] + "_"
 
-with open("preprocess.swarm", "w") as file:
+with open(swarm_file_prefix + "preprocess.swarm", "w") as file:
     for item in preprocess_list:
         file.write(prefix + item + "\n")
 
-with open("train.swarm", "w") as file:
+with open(swarm_file_prefix + "train.swarm", "w") as file:
     for item in train_list:
         file.write(prefix + item + "\n")
 
-with open("infer.swarm", "w") as file:
+with open(swarm_file_prefix + "infer.swarm", "w") as file:
     for item in infer_list:
         file.write(prefix + item + "\n")
 
-print(f"Finished swarm files. Results will be in {params['output_dir']}")
+print(f"Finished swarm files. Swarm files are prefixed with {swarm_file_prefix}. Results will be in {params['output_dir']}")
 
  
 
