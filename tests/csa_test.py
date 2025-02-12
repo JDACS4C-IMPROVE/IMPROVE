@@ -37,6 +37,7 @@ class Bruteforce_CSA_test(unittest.TestCase):
         self.assertEqual(params['epochs'], 5)
         self.assertEqual(params['uses_cuda_name'], True)
     
+    
         
 if __name__ == '__main__':
     unittest.main()
