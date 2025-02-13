@@ -11,11 +11,6 @@ additional_definitions = [
      "default": './', 
      "help": "Path to the model repository"
     },
-    {"name": "model_environment",
-     "type": str,
-     "default": '',
-     "help": "Name of your model conda environment"
-    },
     {"name": "epochs",
      "type": int,
      "default": 10,
