@@ -140,14 +140,17 @@ def lca_scores(input_dir, output_dir, y_col_name, metric_type, model_name, datas
                 dfs.append(shard_score_df)
 
         # Concat dfs and save
-        scores = pd.concat(dfs, axis=0)
-        #scores['model'] = model_name
-        if model_name is not None:
-            scores['model'] = model_name
-        if dataset is not None:
-            scores['dataset'] = dataset
-        scores.to_csv(output_dir / "all_scores.csv", index=False)
-        del dfs
+        if not dfs:
+            print("No runtimes found.")
+        else:
+            scores = pd.concat(dfs, axis=0)
+            #scores['model'] = model_name
+            if model_name is not None:
+                scores['model'] = model_name
+            if dataset is not None:
+                scores['dataset'] = dataset
+            scores.to_csv(output_dir / "all_scores.csv", index=False)
+            del dfs
 
         if len(missing_pred_files) > 0:
             with open(f"{output_dir}/missing_pred_files.txt", "w") as f:
