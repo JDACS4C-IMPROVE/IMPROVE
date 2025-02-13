@@ -43,8 +43,8 @@ This will run the run-time analysis, aggregate scores, and plot the learning cur
 * `--output_dir`: Path to the directory where the postprocessing will be saved (default: `'./'`).
 * `--y_col_name`: The y_col_name in `test_y_data_predicted.csv` (default: `'auc'`).
 * `--metric_type`: Metric type to use (default: `'regression'`).
-* `--model_name`: Name of the model, if you would like it saved in the data / title of the plot (default: `None`).
-* `--dataset`: Name of the dataset, if you would like it saved in the data / title of the plot (default: `None`).
+* `--model_name`: Name of the model, if you would like it saved in the file name / data / title of the plot (default: `None`).
+* `--dataset`: Name of the dataset, if you would like it saved in the file name / data / title of the plot (default: `None`).
 
 
 ## Output

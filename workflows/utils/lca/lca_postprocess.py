@@ -40,6 +40,19 @@ def whole_analysis(input_dir, output_dir, y_col_name, metric_type, model_name, d
     lca_scores(input_dir, output_dir, y_col_name, metric_type, model_name, dataset, **kwargs)
     plot_learning_curve(output_dir, model_name, dataset, **kwargs)
 
+def _file_prefix(model_name, dataset):
+    # Set the file name prefix
+    if model_name is not None:
+        if dataset is not None:
+            prefix = model_name + "_" + dataset + "_"
+        else:
+            prefix = model_name + "_"
+    else:
+        if dataset is not None:
+            prefix = dataset + "_"
+        else:
+            prefix = ""
+    return prefix
 
 def runtimes(input_dir, output_dir, model_name, dataset, **kwargs):
     input_dir_path = Path(input_dir).resolve()  # absolute path to result dir
@@ -85,9 +98,10 @@ def runtimes(input_dir, output_dir, model_name, dataset, **kwargs):
                 times_df['dataset'] = dataset
             times.append(times_df)
 
+    filename = _file_prefix(model_name, dataset) + "runtimes.csv"
     if len(times) > 0:
         times = pd.concat(times, axis=0)
-        times.to_csv(output_dir / f"runtimes.csv", index=False)
+        times.to_csv(output_dir / filename, index=False)
 
 def lca_scores(input_dir, output_dir, y_col_name, metric_type, model_name, dataset, **kwargs):
     input_dir_path = Path(input_dir).resolve()  # absolute path to result dir
@@ -139,6 +153,8 @@ def lca_scores(input_dir, output_dir, y_col_name, metric_type, model_name, datas
             if shard_score_df.empty is False:
                 dfs.append(shard_score_df)
 
+        filename = _file_prefix(model_name, dataset) + "all_scores.csv"
+
         # Concat dfs and save
         if not dfs:
             print("No runtimes found.")
@@ -149,11 +165,11 @@ def lca_scores(input_dir, output_dir, y_col_name, metric_type, model_name, datas
                 scores['model'] = model_name
             if dataset is not None:
                 scores['dataset'] = dataset
-            scores.to_csv(output_dir / "all_scores.csv", index=False)
+            scores.to_csv(output_dir / filename, index=False)
             del dfs
-
+        missing_preds_filename = _file_prefix(model_name, dataset) + "missing_pred_files.txt"
         if len(missing_pred_files) > 0:
-            with open(f"{output_dir}/missing_pred_files.txt", "w") as f:
+            with open(f"{output_dir}/{missing_preds_filename}", "w") as f:
                 for line in missing_pred_files:
                     line = 'infer' + str(line).split('infer')[1]
                     f.write(line + "\n")
@@ -161,7 +177,8 @@ def lca_scores(input_dir, output_dir, y_col_name, metric_type, model_name, datas
 def plot_learning_curve(output_dir, model_name, dataset, **kwargs):
     import seaborn as sns
     import matplotlib.pyplot as plt
-    scores_path = output_dir + "/all_scores.csv"
+    prefix = _file_prefix(model_name, dataset)
+    scores_path = output_dir + "/" + prefix + "all_scores.csv"
     scores = pd.read_csv(scores_path)
     mae_scores = scores[scores['metric'] == 'mae']
     plt.figure(figsize=(10, 8))
@@ -185,7 +202,7 @@ def plot_learning_curve(output_dir, model_name, dataset, **kwargs):
     plt.title(title)
 
     # Save the plot
-    filepath = output_dir + "/fig"
+    filepath = output_dir + f"/{prefix}fig"
     plt.savefig(filepath, bbox_inches='tight', dpi=150)
     plt.close()
     
