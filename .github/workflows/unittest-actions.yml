@@ -1,0 +1,20 @@
+name: IMPROVE UnitTest GitHub Actions
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and check
+        run: |
+          pip install -e .
+          python -c "import improvelib; print(improvelib.__version__)"
+          export PYTHONPATH=$PYTHONPATH:.
+          cd tests
+          mkdir -p improve_data/x_data
+          mkdir -p improve_data/y_data
+          mkdir -p improve_data/splits
+          data_dir=improve_data
+          ls .
+          export IMPROVE_DATA_DIR="./$data_dir/"
+          python test_drp_params.py
