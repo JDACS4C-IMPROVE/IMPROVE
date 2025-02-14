@@ -140,7 +140,7 @@ for source_data_name in params["source_datasets"]:
 if params['swarm_file_prefix'] is not None:
     swarm_file_prefix = params['swarm_file_prefix']
 else:
-    swarm_file_prefix = params['model_name'] + "_" + params['dataset'] + "_"
+    swarm_file_prefix = params['model_name'] + "_" 
 
 with open(swarm_file_prefix + "preprocess.swarm", "w") as file:
     for item in preprocess_list:
