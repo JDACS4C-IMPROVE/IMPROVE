@@ -89,6 +89,7 @@ for source_data_name in params["source_datasets"]:
             split_files.extend(list((splits_dir).glob(f"{source_data_name}_split_{s}_*.txt")))
 
     files_joined = [str(s) for s in split_files]
+    print("FILES JOINED:", files_joined)
 
     for split in params["split_nums"]:
         not_trained_yet = True
@@ -97,7 +98,7 @@ for source_data_name in params["source_datasets"]:
         for phase in ["train", "val", "test"]:
             fname = f"{source_data_name}_split_{split}_{phase}.txt"
             if fname not in "\t".join(files_joined):
-                warnings.warn(f"\nThe {phase} split file {fname} is missing (continue to next split)")
+                print(f"\nThe {phase} split file {fname} is missing (continue to next split)")
                 continue
 
         for target_data_name in params["target_datasets"]:
