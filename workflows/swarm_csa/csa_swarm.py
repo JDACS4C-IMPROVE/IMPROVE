@@ -31,7 +31,7 @@ print("Created script names.")
 
 # Specify dirs
 y_col_name = params['y_col_name']
-MAIN_CSA_OUTDIR = Path(params["csa_outdir"]) # main output dir
+MAIN_CSA_OUTDIR = Path(params["output_dir"]) # main output dir
 MAIN_ML_DATA_DIR = MAIN_CSA_OUTDIR / 'ml_data' # output_dir_pp, input_dir_train, input_dir_infer
 MAIN_MODEL_DIR = MAIN_CSA_OUTDIR / 'models' # output_dir_train, input_dir_infer
 MAIN_INFER_DIR = MAIN_CSA_OUTDIR / 'infer' # output_dir infer
