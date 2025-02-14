@@ -11,7 +11,7 @@ cfg = Config()
 params = cfg.initialize_parameters(
     section="CSA",
     pathToModelDir=filepath,
-    default_config="csa_bruteforce_params.ini",
+    default_config="csa_swarm_params.ini",
     additional_definitions=csa_swarm_params_def.additional_definitions
 )
 
