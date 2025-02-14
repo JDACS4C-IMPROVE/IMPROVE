@@ -119,7 +119,10 @@ for source_data_name in params["source_datasets"]:
                 test_split_file = f"{target_data_name}_all.txt"
 
             # Preprocess
-            preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(train_split_file)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)} --y_col_name {str(y_col_name)} --input_supp_data_dir {str(supp_data_dir)}"]
+            if supp_data_dir is not None:
+                preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(train_split_file)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)} --y_col_name {str(y_col_name)} --input_supp_data_dir {str(supp_data_dir)}"]
+            else:
+                preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(train_split_file)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)} --y_col_name {str(y_col_name)}"]
             preprocess_list = preprocess_list + preprocess_run
             # Train a single model for a given [source, split] pair
             if not_trained_yet:
