@@ -58,7 +58,7 @@ try:
             print("Parameter input_supp_data_dir provided but not found at provided bath or in model_scripts_dir.")
 except KeyError:
     # if no input_supp_data_dir provided, set to empty string
-    supp_data_dir = ""
+    supp_data_dir = None
 
 # ===============================================================
 ###  Generate CSA results (within- and cross-study)
