@@ -123,14 +123,14 @@ for source_data_name in params["source_datasets"]:
             # Train a single model for a given [source, split] pair
             if not_trained_yet:
                 if params["uses_cuda_name"]:
-                    train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params["epochs"])} --cuda_name {params["cuda_name"]} --y_col_name {y_col_name}"]
+                    train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params['epochs'])} --cuda_name {params['cuda_name']} --y_col_name {y_col_name}"]
                 else:
-                    train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params["epochs"])} --y_col_name {y_col_name}"]
+                    train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params['epochs'])} --y_col_name {y_col_name}"]
                 train_list = train_list + train_run
                 not_trained_yet = False
             # Infer
             if params["uses_cuda_name"]:
-                infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --cuda_name {params["cuda_name"]} --y_col_name {y_col_name} --calc_infer_scores true"]
+                infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --cuda_name {params['cuda_name']} --y_col_name {y_col_name} --calc_infer_scores true"]
             else:
                 infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --y_col_name {y_col_name} --calc_infer_scores true"]
             infer_list = infer_list + infer_run
