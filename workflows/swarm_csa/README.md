@@ -1,16 +1,16 @@
-### Cross-Study Analysis (CSA) with Swarm
+# Cross-Study Analysis (CSA) with Swarm
 
-### Overview 
+## Overview 
 
 The scripts contained here create swarm files that can be directly run on a system with Swarm to produce Cross Study Analysis results that are standardized and compatible with IMPROVE CSA postprocessing scripts.
 
-### Requirements
+## Requirements
 
 * [IMPROVE general environment](https://jdacs4c-improve.github.io/docs/content/INSTALLATION.html)
 * [Swarm](https://hpc.nih.gov/apps/swarm.html)
 * An IMPROVE-compliant model and its environment
 
-### Installation and Setup
+## Installation and Setup
 
 Create the IMPROVE general environment:
 
@@ -36,7 +36,7 @@ conda env create -f <MODEL_ENV>.yml -p ./<MODEL_ENV_NAME>/
 ```
 
 
-### Parameter Configuration
+## Parameter Configuration
 
 This workflow uses IMPROVE parameter handling. You should create a config file following the template of `csa_swarm_params.ini` with the parameters appropriate for your experiment. Parameters may also be specified on the command line.
 
@@ -58,7 +58,7 @@ This workflow uses IMPROVE parameter handling. You should create a config file f
 
 
 
-### Usage
+## Usage
 
 Activate the IMPROVE environment:
 
@@ -88,7 +88,7 @@ swarm --merge-output --partition=gpu --gres=gpu:k80:1 -g 60 --time-per-command 0
 
 You may need to change the memory (`-g`) and time (`--time-per-command`) allocations for your model. The `-J` flag labels the standard out and may be omitted. It may be useful to add job dependencies for train and infer with `--dependency afterany:<JOBID>`. See Biowulf documentation for Swarm [here](https://hpc.nih.gov/apps/swarm.html).
 
-### Output
+## Output
 
 The output will be in the specified `output_dir` with the following structure (with the used source and target names and splits):
 ```
