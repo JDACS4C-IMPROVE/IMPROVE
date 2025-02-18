@@ -91,8 +91,8 @@ You may need to change the memory (`-g`) and time (`--time-per-command`) allocat
 ### Output
 
 The output will be in the specified `output_dir` with the following structure (with the used source and target names and splits):
-
-`output_dir`/
+```
+output_dir/
 ├── infer
 │   ├── source[0]-target[0]
 │   │   ├── split_0
@@ -132,5 +132,6 @@ The output will be in the specified `output_dir` with the following structure (w
     ├── source[1]
     ├── ...
     └── source[4]
+ ```
 
  We recommend using the postprocessing script for CSA to aggregate the results. See here.
