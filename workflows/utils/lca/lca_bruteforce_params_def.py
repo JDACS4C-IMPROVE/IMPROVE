@@ -11,11 +11,6 @@ additional_definitions = [
      "default": './', 
      "help": "Path to the model repository"
     },
-    {"name": "epochs",
-     "type": int,
-     "default": 10,
-     "help": "Number of epochs"
-    },
     {"name": "lca_splits_dir",
      "type": str,
      "default": './',
@@ -37,15 +32,19 @@ additional_definitions = [
      "default": 'auc',
      "help": "y col name"
     },
-    {"name": "uses_cuda_name",
-     "type": str2bool,
-     "default": True,
-     "help": "Change to false if the model doesn't have a cuda_name parameter."
-    },
     {"name": "cuda_name",
      "type": str,
-     "default": "cuda:0",
+     "default": None,
      "help": "Cuda device name.",
     },
-
+    {"name": "epochs",
+     "type": int,
+     "default": None,
+     "help": "Number of epochs"
+    },
+    {"name": "input_supp_data_dir",
+     "type": str,
+     "default": None,
+     "help": "Supp data dir, if required by the model."
+    },
     ]

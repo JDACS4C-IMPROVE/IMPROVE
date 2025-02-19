@@ -41,18 +41,16 @@ print("MAIN_MODEL_DIR:   ", MAIN_MODEL_DIR)
 print("MAIN_INFER_DIR:   ", MAIN_INFER_DIR)
 
 
-try:
-    # check if input_supp_data_dir provided
+supp_data_dir = None
+if params['input_supp_data_dir'] is not None:
     supp_data_dir = params['input_supp_data_dir']
     # check if input_supp_data_dir is a directory
     if not os.path.isdir(supp_data_dir):
         # if input_supp_data_dir isn't a directory, check if it's in model_scripts_dir
-        supp_data_dir = os.path.join(params['model_scripts_dir'],supp_data_dir)
+        supp_data_dir = os.path.join(params['model_scripts_dir'], supp_data_dir)
         if not os.path.isdir(supp_data_dir):
-            print("Parameter input_supp_data_dir provided but not found at provided bath or in model_scripts_dir.")
-except KeyError:
-    # if no input_supp_data_dir provided, set to empty string
-    supp_data_dir = None
+            print("Parameter input_supp_data_dir provided but not found at provided path or in model_scripts_dir.")
+            supp_data_dir = None
 
 preprocess_list = []
 train_list = []
@@ -88,15 +86,21 @@ for split_num in params['split_nums']:
 
         ### TRAIN
         model_dir = MAIN_MODEL_DIR / split_name / lca_name
-        if params["uses_cuda_name"]:
-            train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params["epochs"])} --cuda_name {params["cuda_name"]} --y_col_name {str(params['y_col_name'])}"]
+        if params["cuda_name"] is not None:
+            if params['epochs'] is not None:
+                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params["epochs"])} --cuda_name {params["cuda_name"]} --y_col_name {str(params['y_col_name'])}"]
+            else:
+                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --cuda_name {params["cuda_name"]} --y_col_name {str(params['y_col_name'])}"]
         else:
-            train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params["epochs"])} --y_col_name {str(params['y_col_name'])}"]
+            if params['epochs'] is not None:
+                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params["epochs"])} --y_col_name {str(params['y_col_name'])}"]
+            else:
+                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --y_col_name {str(params['y_col_name'])}"]
         train_list = train_list + train_run
 
         ### INFER
         infer_dir = MAIN_INFER_DIR / split_name / lca_name
-        if params["uses_cuda_name"]:
+        if params["cuda_name"] is not None:
             infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --cuda_name {params["cuda_name"]} --y_col_name {str(params['y_col_name'])} --calc_infer_scores true"]
         else:
             infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --y_col_name {str(params['y_col_name'])} --calc_infer_scores true"]
@@ -107,19 +111,19 @@ if params['swarm_file_prefix'] is not None:
 else:
     swarm_file_prefix = params['model_name'] + "_" + params['dataset'] + "_"
 
-with open(swarm_file_prefix + "preprocess.swarm", "w") as file:
+with open(params['output_swarmfile_dir'] + swarm_file_prefix + "preprocess.swarm", "w") as file:
     for item in preprocess_list:
         file.write(prefix + item + "\n")
 
-with open(swarm_file_prefix + "train.swarm", "w") as file:
+with open(params['output_swarmfile_dir'] + swarm_file_prefix + "train.swarm", "w") as file:
     for item in train_list:
         file.write(prefix + item + "\n")
 
-with open(swarm_file_prefix + "infer.swarm", "w") as file:
+with open(params['output_swarmfile_dir'] + swarm_file_prefix + "infer.swarm", "w") as file:
     for item in infer_list:
         file.write(prefix + item + "\n")
 
-print(f"Finished swarm files. Swarm files are prefixed with {swarm_file_prefix}. Results will be in {params['output_dir']}")
+print(f"Finished swarm files. Swarm files are in {params['output_swarmfile_dir']} and prefixed with {swarm_file_prefix}. Results will be in {params['output_dir']}")
 
  
 

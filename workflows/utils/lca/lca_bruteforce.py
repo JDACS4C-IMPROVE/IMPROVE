@@ -48,39 +48,28 @@ train_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_
 infer_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_infer_improve.py")
 print("Created script names.")
 
-
-
-# Specify dirs - need to fix this
-#y_col_name = params['y_col_name']
+# Specify dirs
 MAIN_ML_DATA_DIR = output_dir / 'ml_data' # output_dir_pp, input_dir_train, input_dir_infer
 MAIN_MODEL_DIR = output_dir / 'models' # output_dir_train, input_dir_infer
 MAIN_INFER_DIR = output_dir / 'infer' # output_dir infer
-#MAIN_LOG_DIR = output_dir / 'logs'
-#frm.create_outdir(MAIN_LOG_DIR)
 print("Created directory names.")
 print("output_dir:  ", output_dir)
 print("MAIN_ML_DATA_DIR: ", MAIN_ML_DATA_DIR)
 print("MAIN_MODEL_DIR:   ", MAIN_MODEL_DIR)
 print("MAIN_INFER_DIR:   ", MAIN_INFER_DIR)
-#print("MAIN_LOG_DIR:     ", MAIN_LOG_DIR)
-# Note! Here input_dir is the location of benchmark data
-#splits_dir = Path(params['input_dir']) / params['splits_dir']
-#print("Created splits path.")
-#print("splits_dir: ", splits_dir)
 
 
-try:
-    # check if input_supp_data_dir provided
+
+supp_data_dir = None
+if params['input_supp_data_dir'] is not None:
     supp_data_dir = params['input_supp_data_dir']
     # check if input_supp_data_dir is a directory
     if not os.path.isdir(supp_data_dir):
         # if input_supp_data_dir isn't a directory, check if it's in model_scripts_dir
-        supp_data_dir = os.path.join(params['model_scripts_dir'],supp_data_dir)
+        supp_data_dir = os.path.join(params['model_scripts_dir'], supp_data_dir)
         if not os.path.isdir(supp_data_dir):
-            print("Parameter input_supp_data_dir provided but not found at provided bath or in model_scripts_dir.")
-except KeyError:
-    # if no input_supp_data_dir provided, set to empty string
-    supp_data_dir = ""
+            print("Parameter input_supp_data_dir provided but not found at provided path or in model_scripts_dir.")
+            supp_data_dir = None
 
 
 
@@ -107,15 +96,25 @@ for split_num in params['split_nums']:
         ### PREPROCESS
         ml_data_dir = MAIN_ML_DATA_DIR / split_name / lca_name
         preprocess_start = time.time()
-        preprocess_run = ["python", preprocess_python_script,
-                "--train_split_file", str(lca_train_path),
-                "--val_split_file", str(val_split_file),
-                "--test_split_file", str(test_split_file),
-                "--input_dir", params['input_dir'], # str("./csa_data/raw_data"),
-                "--output_dir", str(ml_data_dir),
-                "--y_col_name", str(params['y_col_name']),
-                "--input_supp_data_dir", str(supp_data_dir)
-        ]
+        if supp_data_dir is not None:
+            preprocess_run = ["python", preprocess_python_script,
+                    "--train_split_file", str(lca_train_path),
+                    "--val_split_file", str(val_split_file),
+                    "--test_split_file", str(test_split_file),
+                    "--input_dir", params['input_dir'], 
+                    "--output_dir", str(ml_data_dir),
+                    "--y_col_name", str(params['y_col_name']),
+                    "--input_supp_data_dir", str(supp_data_dir)
+            ]
+        else:
+            preprocess_run = ["python", preprocess_python_script,
+                    "--train_split_file", str(lca_train_path),
+                    "--val_split_file", str(val_split_file),
+                    "--test_split_file", str(test_split_file),
+                    "--input_dir", params['input_dir'], 
+                    "--output_dir", str(ml_data_dir),
+                    "--y_col_name", str(params['y_col_name'])
+            ]
         preprocess_result = subprocess.run(preprocess_run,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT,
@@ -129,21 +128,36 @@ for split_num in params['split_nums']:
         ### TRAIN
         train_start = time.time()
         model_dir = MAIN_MODEL_DIR / split_name / lca_name
-        if params["uses_cuda_name"]:
-            train_run = ["python", train_python_script,
-                "--input_dir", str(ml_data_dir),
-                "--output_dir", str(model_dir),
-                "--epochs", str(params["epochs"]),
-                "--cuda_name", params["cuda_name"],
-                "--y_col_name", str(params['y_col_name'])
-            ]
+        if params["cuda_name"] is not None:
+            if params['epochs'] is not None:
+                train_run = ["python", train_python_script,
+                    "--input_dir", str(ml_data_dir),
+                    "--output_dir", str(model_dir),
+                    "--epochs", str(params["epochs"]),
+                    "--cuda_name", params["cuda_name"],
+                    "--y_col_name", str(params['y_col_name'])
+                ]
+            else:
+                train_run = ["python", train_python_script,
+                    "--input_dir", str(ml_data_dir),
+                    "--output_dir", str(model_dir),
+                    "--cuda_name", params["cuda_name"],
+                    "--y_col_name", str(params['y_col_name'])
+                ]
         else:
-            train_run = ["python", train_python_script,
-                "--input_dir", str(ml_data_dir),
-                "--output_dir", str(model_dir),
-                "--epochs", str(params["epochs"]),
-                "--y_col_name", str(params['y_col_name'])
-            ]
+            if params['epochs'] is not None:
+                train_run = ["python", train_python_script,
+                    "--input_dir", str(ml_data_dir),
+                    "--output_dir", str(model_dir),
+                    "--epochs", str(params["epochs"]),
+                    "--y_col_name", str(params['y_col_name'])
+                ]
+            else:
+                train_run = ["python", train_python_script,
+                    "--input_dir", str(ml_data_dir),
+                    "--output_dir", str(model_dir),
+                    "--y_col_name", str(params['y_col_name'])
+                ]
         train_result = subprocess.run(train_run,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT,
@@ -156,7 +170,7 @@ for split_num in params['split_nums']:
         ### INFER
         infer_start = time.time()
         infer_dir = MAIN_INFER_DIR / split_name / lca_name
-        if params["uses_cuda_name"]:
+        if params["cuda_name"] is not None:
             infer_run = ["python", infer_python_script,
                 "--input_data_dir", str(ml_data_dir),
                 "--input_model_dir", str(model_dir),
