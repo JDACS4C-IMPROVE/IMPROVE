@@ -47,12 +47,13 @@ splits_dir = Path(params['input_dir']) / "splits"
 print("Created splits path.")
 print("splits_dir: ", splits_dir)
 
+supp_data_dir = None
 if params['input_supp_data_dir'] is not None:
     supp_data_dir = params['input_supp_data_dir']
     # check if input_supp_data_dir is a directory
     if not os.path.isdir(supp_data_dir):
         # if input_supp_data_dir isn't a directory, check if it's in model_scripts_dir
-        supp_data_dir = os.path.join(params['model_scripts_dir'],supp_data_dir)
+        supp_data_dir = os.path.join(params['model_scripts_dir'], supp_data_dir)
         if not os.path.isdir(supp_data_dir):
             print("Parameter input_supp_data_dir provided but not found at provided path or in model_scripts_dir.")
             supp_data_dir = None

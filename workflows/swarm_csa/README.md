@@ -69,7 +69,7 @@ conda activate IMPROVE
 Create the swarm files with your configuration files:
 
 ```
-python lca_swarm,py --config <yourconfig.ini>
+python csa_swarm.py --config <yourconfig.ini>
 ```
 
 Run the swarm files (example usage for Biowulf):
