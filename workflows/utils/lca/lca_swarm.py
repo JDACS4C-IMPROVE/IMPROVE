@@ -88,12 +88,12 @@ for split_num in params['split_nums']:
         model_dir = MAIN_MODEL_DIR / split_name / lca_name
         if params["cuda_name"] is not None:
             if params['epochs'] is not None:
-                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params["epochs"])} --cuda_name {params["cuda_name"]} --y_col_name {str(params['y_col_name'])}"]
+                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params['epochs'])} --cuda_name {params['cuda_name']} --y_col_name {str(params['y_col_name'])}"]
             else:
-                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --cuda_name {params["cuda_name"]} --y_col_name {str(params['y_col_name'])}"]
+                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --cuda_name {params['cuda_name']} --y_col_name {str(params['y_col_name'])}"]
         else:
             if params['epochs'] is not None:
-                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params["epochs"])} --y_col_name {str(params['y_col_name'])}"]
+                train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --epochs {str(params['epochs'])} --y_col_name {str(params['y_col_name'])}"]
             else:
                 train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} --y_col_name {str(params['y_col_name'])}"]
         train_list = train_list + train_run
@@ -101,7 +101,7 @@ for split_num in params['split_nums']:
         ### INFER
         infer_dir = MAIN_INFER_DIR / split_name / lca_name
         if params["cuda_name"] is not None:
-            infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --cuda_name {params["cuda_name"]} --y_col_name {str(params['y_col_name'])} --calc_infer_scores true"]
+            infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --cuda_name {params['cuda_name']} --y_col_name {str(params['y_col_name'])} --calc_infer_scores true"]
         else:
             infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --y_col_name {str(params['y_col_name'])} --calc_infer_scores true"]
         infer_list = infer_list + infer_run
