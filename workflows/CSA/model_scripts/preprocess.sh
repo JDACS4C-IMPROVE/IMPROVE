@@ -1,8 +1,0 @@
-IMPROVE_MODEL_NAME=YOUR_MODEL_NAME
-IMPROVE_STAGE=preprocess
-IMPROVE_MODEL_SCRIPT=${IMPROVE_MODEL_NAME}_${IMPROVE_STAGE}_improve.py
-
-# Set env if CANDLE_MODEL is not in same directory as this script
-IMPROVE_MODEL_DIR=${IMPROVE_MODEL_DIR:-$( dirname -- "$0" )}
-
-python $IMPROVE_MODEL_DIR/$IMPROVE_MODEL_SCRIPT $@
