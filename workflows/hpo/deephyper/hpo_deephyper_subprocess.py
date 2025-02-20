@@ -41,6 +41,8 @@ def run(job, optuna_trial=None):
              str(params['epochs']),
              str(os.environ["CUDA_VISIBLE_DEVICES"])
         ]
+    if params['epochs'] is not None:
+        train_run = train_run + ['epochs'] + [params['epochs']]
     for hp in params['hyperparams']:
         train_run = train_run + [str(hp)]
         train_run = train_run + [str(job.parameters[hp])]
@@ -123,12 +125,8 @@ if __name__ == "__main__":
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
-    if params['interactive_session']:
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(rank % params['num_gpus_per_node'])
-        cuda_name = "cuda:" + str(rank % params['num_gpus_per_node'])
-    else:
-        # CUDA_VISIBLE_DEVICES is now set via set_affinity_gpu_polaris.sh
-        local_rank = os.environ["PMI_LOCAL_RANK"]
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(rank % params['num_gpus_per_node'])
+    cuda_name = "cuda:" + str(rank % params['num_gpus_per_node'])
 
     # Run DeepHyper
     with Evaluator.create(

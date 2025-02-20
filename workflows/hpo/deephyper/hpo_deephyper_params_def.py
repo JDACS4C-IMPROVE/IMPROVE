@@ -18,18 +18,8 @@ additional_definitions = [
     },
     {"name": "epochs",
      "type": int,
-     "default": 10,
-     "help": "Number of epochs"
-    },
-    {"name": "use_singularity",
-     "type": bool,
-     "default": True,
-     "help": "Do you want to use singularity image for running the model?"
-    },
-    {"name": "singularity_image",
-     "type": str,
-     "default": '',
-     "help": "Singularity image file of the model"
+     "default": None,
+     "help": "Number of epochs. If None, model default will be used."
     },
     {"name": "val_metric",
      "type": str,
@@ -40,11 +30,6 @@ additional_definitions = [
      "type": int,
      "default": 20,
      "help": "Number of evaluations"
-    },
-    {"name": "interactive_session",
-     "type": bool,
-     "default": True,
-     "help": "Are you using an interactive session?"
     },
     {"name": "hyperparameter_file",
      "type": str,

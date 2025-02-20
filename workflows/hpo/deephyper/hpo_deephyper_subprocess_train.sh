@@ -20,14 +20,13 @@ echo "Activated conda env $CONDA_ENV"
 SCRIPT=$2
 input_dir=$3
 output_dir=$4
-epochs=$5
-CUDA_VISIBLE_DEVICES=$6
+CUDA_VISIBLE_DEVICES=$5
 
-command="python $SCRIPT --input_dir $input_dir --output_dir $output_dir --epochs $epochs "
+command="python $SCRIPT --input_dir $input_dir --output_dir $output_dir "
 
 
 # append hyperparameter arguments to python call
-for i in $(seq 7 $#)
+for i in $(seq 6 $#)
 do
     if [ $(($i % 2)) == 0 ]; then
         command="${command} ${!i}"
