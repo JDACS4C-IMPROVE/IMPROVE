@@ -38,10 +38,9 @@ def run(job, optuna_trial=None):
              str(params['script_name']),
              str(params['input_dir']),
              str(model_outdir_job_id),
-             str(params['epochs']),
              str(os.environ["CUDA_VISIBLE_DEVICES"])
         ]
-    if not (params['epochs'] is None or params['epochs'] == 'None') :
+    if params['epochs'] is not None:
         train_run = train_run + ['epochs'] + [params['epochs']]
     for hp in params['hyperparams']:
         train_run = train_run + [str(hp)]
