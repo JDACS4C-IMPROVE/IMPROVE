@@ -41,7 +41,7 @@ def run(job, optuna_trial=None):
              str(params['epochs']),
              str(os.environ["CUDA_VISIBLE_DEVICES"])
         ]
-    if params['epochs'] is not None:
+    if not (params['epochs'] is None or params['epochs'] == 'None') :
         train_run = train_run + ['epochs'] + [params['epochs']]
     for hp in params['hyperparams']:
         train_run = train_run + [str(hp)]
