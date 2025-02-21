@@ -29,9 +29,9 @@ command="python $SCRIPT --input_dir $input_dir --output_dir $output_dir "
 for i in $(seq 6 $#)
 do
     if [ $(($i % 2)) == 0 ]; then
-        command="${command} ${!i}"
-    else
         command="${command} --${!i}"
+    else
+        command="${command} ${!i}"
     fi
 done
 
