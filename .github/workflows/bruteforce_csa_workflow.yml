@@ -20,5 +20,8 @@ jobs:
           python graphdrp_preprocess_improve.py --input_dir ./csa_data/raw_data --output_dir exp_result
           python graphdrp_train_improve.py --input_dir exp_result --output_dir exp_result
           python graphdrp_infer_improve.py --input_data_dir exp_result --input_model_dir exp_result --output_dir exp_result --calc_infer_score true
+          ls -ltrh
           cd ..
+          ls -ltrh
+          tree .
           python csa_test.py
