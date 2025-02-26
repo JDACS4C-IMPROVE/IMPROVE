@@ -1,26 +1,31 @@
 """
-Unit tests for the bruteforce_csa workflow. 
-
+Unit tests for the bruteforce_csa workflow.
 """
-
 import unittest
 import sys
 import os
+import argparse
+from pathlib import Path
 
 # Importing params definitions:
 from csa_bruteforce_params_def import csa_bruteforce_params
 from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
-from pathlib import Path
+
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="Unit tests for the bruteforce_csa workflow.")
+parser.add_argument('--config_file', type=str, required=True, help='Path to the configuration file')
+args = parser.parse_args()
+
+# Load config file
+config_file = args.config_file
 filepath = Path(__file__).resolve().parent
-
 csa_bruteforce_params = csa_bruteforce_params
-config_file = 'csa_bruteforce_params.ini'
 
-# Load config csa_bruteforce_params.ini
+# Load config
 cfg = DRPPreprocessConfig()
 params = cfg.initialize_parameters(
     pathToModelDir=filepath,
-    default_config="csa_bruteforce_params.ini",
+    default_config=config_file,
     additional_definitions=csa_bruteforce_params,
     required=None
 )
@@ -36,8 +41,6 @@ class Bruteforce_CSA_test(unittest.TestCase):
         self.assertEqual(params['model_name'], 'GraphDRP')
         self.assertEqual(params['epochs'], 5)
         self.assertEqual(params['uses_cuda_name'], True)
-    
-    
-        
+
 if __name__ == '__main__':
     unittest.main()
