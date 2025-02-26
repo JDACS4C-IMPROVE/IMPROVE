@@ -13,8 +13,12 @@ from improvelib.applications.drug_response_prediction.config import DRPPreproces
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="Unit tests for the bruteforce_csa workflow.")
-parser.add_argument('--config_file', type=str, required=True, help='Path to the configuration file')
+parser.add_argument('--config_file', type=str, default='csa_bruteforce_params.ini', help='Path to the configuration file')
 args = parser.parse_args()
+
+# Debugging information
+print(f"Command-line arguments: {sys.argv}")
+print(f"Parsed arguments: {args}")
 
 # Load config file
 config_file = args.config_file
