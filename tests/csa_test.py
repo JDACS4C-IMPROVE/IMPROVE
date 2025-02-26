@@ -11,10 +11,10 @@ from pathlib import Path
 from csa_bruteforce_params_def import csa_bruteforce_params
 from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
 
-# Parse command-line arguments
+# Manually parse the custom arguments
 parser = argparse.ArgumentParser(description="Unit tests for the bruteforce_csa workflow.")
 parser.add_argument('--config_file', type=str, default='csa_bruteforce_params.ini', help='Path to the configuration file')
-args = parser.parse_args()
+args, remaining_argv = parser.parse_known_args()
 
 # Debugging information
 print(f"Command-line arguments: {sys.argv}")
@@ -47,4 +47,6 @@ class Bruteforce_CSA_test(unittest.TestCase):
         self.assertEqual(params['uses_cuda_name'], True)
 
 if __name__ == '__main__':
+    # Pass the remaining arguments to unittest
+    sys.argv = [sys.argv[0]] + remaining_argv
     unittest.main()
