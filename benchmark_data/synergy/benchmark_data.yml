@@ -1,0 +1,17 @@
+name: benchmark_data
+channels:
+  - conda-forge
+  - anaconda
+  - bioconda
+dependencies:
+  - python=3.12.2
+  - joblib=1.2.0
+  - numpy=1.26.0
+  - pandas=2.1.1
+  - rdkit=2023.09.2
+  - mordred=1.2.0
+  - pip=23.3
+  - pip:
+      - dgl==2.1.0
+      - dgllife==0.3.2
+      - torch==2.2.1
