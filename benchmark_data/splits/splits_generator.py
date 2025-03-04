@@ -27,7 +27,8 @@ def _split_checks(output_dir, ratio, seeds, n_splits):
     os.makedirs(output_dir, exist_ok=True)
 
 def generate_mixed_splits(df, output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
-    df = df.reset_index(names='index_num')
+    df = df.reset_index()
+    df = df.rename(columns={df.columns[0]: 'index_num'})
     studies = df['study'].unique()
     _split_checks(output_dir, ratio, seeds, n_splits)
 
@@ -62,7 +63,8 @@ def generate_mixed_splits(df, output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list
 
 
 def generate_blind_splits(df, blind_col, blind_name, output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
-    df = df.reset_index(names='index_num')
+    df = df.reset_index()
+    df = df.rename(columns={df.columns[0]: 'index_num'})
     studies = df['study'].unique()
     _split_checks(output_dir, ratio, seeds, n_splits)
 
