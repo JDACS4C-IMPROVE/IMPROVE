@@ -64,7 +64,7 @@ def run(args):
     #################################### MUTATION #########################################
     # DepMap data 22Q2 has the same cell lines as 23Q4 so we use that for consistency with mutation data
     MUT_22Q2 = pd.read_csv(input_dir + "CCLE_mutations.csv")
-    MUT_22Q2['names'] = MUT_22Q2['Hugo_Symbol'].astype(str) + "_" + MUT_22Q2['Entrez_Gene_Id'].astype(str)
+    MUT_22Q2['names'] = MUT_22Q2['Entrez_Gene_Id'].astype(str)
 
     ### mutation data for deleterious only, binarized
     MUT_22Q2['isDeleterious'] = MUT_22Q2['isDeleterious'].astype(str)
@@ -91,9 +91,15 @@ def run(args):
 
     #################################### COPY NUMBER #########################################
     CNV_22Q2 = pd.read_csv(input_dir + "CCLE_gene_cn.csv")
-    CNV_22Q2.columns = CNV_22Q2.columns.str.replace("[()]", "", regex=True)
-    CNV_22Q2.columns = CNV_22Q2.columns.str.replace(" ", "_")
     CNV_22Q2.rename(columns={CNV_22Q2.columns[0]: "DepMapID" }, inplace = True)
+    CNV_22Q2.set_index(CNV_22Q2.columns[0], inplace=True)
+    cols = CNV_22Q2.columns.to_list()
+    new_cols = []
+    for c in cols:
+        cc = [c.split('(')[1].split(')')[0]]
+        new_cols = new_cols + cc
+    CNV_22Q2.columns = new_cols
+    CNV_22Q2 = CNV_22Q2.reset_index()
 
     ### continuous
     CNV_22Q2_cont = CNV_22Q2[CNV_22Q2['DepMapID'].isin(cell_lines)]
@@ -112,9 +118,15 @@ def run(args):
 
     #################################### GENE EXPRESSION #########################################
     GE_22Q2 = pd.read_csv(input_dir + "CCLE_expression.csv")
-    GE_22Q2.columns = GE_22Q2.columns.str.replace("[()]", "", regex=True)
-    GE_22Q2.columns = GE_22Q2.columns.str.replace(" ", "_")
     GE_22Q2.rename(columns={GE_22Q2.columns[0]: "DepMapID" }, inplace = True)
+    GE_22Q2.set_index(GE_22Q2.columns[0], inplace=True)
+    cols = GE_22Q2.columns.to_list()
+    new_cols = []
+    for c in cols:
+        cc = [c.split('(')[1].split(')')[0]]
+        new_cols = new_cols + cc
+    GE_22Q2.columns = new_cols
+    GE_22Q2 = GE_22Q2.reset_index()
     GE_22Q2_all = GE_22Q2[GE_22Q2['DepMapID'].isin(cell_lines)]
     GE_22Q2_all.to_csv(output_dir + "cell_transcriptomics.tsv", sep='\t', index=False)
 
@@ -193,6 +205,7 @@ def run(args):
     columns_to_keep = ['DepMap_ID', 'id_x', 'id_y', 'study_name', 'synergy_loewe', 'synergy_bliss', 'synergy_zip', 'synergy_hsa', 'S_mean', 'css_ri']
     synergy = synergy[columns_to_keep]
     synergy.rename(columns={'DepMap_ID': 'DepMapID', 'id_x': 'DrugID_row', 'id_y': 'DrugID_col', 'study_name': 'study', 'synergy_loewe': 'loewe', 'synergy_bliss': 'bliss', 'synergy_zip': 'zip', 'synergy_hsa': 'hsa', 'S_mean': 'smean', 'css_ri': 'css'}, inplace=True)
+    synergy.replace('\\N', np.nan, inplace=True)
     synergy.to_csv(output_dir + "synergy.tsv", sep='\t', index=False)
 
 def main(args):
