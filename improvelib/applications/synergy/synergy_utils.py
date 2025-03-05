@@ -131,6 +131,9 @@ def get_drug_ecfp(file, benchmark_dir, drug_column_name, norm=None):
 def normalize_cell_features(df, norm_list):
     norm_df = df
     if (norm_list != []) and (norm_list != None):
+        if isinstance(norm_list, str):
+            print("norm_list is a string. Converting to list.")
+            norm_list = literal_eval(norm_list)
         for n in norm_list:
             if not len(n) == 2:
                 print(f"Each processing list must have two items. Skipping {n}.")
