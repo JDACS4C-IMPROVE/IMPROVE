@@ -1,35 +1,114 @@
 app_preproc_params = [
     {
-        "name": "y_data_files",
+        "name": "y_data_file",
         "type": str,
         "default": "synergy.tsv",
+        "help": "File that contain the y (prediction variable) data."
+    },
+    {
+        "name": "cell_transcriptomic_file'",
+        "type": str,
+        "default": None,
+        "help": "'cell_transcriptomics.tsv' for benchmark data or path to the transcriptomics data. None if not used."
+    },
+    {
+        "name": "cell_transcriptomic_transform'",
+        "type": str,
+        "default": None,
         "help": (
-            "File that contain the y (prediction variable) data. "
+            "List of lists with the type of transformation and the option. "
+            "Transformations will be performed in the order of the outer list. "
+            "For example, [['normalize', 'zscale'], ['subset', 'L1000']] will first"
+            "normalize the data with z-scaling and then subset to genes in L1000."
+            "For subset, a path to a text file with Entrez IDs separated by new lines can be given."
+            "None if not used."
         ),
+    },
+    {
+        "name": "cell_cnv_file'",
+        "type": str,
+        "default": None,
+        "help": "'cell_cnv_continuous.tsv' or 'cell_cnv_discretized.tsv' for benchmark data or path to the CNV data."
+    },
+    {
+        "name": "cell_cnv_transform'",
+        "type": str,
+        "default": None,
+        "help": (
+            "List of lists with the type of transformation and the option. "
+            "Transformations will be performed in the order of the outer list. "
+            "For example, [['normalize', 'zscale'], ['subset', 'L1000']] will first"
+            "normalize the data with z-scaling and then subset to genes in L1000."
+            "For subset, a path to a text file with Entrez IDs separated by new lines can be given."
+            "None if not used."
+        ),
+    },
+    {
+        "name": "cell_mutation_file'",
+        "type": str,
+        "default": None,
+        "help": "'cell_mutation_delet.tsv' or 'cell_mutation_nonsynon.tsv' for benchmark data or path to the mutation data."
+    },
+        {
+        "name": "cell_mutation_transform'",
+        "type": str,
+        "default": None,
+        "help": (
+            "List of lists with the type of transformation and the option. "
+            "Transformations will be performed in the order of the outer list. "
+            "For example, [['normalize', 'zscale'], ['subset', 'L1000']] will first"
+            "normalize the data with z-scaling and then subset to genes in L1000."
+            "For subset, a path to a text file with Entrez IDs separated by new lines can be given."
+            "None if not used."
+        ),
+    },
+    {
+        "name": "drug_smiles_file'",
+        "type": str,
+        "default": None,
+        "help": "'drug_smiles.tsv' or 'drug_smiles_canonical.tsv' for benchmark data or path to the SMILES data."
+    },
+    {
+        "name": "drug_mordred_file'",
+        "type": str,
+        "default": None,
+        "help": "'drug_mordred.tsv' for benchmark data or path to the Mordred data."
+    },
+    {
+        "name": "drug_infomax_file'",
+        "type": str,
+        "default": None,
+        "help": "'drug_infomax.tsv' for benchmark data or path to the Infomax data."
+    },
+    {
+        "name": "drug_ecfp_file'",
+        "type": str,
+        "default": None,
+        "help": "'drug_ecfp[2/4/6]_nbits[256/1024].tsv' for benchmark data or path to the ECFP data."
     },
     {
         "name": "cell_column_name",
         "type": str,
         "default": "DepMapID",
-        "help": (
-            "Column name in the y (response) data file that contains the cancer sample IDs."
-        ),
+        "help": "Column name in the y (response) data file that contains the cancer sample IDs."
+    },
+    {
+        "name": "drug_column_name",
+        "type": str,
+        "default": "DrugID",
+        "help": "Column name in the y (response) data file that contains the cancer sample IDs."
     },
     {
         "name": "drug_1_column_name",
         "type": str,
         "default": "DrugID_row",
-        "help": (
-            "Column name in the y (response) data file that contains the first drug IDs."
-        ),
+        "help": "Column name in the y (response) data file that contains the first drug IDs."
     },
     {
         "name": "drug_2_column_name",
         "type": str,
         "default": "DrugID_col",
-        "help": (
-            "Column name in the y (response) data file that contains the second drug IDs."
-        ),
+        "help": "Column name in the y (response) data file that contains the second drug IDs."
     },
     {
         "name": "y_col_name",

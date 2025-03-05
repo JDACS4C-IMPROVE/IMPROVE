@@ -65,7 +65,7 @@ def get_response_data(split_file, benchmark_dir, response_file='synergy.tsv', se
     df = df.loc[ids]
     return df
 
-def get_all_response_data(split_file, benchmark_dir, response_file='synergy.tsv', sep='\t'):
+def get_all_response_data(train_split_file, val_split_file, test_split_file, benchmark_dir, response_file='synergy.tsv', sep='\t'):
     # get path to y_data file, read data
     response_path = get_full_input_path(response_file, benchmark_dir, 'y_data')
     df = pd.read_csv(response_path, sep=sep)
@@ -74,9 +74,9 @@ def get_all_response_data(split_file, benchmark_dir, response_file='synergy.tsv'
     # ensures the rest of the columns are floats
     df[df.columns[4:]] = df[df.columns[4:]].astype(float)
     # get path to splits files, read data
-    train_split_path = get_full_input_path(split_file, benchmark_dir, 'splits')
-    val_split_path = get_full_input_path(split_file, benchmark_dir, 'splits')
-    test_split_path = get_full_input_path(split_file, benchmark_dir, 'splits')
+    train_split_path = get_full_input_path(train_split_file, benchmark_dir, 'splits')
+    val_split_path = get_full_input_path(val_split_file, benchmark_dir, 'splits')
+    test_split_path = get_full_input_path(test_split_file, benchmark_dir, 'splits')
     train = list(np.loadtxt(train_split_path,dtype=int))
     val = list(np.loadtxt(val_split_path,dtype=int))
     test = list(np.loadtxt(test_split_path,dtype=int))
@@ -112,26 +112,26 @@ def get_cell_mutations(file, benchmark_dir, cell_column_name, norm):
     data = get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64')
     return data
 
-def get_drug_smiles(file, benchmark_dir, cell_column_name, norm):
-    data = get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='str')
+def get_drug_smiles(file, benchmark_dir, drug_column_name, norm=None):
+    data = get_x_data(file, benchmark_dir, drug_column_name, norm, dtype='str')
     return data
 
-def get_drug_mordred(file, benchmark_dir, cell_column_name, norm):
-    data = get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64')
+def get_drug_mordred(file, benchmark_dir, drug_column_name, norm=None):
+    data = get_x_data(file, benchmark_dir, drug_column_name, norm, dtype='float64')
     return data
 
-def get_drug_infomax(file, benchmark_dir, cell_column_name, norm):
-    data = get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64')
+def get_drug_infomax(file, benchmark_dir, drug_column_name, norm=None):
+    data = get_x_data(file, benchmark_dir, drug_column_name, norm, dtype='float64')
     return data
 
-def get_drug_ecfp(file, benchmark_dir, cell_column_name, norm):
-    data = get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='int')
+def get_drug_ecfp(file, benchmark_dir, drug_column_name, norm=None):
+    data = get_x_data(file, benchmark_dir, drug_column_name, norm, dtype='int')
     return data
 
 def normalize_cell_features(df, norm_list):
     norm_df = df
     if not norm_list:
-        for n in norm:
+        for n in norm_list:
             if not len(n) == 2:
                 print(f"Each processing list must have two items. Skipping {n}.")
             else:
