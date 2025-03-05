@@ -8,6 +8,7 @@ functionality to filter dataframes, retaining only the common IDs shared between
 from ast import literal_eval
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
@@ -74,12 +75,7 @@ def get_all_response_data(train_split_file, val_split_file, test_split_file, ben
     # ensures the rest of the columns are floats
     df[df.columns[4:]] = df[df.columns[4:]].astype(float)
     # get path to splits files, read data
-    train_split_path = get_full_input_path(train_split_file, benchmark_dir, 'splits')
-    val_split_path = get_full_input_path(val_split_file, benchmark_dir, 'splits')
-    test_split_path = get_full_input_path(test_split_file, benchmark_dir, 'splits')
-    train = list(np.loadtxt(train_split_path,dtype=int))
-    val = list(np.loadtxt(val_split_path,dtype=int))
-    test = list(np.loadtxt(test_split_path,dtype=int))
+    train, val, test = get_all_splits(train_split_file, val_split_file, test_split_file, benchmark_dir)
     # label y_data with split column, populated with the appropriate stage name
     df['split'] = "NA"
     df.loc[train, 'split'] = "train"
@@ -88,6 +84,41 @@ def get_all_response_data(train_split_file, val_split_file, test_split_file, ben
     # drop y_data not in any stage
     df = df[df['split'].notna()]
     return df
+
+def get_all_splits(train_split_file, val_split_file, test_split_file, benchmark_dir):
+    if isinstance(train_split_file, str):
+        train_split_file = literal_eval(train_split_file)
+    if isinstance(val_split_file, str):
+        val_split_file = literal_eval(val_split_file)
+    if isinstance(test_split_file, str):
+        test_split_file = literal_eval(test_split_file)
+    if isinstance(train_split_file, str) and isinstance(val_split_file, str) and isinstance(test_split_file, str):
+        # get path to splits files, read data
+        train_split_path = get_full_input_path(train_split_file, benchmark_dir, 'splits')
+        val_split_path = get_full_input_path(val_split_file, benchmark_dir, 'splits')
+        test_split_path = get_full_input_path(test_split_file, benchmark_dir, 'splits')
+        train = list(np.loadtxt(train_split_path,dtype=int))
+        val = list(np.loadtxt(val_split_path,dtype=int))
+        test = list(np.loadtxt(test_split_path,dtype=int))
+    elif isinstance(train_split_file, list) and isinstance(val_split_file, list) and isinstance(test_split_file, list):
+        if not (len(train_split_file) == len(val_split_file) == len(test_split_file)):
+            print("'train_split_file', 'val_split_file', and 'test_split_file' are lists, but not of the same length. Exiting.")
+            sys.exit(1)
+        else:
+            train = []
+            val = []
+            test = []
+            for m in range(len(train_split_file)):
+                train_split_path = get_full_input_path(train_split_file[m], benchmark_dir, 'splits')
+                val_split_path = get_full_input_path(val_split_file[m], benchmark_dir, 'splits')
+                test_split_path = get_full_input_path(test_split_file[m], benchmark_dir, 'splits')
+                train = train + list(np.loadtxt(train_split_path,dtype=int))
+                val = val + list(np.loadtxt(val_split_path,dtype=int))
+                test = test + list(np.loadtxt(test_split_path,dtype=int))
+    else:
+        print("'train_split_file', 'val_split_file', and 'test_split_file' are a mix of lists and strings. Exiting.")
+        sys.exit(1)
+    return train, val, test
 
 #### X_DATA FUNCTIONS
 def get_x_data(file, benchmark_dir, column_name, norm, dtype):
