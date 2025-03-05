@@ -86,12 +86,12 @@ def get_all_response_data(train_split_file, val_split_file, test_split_file, ben
     return df
 
 def get_all_splits(train_split_file, val_split_file, test_split_file, benchmark_dir):
-    if isinstance(train_split_file, str):
+    try:
         train_split_file = literal_eval(train_split_file)
-    if isinstance(val_split_file, str):
         val_split_file = literal_eval(val_split_file)
-    if isinstance(test_split_file, str):
         test_split_file = literal_eval(test_split_file)
+    except Exception:
+        pass 
     if isinstance(train_split_file, str) and isinstance(val_split_file, str) and isinstance(test_split_file, str):
         # get path to splits files, read data
         train_split_path = get_full_input_path(train_split_file, benchmark_dir, 'splits')
