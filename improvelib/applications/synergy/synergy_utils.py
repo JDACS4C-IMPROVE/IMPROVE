@@ -14,7 +14,7 @@ from typing import Dict, List, Tuple, Union
 import pandas as pd
 import numpy as np
 
-from synergy_utils import L1000_ENTREZ, L1000_SYMBOL
+from synergy_statics import L1000_ENTREZ, L1000_SYMBOL
 
 def z_scale_dataframe(df):
   """
