@@ -1,4 +1,4 @@
-name: Docker Bruteforce GraphDRP CSA workflow
+name: IMPROVE UnitTest Bruteforce CSA workflow
 on: [push]
 jobs:
   test:
@@ -27,11 +27,8 @@ jobs:
           ls -ltrh
           conda list -n graphdrp
           python -c "import sys; print(sys.path)"
-          cd $BASE_DIR/workflows/csa/parsl/
-          pip install cryptography==37.0.1 
-          pip install pyopenssl==22.0.0
-          pip install cffi==1.14.5
-          pip install parsl numpy pandas scikit-learn pyyaml
-          mv /app/GraphDRP/csa_data .
-          python workflow_preprocess.py
-          python workflow_csa.py
+          python graphdrp_preprocess_improve.py --input_dir ./csa_data/raw_data --output_dir exp_result 
+          python graphdrp_train_improve.py --input_dir exp_result --output_dir exp_result --epoch 1
+          python graphdrp_infer_improve.py --input_data_dir exp_result --input_model_dir exp_result --output_dir exp_result --calc_infer_score true
+          cd $BASE_DIR/tests
+          python csa_test.py --config_file csa_bruteforce_params_docker.ini
