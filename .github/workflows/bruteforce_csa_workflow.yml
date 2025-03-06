@@ -1,4 +1,4 @@
-name: IMPROVE UnitTest Bruteforce CSA workflow
+name: Source Bruteforce GraphDRP CSA workflow
 on: [push]
 jobs:
   test:

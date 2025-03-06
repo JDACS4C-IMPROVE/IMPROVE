@@ -1,4 +1,4 @@
-name: Docker Bruteforce GraphDRP CSA workflow
+name: Docker Parsl GraphDRP CSA workflow
 on: [push]
 jobs:
   test:
@@ -34,4 +34,4 @@ jobs:
           pip install parsl numpy pandas scikit-learn pyyaml
           mv /app/GraphDRP/csa_data .
           python workflow_preprocess.py
-          python workflow_csa.py
+          python workflow_csa.py --config_file parsl_csa_githubactions.ini 
