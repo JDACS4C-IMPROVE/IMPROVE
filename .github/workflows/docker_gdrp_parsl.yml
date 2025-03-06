@@ -33,7 +33,9 @@ jobs:
           pip install cffi==1.14.5
           pip install parsl numpy pandas scikit-learn pyyaml
           mv /app/GraphDRP/csa_data .
-          python workflow_preprocess.py
+          echo "Preprocess started"
+          ls -ltrh
+          python workflow_preprocess.py --config_file ./parsl_csa_githubactions.ini 
           echo "Preprocess done"
           python workflow_csa.py --config_file ./parsl_csa_githubactions.ini 
           echo "Parsl CSA done"
