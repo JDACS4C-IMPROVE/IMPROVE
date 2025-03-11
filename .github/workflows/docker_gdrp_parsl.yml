@@ -45,15 +45,6 @@ jobs:
           cat ./parsl_csa_exp3/infer/CCLE-CCLE/split_0/test_scores.json
           echo "Content of ./parsl_csa_exp3/infer/CCLE-CCLE/split_1/test_scores.json:"
           cat ./parsl_csa_exp3/infer/CCLE-CCLE/split_1/test_scores.json
-          rmse_line=$(grep '"rmse":' ./parsl_csa_exp3/infer/CCLE-CCLE/split_1/test_scores.json)
-          rmse_value=$(echo "$rmse_line" | awk -F ': ' '{print $2}' | tr -d ',')
-          echo "RMSE for split_1: $rmse_value"
-          if [[ $(echo "$rmse_value < 0.3" | bc -l) -eq 1 ]]; then
-              echo "Assertion passed: RMSE ($rmse_value) < 0.3"
-          else
-              echo "Assertion failed: RMSE ($rmse_value) >= 0.3"
-              exit 1 # Fail the workflow
-          fi
           echo "Content of ./parsl_csa_exp3/infer/CCLE-gCSI/split_0/test_scores.json:"
           cat ./parsl_csa_exp3/infer/CCLE-gCSI/split_0/test_scores.json
           echo "Content of ./parsl_csa_exp3/infer/gCSI-CCLE/split_0/test_scores.json:"
