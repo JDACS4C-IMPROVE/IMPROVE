@@ -579,8 +579,8 @@ def store_predictions_df(y_pred: np.array,
                 v1 = rsp_df[y_col_name].values
                 v2 = pred_df[true_col_name].values
                 # Check that values of ground truth in ydf and y_true actually match
-                assert np.array_equal(v1, v2), "Loaded y data array is not \
-                    equal to the true array"
+                assert np.array_equal(v1, v2, equal_nan=True), "Loaded y data\
+                    array is not equal to the true array"
 
         df = pd.concat([rsp_df, pred_df], axis=1)
 
