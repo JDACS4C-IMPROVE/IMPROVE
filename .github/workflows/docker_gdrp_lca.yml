@@ -1,0 +1,46 @@
+name: Docker GraphDRP LCA workflow
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: rajeeja/graphdrp-image:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install missing libraries
+        run: |
+          apt-get update && apt-get install -y libxrender1 libxext6 tree #added tree here
+      - name: Install and check
+        run: |
+          which python
+          which conda
+          conda env list
+          eval "$(conda shell.bash hook)"
+          conda activate graphdrp
+          pip install -e .
+          export PYTHONPATH=$PYTHONPATH:.
+          python -c "from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig; print('Import successful')"
+          BASE_DIR=$(pwd)
+          ls -ltrh
+          cd /app/GraphDRP
+          ls -ltrh
+          conda list -n graphdrp
+          python -c "import sys; print(sys.path)"
+          cd $BASE_DIR/workflows/lca/generate_splits
+          pip install cryptography==37.0.1
+          pip install pyopenssl==22.0.0
+          pip install cffi==1.14.5
+          pip install parsl numpy pandas scikit-learn pyyaml seaborn matplotlib
+          mv /app/GraphDRP/csa_data .
+          bash gen_lc_splits.sh ./csa_data/raw_data/y_data/response.tsv ./csa_data/raw_data/splits 3
+          ls lc_splits
+          cd ../bruteforce
+          python lca_bruteforce.py --config lca_bruteforce_githubactions.ini
+          mv ./test_graphdrp ../postprocess/results/
+          cd ../postprocess      
+          tree .  
+          python lca_postprocess.py lca_scores 
+          echo "Postprocess done"
+          tree .
+
+          
