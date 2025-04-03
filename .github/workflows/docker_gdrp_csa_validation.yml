@@ -1,0 +1,55 @@
+name: Docker Parsl GraphDRP CSA workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: rajeeja/graphdrp-image:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install missing libraries
+        run: |
+          apt-get update && apt-get install -y libxrender1 libxext6 tree
+
+      - name: Install and check
+        run: |
+          which python
+          python --version
+          which conda
+          conda env list
+          eval "$(conda shell.bash hook)"
+          conda activate graphdrp
+          pip install -e .
+          export PYTHONPATH=$PYTHONPATH:.
+          python -c "from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig; print('Import successful')"
+          BASE_DIR=$(pwd)
+          ls -ltrh
+          cd /app/GraphDRP
+          ls -ltrh
+          conda list -n graphdrp
+          python -c "import sys; print(sys.path)"
+
+          cd $BASE_DIR/workflows/csa/parsl/
+          pip install cryptography==37.0.1
+          pip install pyopenssl==22.0.0
+          pip install cffi==1.14.5
+          pip install parsl numpy pandas scikit-learn pyyaml
+
+          mv /app/GraphDRP/csa_data .
+
+          echo "Preprocess started"
+          ls -ltrh
+          python workflow_preprocess.py --config_file ./parsl_githubactions_validation.ini
+          echo "Preprocess done"
+          python workflow_csa.py --config_file ./parsl_githubactions_validation.ini
+          echo "Parsl CSA done"
+          echo "Tree of ./parsl_csa_gcsi:"
+          tree ./parsl_csa_gcsi
+          echo "Content of ./parsl_csa_gcsi/infer/gCSI-gCSI/split_0/test_scores and runtime .json:"
+          cat ./parsl_csa_gcsi/infer/gCSI-gCSI/split_0/test_scores.json
+          cat ./parsl_csa_gcsi/infer/gCSI-gCSI/split_0/runtime.json
