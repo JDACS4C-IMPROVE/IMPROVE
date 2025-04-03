@@ -39,9 +39,13 @@ jobs:
           echo "Preprocess done"
           python workflow_csa.py --config_file ./parsl_csa_githubactions.ini
           echo "Parsl CSA done"
-          echo "Tree of ./parsl_csa_gcsi:"
-          tree ./parsl_csa_gcsi
-          echo "Content of ./parsl_csa_gcsi/infer/gCSI-gCSI/split_0/test_scores and runtime .json:"
-          cat ./parsl_csa_gcsi/infer/gCSI-gCSI/split_0/test_scores.json
-          cat ./parsl_csa_gcsi/infer/gCSI-gCSI/split_0/runtime.json
-          
+          echo "Tree of ./parsl_csa_exp3:"
+          tree ./parsl_csa_exp3
+          echo "Content of ./parsl_csa_exp3/infer/CCLE-CCLE/split_0/test_scores.json:"
+          cat ./parsl_csa_exp3/infer/CCLE-CCLE/split_0/test_scores.json
+          echo "Content of ./parsl_csa_exp3/infer/CCLE-CCLE/split_1/test_scores.json:"
+          cat ./parsl_csa_exp3/infer/CCLE-CCLE/split_1/test_scores.json
+          echo "Content of ./parsl_csa_exp3/infer/CCLE-gCSI/split_0/test_scores.json:"
+          cat ./parsl_csa_exp3/infer/CCLE-gCSI/split_0/test_scores.json
+          echo "Content of ./parsl_csa_exp3/infer/gCSI-CCLE/split_0/test_scores.json:"
+          cat ./parsl_csa_exp3/infer/gCSI-CCLE/split_0/test_scores.json
