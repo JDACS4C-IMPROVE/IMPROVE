@@ -1,4 +1,4 @@
-name: Docker Parsl GraphDRP CSA workflow
+name: Docker Parsl GraphDRP CSA Validation Workflow
 
 on:
   workflow_dispatch:
