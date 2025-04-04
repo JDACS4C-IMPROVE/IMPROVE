@@ -21,3 +21,20 @@ The workflow uses the following configuration files:
 
 - **`parsl_csa_githubactions.ini`**: This configuration file is used to set up the parameters for the Parsl CSA workflow. It includes settings for data paths, model parameters, and other relevant configurations.
 
+# Docker GraphDRP LCA Workflow (docker_gdrp_lca.yml)
+
+This GitHub Actions workflow automates the execution of the GraphDRP Learning Curve Analysis (LCA) workflow using Docker. The workflow performs the following steps:
+
+1.  **Checkout the Repository**: The workflow checks out the IMPROVE repository code.
+2.  **Install Missing Libraries and check**
+3.  **Generate LCA Splits**: Executes the `gen_lc_splits.sh` script to create learning curve data splits.
+4.  **Run Bruteforce LCA Workflow**: Executes the `lca_bruteforce.py` script using the specified configuration file.
+5.  **Run Postprocessing**: Executes the `lca_postprocess.py` script to process the results of the LCA workflow.
+
+## Configuration Files
+
+The workflow uses the following configuration file:
+
+- **`lca_bruteforce_githubactions.ini`**: Located in `workflows/lca/bruteforce/`, this file contains parameters for the bruteforce LCA workflow, including settings for data paths and model configurations.
+
+
