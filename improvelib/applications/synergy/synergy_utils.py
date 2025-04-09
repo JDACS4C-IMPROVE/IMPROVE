@@ -60,8 +60,7 @@ def get_response_data(split_file, benchmark_dir, response_file='synergy.tsv', se
     # ensures the rest of the columns are floats
     df[df.columns[4:]] = df[df.columns[4:]].astype(float)
     # get path to splits file, read data
-    split_path = get_stage_splits(split_file, benchmark_dir)
-    ids = pd.read_csv(split_path, header=None)[0].tolist()
+    ids = get_stage_splits(split_file, benchmark_dir)
     # subset y_data based on split given
     df = df.loc[ids]
     return df
