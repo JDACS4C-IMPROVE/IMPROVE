@@ -28,7 +28,7 @@ app_preproc_params = [
         "name": "cell_cnv_file",
         "type": str,
         "default": None,
-        "help": "'cell_cnv_continuous.tsv' or 'cell_cnv_discretized.tsv' for benchmark data or path to the CNV data."
+        "help": "'cell_cnv_continuous.tsv' or 'cell_cnv_discretized.tsv' for benchmark data or path to the CNV data. None if not used."
     },
     {
         "name": "cell_cnv_transform",
@@ -47,7 +47,7 @@ app_preproc_params = [
         "name": "cell_mutation_file",
         "type": str,
         "default": None,
-        "help": "'cell_mutation_delet.tsv' or 'cell_mutation_nonsynon.tsv' for benchmark data or path to the mutation data."
+        "help": "'cell_mutation_delet.tsv' or 'cell_mutation_nonsynon.tsv' for benchmark data or path to the mutation data. None if not used."
     },
         {
         "name": "cell_mutation_transform",
@@ -66,25 +66,25 @@ app_preproc_params = [
         "name": "drug_smiles_file",
         "type": str,
         "default": None,
-        "help": "'drug_smiles.tsv' or 'drug_smiles_canonical.tsv' for benchmark data or path to the SMILES data."
+        "help": "'drug_smiles.tsv' or 'drug_smiles_canonical.tsv' for benchmark data or path to the SMILES data. None if not used."
     },
     {
         "name": "drug_mordred_file",
         "type": str,
         "default": None,
-        "help": "'drug_mordred.tsv' for benchmark data or path to the Mordred data."
+        "help": "'drug_mordred.tsv' for benchmark data or path to the Mordred data. None if not used."
     },
     {
         "name": "drug_infomax_file",
         "type": str,
         "default": None,
-        "help": "'drug_infomax.tsv' for benchmark data or path to the Infomax data."
+        "help": "'drug_infomax.tsv' for benchmark data or path to the Infomax data. None if not used."
     },
     {
         "name": "drug_ecfp_file",
         "type": str,
         "default": None,
-        "help": "'drug_ecfp[2/4/6]_nbits[256/1024].tsv' for benchmark data or path to the ECFP data."
+        "help": "'drug_ecfp[2/4/6]_nbits[256/1024].tsv' for benchmark data or path to the ECFP data. None if not used."
     },
     {
         "name": "cell_column_name",

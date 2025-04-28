@@ -7,6 +7,7 @@ import argparse
 
 '''
 Natasha: remaining to do
+- Fix source vs study issue, probably with argpase
 - Blind split on 2 col (for synergy drug)
 - Argparse options to run as is on any data
 - Option for blind splits to only be blind for test, not both test and val
