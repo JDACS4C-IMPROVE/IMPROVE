@@ -161,6 +161,19 @@ parser.add_argument('--lc_sizes_arr',
                     default=None,
                     help='List of the actual sizes in the learning curve plot \
                         (default: None).')
+parser.add_argument('--sources',
+                    nargs='+',
+                    type=str,
+                    default=None,
+                    help="List of sources (studies) to use. If None given, it uses all sources in the splits_dir (default: None).")
+parser.add_argument('--n_splits',
+                    default=None,
+                    type=int,
+                    help='The number of splits to use. If None given, uses all splits in the splits_dir, typically 10 (default: None).')
+parser.add_argument('--split_type',
+                    default="split",
+                    type=str,
+                    help="Type of split to use. 'split' for mixed-set splits, use 'cell' or 'drug' etc for other blind splits (default: 'split').")
 
 args = parser.parse_args()
 args = vars(args)
@@ -174,13 +187,21 @@ lc_step_scale = args['lc_step_scale']
 min_size = args['min_size']
 max_size = args['max_size']
 lc_sizes = args['lc_sizes']
-
+sources = args['sources']
+n_splits = args['n_splits']
+split_type = args['split_type']
 # Load y data
 logging.info(f"Loading data from {data_file_path}")
 ydata = pd.read_csv(data_file_path, sep='\t')
 
-sources = ['CCLE', 'CTRPv2', 'gCSI', 'GDSCv1', 'GDSCv2']
-n_splits = 10
+source_paths = list(Path(splits_dir).glob(f"*_{split_type}_*.txt"))
+source_files = [os.path.basename(x) for x in source_paths]
+if sources is None:
+    sources = list(set([x.split('_')[0] for x in source_files]))
+if n_splits is None:
+    n_splits = max([int(x.split('_')[2]) for x in source_files]) + 1
+#sources = ['CCLE', 'CTRPv2', 'gCSI', 'GDSCv1', 'GDSCv2']
+#n_splits = 10
 
 outdir = filepath / "lc_splits"
 os.makedirs(outdir, exist_ok=True)
