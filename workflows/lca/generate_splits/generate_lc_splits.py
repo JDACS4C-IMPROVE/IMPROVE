@@ -173,7 +173,7 @@ parser.add_argument('--n_splits',
 parser.add_argument('--split_type',
                     default="split",
                     type=str,
-                    help='Type of split to use. "split" for mixed-set splits, use "cell" or "drug" etc for other blind splits (default: None).')
+                    help="Type of split to use. 'split' for mixed-set splits, use 'cell' or 'drug' etc for other blind splits (default: 'split').")
 
 args = parser.parse_args()
 args = vars(args)
