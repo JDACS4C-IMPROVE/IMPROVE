@@ -1,0 +1,34 @@
+name: IMPROVE UnitTest Bruteforce CSA workflow
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: rajeeja/graphdrp-image:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install missing libraries
+        run: |
+          apt-get update && apt-get install -y libxrender1 libxext6
+      - name: Install and check
+        run: |
+          which python
+          python --version
+          which conda
+          conda env list
+          eval "$(conda shell.bash hook)"  # Ensure Conda is properly initialized
+          conda activate graphdrp
+          pip install -e .
+          export PYTHONPATH=$PYTHONPATH:.
+          python -c "from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig; print('Import successful')"
+          BASE_DIR=$(pwd)
+          ls -ltrh
+          cd /app/GraphDRP
+          ls -ltrh
+          conda list -n graphdrp
+          python -c "import sys; print(sys.path)"
+          python graphdrp_preprocess_improve.py --input_dir ./csa_data/raw_data --output_dir exp_result 
+          python graphdrp_train_improve.py --input_dir exp_result --output_dir exp_result --epoch 1
+          python graphdrp_infer_improve.py --input_data_dir exp_result --input_model_dir exp_result --output_dir exp_result --calc_infer_score true
+          cd $BASE_DIR/tests
+          python csa_test.py --config_file csa_bruteforce_params_docker.ini

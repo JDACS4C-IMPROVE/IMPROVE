@@ -1,0 +1,27 @@
+name: Source Bruteforce GraphDRP CSA workflow
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and check
+        run: |
+          pip install -e .
+          export PYTHONPATH=$PYTHONPATH:.
+          cd tests
+          git clone https://github.com/JDACS4C-IMPROVE/GraphDRP.git
+          cd GraphDRP
+          conda env create -f conda_env.yml
+          eval "$(conda shell.bash hook)"  # Ensure Conda is properly initialized
+          conda activate graphdrp
+          source setup_improve.sh
+          wget --cut-dirs=8 -P ./ -nH -np -m https://web.cels.anl.gov/projects/IMPROVE_FTP/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/ || { echo 'Download failed'; exit 1; }
+          python graphdrp_preprocess_improve.py --input_dir ./csa_data/raw_data --output_dir exp_result
+          python graphdrp_train_improve.py --input_dir exp_result --output_dir exp_result
+          python graphdrp_infer_improve.py --input_data_dir exp_result --input_model_dir exp_result --output_dir exp_result --calc_infer_score true
+          ls -ltrh
+          cd ..
+          ls -ltrh
+          tree .
+          python csa_test.py

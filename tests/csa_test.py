@@ -1,0 +1,52 @@
+"""
+Unit tests for the bruteforce_csa workflow.
+"""
+import unittest
+import sys
+import os
+import argparse
+from pathlib import Path
+
+# Importing params definitions:
+from csa_bruteforce_params_def import csa_bruteforce_params
+from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+
+# Manually parse the custom arguments
+parser = argparse.ArgumentParser(description="Unit tests for the bruteforce_csa workflow.")
+parser.add_argument('--config_file', type=str, default='csa_bruteforce_params.ini', help='Path to the configuration file')
+args, remaining_argv = parser.parse_known_args()
+
+# Debugging information
+print(f"Command-line arguments: {sys.argv}")
+print(f"Parsed arguments: {args}")
+
+# Load config file
+config_file = args.config_file
+filepath = Path(__file__).resolve().parent
+csa_bruteforce_params = csa_bruteforce_params
+
+# Load config
+cfg = DRPPreprocessConfig()
+params = cfg.initialize_parameters(
+    pathToModelDir=filepath,
+    default_config=config_file,
+    additional_definitions=csa_bruteforce_params,
+    required=None
+)
+
+class Bruteforce_CSA_test(unittest.TestCase):
+    def test_params(self):
+        self.assertEqual(params['cuda_name'], 'cuda:0')
+        self.assertEqual(params['csa_outdir'], './run_csa_full')
+        self.assertEqual(params['source_datasets'], ['CCLE', 'gCSI'])
+        self.assertEqual(params['target_datasets'], ['CCLE', 'gCSI'])
+        self.assertEqual(params['split_nums'], ["0","1","2","3"])
+        self.assertEqual(params['only_cross_study'], False)
+        self.assertEqual(params['model_name'], 'GraphDRP')
+        self.assertEqual(params['epochs'], 5)
+        self.assertEqual(params['uses_cuda_name'], True)
+
+if __name__ == '__main__':
+    # Pass the remaining arguments to unittest
+    sys.argv = [sys.argv[0]] + remaining_argv
+    unittest.main()
