@@ -21,11 +21,6 @@ additional_definitions = [
      "default": '',
      "help": "Name of your model conda environment"
     },
-    {"name": "epochs",
-     "type": int,
-     "default": 10,
-     "help": "Number of epochs"
-    },
     {"name": "source_datasets",
      "nargs" : "+",
      "type": str,
@@ -53,6 +48,11 @@ additional_definitions = [
      "type": str,
      "default": 'auc',
      "help": "y col name"
+    },
+    {"name": "epochs",
+     "type": int,
+     "default": None,
+     "help": "Number of epochs"
     },
     {"name": "cuda_name",
      "type": str,
