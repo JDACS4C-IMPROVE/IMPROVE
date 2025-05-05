@@ -14,7 +14,7 @@ Variables:
 
 import argparse
 
-from improvelib.utils import StoreIfPresent, str2bool
+from improvelib.utils import str2bool
 from improvelib.utils_config import StoreIfPresent
 
 # Parameters relevant to all IMPROVE model models
