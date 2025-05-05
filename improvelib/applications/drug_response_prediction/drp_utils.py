@@ -14,7 +14,7 @@ from typing import Dict, List, Tuple, Union
 import pandas as pd
 
 from improvelib.utils_app_generic import _get_full_input_path, _get_stage_splits, _get_all_splits, _get_x_data
-
+from improvelib.statics import L1000_ENTREZ, L1000_SYMBOL
 
 # Set logger for this module
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
@@ -116,7 +116,7 @@ def get_all_response_data(train_split_file, val_split_file, test_split_file, ben
     df = df[df['split'].notna()]
     return df
 
-def get_cell_transcriptomics(file, benchmark_dir, cell_column_name, norm):
+def get_cell_transcriptomics(file, benchmark_dir, cell_column_name, norm, gene_id='Symbol'):
     """Gets cell transcriptomics. Sets index to cell ID and sets dtype to float64.
 
     Args:
@@ -128,10 +128,10 @@ def get_cell_transcriptomics(file, benchmark_dir, cell_column_name, norm):
     Returns:
         pd.DataFrame: cell transcriptomics data (with normalization if specified), index set to cell ID.
     """
-    data = _get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64')
+    data = _get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64', gene_id=gene_id)
     return data
 
-def get_cell_cnv(file, benchmark_dir, cell_column_name, norm):
+def get_cell_cnv(file, benchmark_dir, cell_column_name, norm, gene_id='Symbol'):
     """Gets cell Copy Number Variation. Sets index to cell ID and sets dtype to float64.
 
     Args:
@@ -143,10 +143,10 @@ def get_cell_cnv(file, benchmark_dir, cell_column_name, norm):
     Returns:
         pd.DataFrame: cell Copy Number Variation data (with normalization if specified), index set to cell ID.
     """
-    data = _get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64')
+    data = _get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64', gene_id=gene_id)
     return data
 
-def get_cell_mutations(file, benchmark_dir, cell_column_name, norm):
+def get_cell_mutations(file, benchmark_dir, cell_column_name, norm, gene_id='Symbol'):
     """Gets cell mutation. Sets index to cell ID and sets dtype to float64.
 
     Args:
@@ -158,7 +158,7 @@ def get_cell_mutations(file, benchmark_dir, cell_column_name, norm):
     Returns:
         pd.DataFrame: cell mutation data (with normalization if specified), index set to cell ID.
     """
-    data = _get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64')
+    data = _get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64', gene_id=gene_id)
     return data
 
 def get_cell_methylation(file, benchmark_dir, cell_column_name, norm):

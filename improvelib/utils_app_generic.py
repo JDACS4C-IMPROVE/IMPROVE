@@ -9,10 +9,10 @@ from typing import Dict, List, Tuple, Union
 import pandas as pd
 import numpy as np
 
-from improvelib.applications.synergy.synergy_statics import L1000_ENTREZ, L1000_SYMBOL
+from improvelib.statics import L1000_ENTREZ, L1000_SYMBOL
 
 
-def _get_x_data(file, benchmark_dir, column_name, norm, dtype):
+def _get_x_data(file, benchmark_dir, column_name, norm, dtype, gene_id=None):
     """Generic function to get x data. Sets index to ID and checks dtype.
 
     Args:
@@ -31,7 +31,7 @@ def _get_x_data(file, benchmark_dir, column_name, norm, dtype):
     data.set_index(column_name, inplace=True)
     data = data.astype(dtype)
     # call normalization if needed
-    data = _transform_cell_features(data, norm)
+    data = _transform_cell_features(data, norm, gene_id)
     return data
 
 
@@ -41,7 +41,7 @@ def _get_x_data(file, benchmark_dir, column_name, norm, dtype):
 
 # requires ID to be index
 
-def _transform_cell_features(df, norm_list):
+def _transform_cell_features(df, norm_list, gene_id):
     """Transforms (subsets and/or normalizes) cell features based on a list of lists of [[strategy, subtype]]. Transformations are performed
     in the order listed. For example, [['subset', 'L1000'], ['normalize', 'zscale']] will first subset the columns to genes in LINCS1000, and
     then normalize the remaining data by Z-scaling.
@@ -71,7 +71,7 @@ def _transform_cell_features(df, norm_list):
                     norm_df = _normalize_features(df, subtype)
                 elif strategy == 'subset':
                     print(f"Running {strategy} with {subtype}.")
-                    norm_df = _subset_features(df, subtype)
+                    norm_df = _subset_features(df, subtype, gene_id)
     return norm_df
 
 def _normalize_features(df, subtype):
@@ -91,7 +91,7 @@ def _normalize_features(df, subtype):
         print("zscale is the only implemented normalization")
     return norm_df
 
-def _subset_features(df, subtype):
+def _subset_features(df, subtype, gene_id):
     """Subsets columns in a Pandas DataFrame based on the specified subtype.
 
     Args:
@@ -105,7 +105,7 @@ def _subset_features(df, subtype):
     if subtype == 'high_variance':
         norm_df = _subset_high_variance(df)
     elif subtype == 'L1000':
-        norm_df = _subset_L1000(df)
+        norm_df = _subset_L1000(df, gene_id)
     elif os.path.isfile(subtype):
         try:
             sub_list = list(np.loadtxt(subtype, dtype=str))
@@ -117,7 +117,7 @@ def _subset_features(df, subtype):
         print(f"Subset with {subtype} is invalid. Please choose 'high_variance', 'L1000', or provide the path to a file with ENTREZ IDs.")
     return norm_df
 
-def _subset_L1000(df):
+def _subset_L1000(df, gene_id):
     """Subsets columns in a Pandas DataFrame to only those with a column name in LINCS1000 genes list.
 
     Args:
@@ -127,7 +127,12 @@ def _subset_L1000(df):
         pd.DataFrame: The subsetted DataFrame with only LINCS1000 genes.
     """
     # FUTURE: this could take a parameter for any subset
-    inter_list = list(set(L1000_ENTREZ) & set(df.columns.to_list()))
+    if gene_id == 'Entrez':
+        inter_list = list(set(L1000_ENTREZ) & set(df.columns.to_list()))
+    elif gene_id == 'Symbol':
+        inter_list = list(set(L1000_SYMBOL) & set(df.columns.to_list()))
+    else:
+        raise ValueError(f"ERROR! Gene ID type provided was {gene_id} but must be either 'Entrez' or 'Symbol'.\n")
     sub_df = df[inter_list]
     return sub_df
 
