@@ -229,7 +229,7 @@ def _transform_cell_features(df, norm_list):
         pd.DataFrame: The transformed DataFrame.
     """
     norm_df = df
-    if (norm_list != []) and (norm_list != None):
+    if (norm_list != []) and (norm_list != None) and (norm_list != 'None'):
         if isinstance(norm_list, str):
             print("norm_list is a string. Converting to list.")
             norm_list = literal_eval(norm_list)
