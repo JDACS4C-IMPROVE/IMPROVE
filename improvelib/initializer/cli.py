@@ -12,7 +12,7 @@ import logging
 import os
 import pprint
 
-from improvelib.utils import parse_from_dictlist
+from improvelib.utils_config import parse_from_dictlist
 
 printfn = pprint.PrettyPrinter(indent=4).pformat
 

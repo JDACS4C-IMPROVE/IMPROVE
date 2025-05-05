@@ -11,6 +11,7 @@ from typing import List, Set, Union, NewType, Dict, Optional
 import numpy as np
 import pandas as pd
 
+from .utils_config import check_path
 from .metrics import compute_metrics
 
 
@@ -100,303 +101,6 @@ def cast_value(s):
         except ValueError:
             return s  # Return the original string if it's neither int nor float
 
-
-class ListOfListsAction(argparse.Action):
-    """This class extends the argparse.Action class by instantiating an
-    argparser that constructs a list-of-lists from an input (command-line
-    option or argument) given as a string."""
-
-    def __init__(self, option_strings: str, dest, type, **kwargs):
-        """Initialize a ListOfListsAction object. If no type is specified, an
-        integer is assumed by default as the type for the elements of the list-
-        of-lists.
-
-        Parameters
-        ----------
-        option_strings : string
-            String to parse
-        dest : object
-            Object to store the output (in this case the parsed list-of-lists).
-        type : data type
-            Data type to decode the elements of the lists.
-            Defaults to np.int32.
-        kwargs : object
-            Python object containing other argparse.Action parameters.
-        """
-
-        super(ListOfListsAction, self).__init__(option_strings, dest, **kwargs)
-        self.dtype = type
-        if self.dtype is None:
-            self.dtype = np.int32
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        """This function overrides the __call__ method of the base
-        argparse.Action class.
-
-        This function implements the action of the ListOfListAction
-        class by parsing an input string (command-line option or argument)
-        and maping it into a list-of-lists. The resulting list-of-lists is
-        added to the namespace of parsed arguments. The parsing assumes that
-        the separator between lists is a colon ':' and the separator inside
-        the list is a comma ','. The values of the list are casted to the
-        type specified at the object initialization.
-
-        Parameters
-        ----------
-        parser : ArgumentParser object
-            Object that contains this action
-        namespace : Namespace object
-            Namespace object that will be returned by the parse_args()
-            function.
-        values : string
-            The associated command-line arguments converted to string type
-            (i.e. input).
-        option_string : string
-            The option string that was used to invoke this action. (optional)
-        """
-
-        decoded_list = []
-        removed1 = values.replace("[", "")
-        removed2 = removed1.replace("]", "")
-        out_list = removed2.split(":")
-
-        for line in out_list:
-            in_list = []
-            elem = line.split(",")
-            for el in elem:
-                in_list.append(self.dtype(el))
-            decoded_list.append(in_list)
-
-        setattr(namespace, self.dest, decoded_list)
-
-
-class StoreIfPresent(argparse.Action):
-    """
-    This class allows to define an argument in argparse that keeps the default
-    value empty and, if not passed by the user, the argument is not available
-    in the parsed arguments. By default, argparse includes all defined arguments
-    in the Namespace object returned by parse_args(), even if they are not
-    provided by the user, assigning them the default value.
-
-    This is primarily used with args that we plan to deprecate.
-    """
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        """
-        Args:
-            parser (ArgumentParser object): Object that contains this action
-            namespace (Namespace object): Namespace object that will be
-                returned by the parse_args() function.
-            values (str): The associated command-line arguments converted to
-                string type (i.e. input).
-            option_string (str): The option string that was used to invoke
-                this action. (optional)
-        """
-        setattr(namespace, self.dest, values)
-
-
-def parse_from_dictlist(dictlist, parser):
-    """
-    Functionality to parse options.
-
-    :param List pardict: Specification of parameters
-    :param ArgumentParser parser: Current parser
-
-    :return: consolidated parameters
-    :rtype: ArgumentParser
-    """
-
-    for d in dictlist:
-        if "type" not in d:
-            d["type"] = None
-        # print(d['name'], 'type is ', d['type'])
-
-        if "default" not in d:
-            d["default"] = argparse.SUPPRESS
-
-        if "help" not in d:
-            d["help"] = ""
-
-        if "abv" not in d:
-            d["abv"] = None
-
-        if "action" in d:  # Actions
-            if (
-                d["action"] == "list-of-lists"
-            ):  # Non standard. Specific functionallity has been added
-                d["action"] = ListOfListsAction
-                if d["abv"] is None:
-                    parser.add_argument(
-                        "--" + d["name"],
-                        dest=d["name"],
-                        action=d["action"],
-                        type=d["type"],
-                        default=d["default"],
-                        help=d["help"],
-                    )
-                else:
-                    parser.add_argument(
-                        "-" + d["abv"],
-                        "--" + d["name"],
-                        dest=d["name"],
-                        action=d["action"],
-                        type=d["type"],
-                        default=d["default"],
-                        help=d["help"],
-                    )
-            elif (d["action"] == "store_true") or (d["action"] == "store_false"):
-                raise Exception(
-                    "The usage of store_true or store_false cannot be undone in the command line. Use type=str2bool instead."
-                )
-            else:
-                if d["abv"] is None:
-                    parser.add_argument(
-                        "--" + d["name"],
-                        action=d["action"],
-                        default=d["default"],
-                        help=d["help"],
-                        type=d["type"],
-                    )
-                else:
-                    parser.add_argument(
-                        "-" + d["abv"],
-                        "--" + d["name"],
-                        action=d["action"],
-                        default=d["default"],
-                        help=d["help"],
-                        type=d["type"],
-                    )
-        else:  # Non actions
-            if "nargs" in d:  # variable parameters
-                if "choices" in d:  # choices with variable parameters
-                    if d["abv"] is None:
-                        parser.add_argument(
-                            "--" + d["name"],
-                            nargs=d["nargs"],
-                            choices=d["choices"],
-                            default=d["default"],
-                            help=d["help"],
-                        )
-                    else:
-                        parser.add_argument(
-                            "-" + d["abv"],
-                            "--" + d["name"],
-                            nargs=d["nargs"],
-                            choices=d["choices"],
-                            default=d["default"],
-                            help=d["help"],
-                        )
-                else:  # Variable parameters (free, no limited choices)
-                    if d["abv"] is None:
-                        parser.add_argument(
-                            "--" + d["name"],
-                            nargs=d["nargs"],
-                            type=d["type"],
-                            default=d["default"],
-                            help=d["help"],
-                        )
-                    else:
-                        parser.add_argument(
-                            "-" + d["abv"],
-                            "--" + d["name"],
-                            nargs=d["nargs"],
-                            type=d["type"],
-                            default=d["default"],
-                            help=d["help"],
-                        )
-            # Select from choice (fixed number of parameters)
-            elif "choices" in d:
-                if d["abv"] is None:
-                    parser.add_argument(
-                        "--" + d["name"],
-                        choices=d["choices"],
-                        default=d["default"],
-                        help=d["help"],
-                    )
-                else:
-                    parser.add_argument(
-                        "-" + d["abv"],
-                        "--" + d["name"],
-                        choices=d["choices"],
-                        default=d["default"],
-                        help=d["help"],
-                    )
-            else:  # Non an action, one parameter, no choices
-                # print('Adding ', d['name'], ' to parser')
-                if d["abv"] is None:
-                    parser.add_argument(
-                        "--" + d["name"],
-                        type=d["type"],
-                        default=d["default"],
-                        help=d["help"],
-                    )
-                else:
-                    parser.add_argument(
-                        "-" + d["abv"],
-                        "--" + d["name"],
-                        type=d["type"],
-                        default=d["default"],
-                        help=d["help"],
-                    )
-
-    return parser
-
-
-def check_path(path: Path):
-    if path.exists() == False:
-        raise Exception(f"ERROR ! {path} not found.\n")
-
-
-def build_paths(params: Dict):
-    """ Build paths for raw_data, x_data, y_data, splits.
-    These paths determine directories for a benchmark dataset.
-    TODO: consider renaming to build_benchmark_data_paths()
-
-    Args:
-        params (dict): dict of CANDLE/IMPROVE parameters and parsed values.
-
-    Returns:
-        dict: updated dict of CANDLE/IMPROVE parameters and parsed values.
-    """
-    mainpath = Path(params["input_dir"])
-    check_path(mainpath)
-
-    # Raw data
-    raw_data_path = mainpath
-    params["raw_data_path"] = raw_data_path
-    check_path(raw_data_path)
-
-    x_data_path = raw_data_path / params["x_data_dir"]
-    params["x_data_path"] = x_data_path
-    check_path(x_data_path)
-
-    y_data_path = raw_data_path / params["y_data_dir"]
-    params["y_data_path"] = y_data_path
-    check_path(y_data_path)
-
-    splits_path = raw_data_path / params["splits_dir"]
-    params["splits_path"] = splits_path
-    check_path(splits_path)
-
-    # # ML data dir
-    # ml_data_path = mainpath / params["ml_data_outdir"]
-    # params["ml_data_path"] = ml_data_path
-    # os.makedirs(ml_data_path, exist_ok=True)
-    # check_path(ml_data_path)
-    # os.makedirs(params["ml_data_outdir"], exist_ok=True)
-    # check_path(params["ml_data_outdir"])
-
-    # Models dir
-    # os.makedirs(params["model_outdir"], exist_ok=True)
-    # check_path(params["model_outdir"])
-
-    # Infer dir
-    # os.makedirs(params["infer_outdir"], exist_ok=True)
-    # check_path(params["infer_outdir"])
-
-    return params
-
-
 def create_outdir(outdir: Union[Path, str]):
     """ Create directory.
 
@@ -415,21 +119,6 @@ def create_outdir(outdir: Union[Path, str]):
     check_path(outdir)
     return outdir
 
-
-# def create_ml_data_outdir(params: Dict):
-#     """ Create directory to store data files for ML/DL models.
-#     Used in *preprocess*.py
-#     """
-#     ml_data_dir = Path(params["ml_data_outdir"])
-#     if ml_data_dir.exists():
-#         print(f"ml_data_outdir already exists: {ml_data_dir}")
-#     else:
-#         print(f"Creating ml_data_outdir: {ml_data_dir}")
-#         os.makedirs(ml_data_dir, exist_ok=True)
-#     check_path(ml_data_dir)
-#     return ml_data_dir
-
-
 def get_file_format(file_format: Union[str, None] = None):
     """ Clean file_format.
     Exmamples of (input, return) pairs:
@@ -443,8 +132,6 @@ def get_file_format(file_format: Union[str, None] = None):
         file_format = "." + file_format
     return file_format
 
-
-# def build_ml_data_name(params: Dict, stage: str, file_format: str=""):
 def build_ml_data_file_name(data_format: str, stage: str):
     """ Returns name of the ML/DL data file. E.g., train_data.pt
     Used in *preprocess*.py*, *train*.py, and *infer*.py
@@ -452,7 +139,6 @@ def build_ml_data_file_name(data_format: str, stage: str):
     data_file_format = get_file_format(file_format=data_format)
     ml_data_file_name = stage + "_" + "data" + data_file_format
     return ml_data_file_name
-
 
 def build_model_path(model_file_name: str, model_file_format: str, model_dir: Union[Path, str]):
     """ Build path to save the trained model.
@@ -477,21 +163,6 @@ def build_model_path(model_file_name: str, model_file_format: str, model_dir: Un
 
     return model_path
 
-
-# def create_model_outpath(params: Dict):
-# # def create_model_outpath(params: Dict, model_dir):
-#     """ Create path to save the trained model
-#     Used in *train*.py
-#     """
-#     model_dir = Path(params["model_outdir"])
-#     os.makedirs(model_dir, exist_ok=True)
-#     check_path(model_dir)
-#     # model_file_format = get_file_format(file_format=params["model_file_format"])
-#     # model_path = model_dir / (params["model_file_name"] + model_file_format)
-#     model_path = build_model_path(params, model_dir)
-#     return model_path
-
-
 def save_stage_ydf(ydf: pd.DataFrame, stage: str, output_dir: str):
     """ Save a subset of y data samples (rows of the input dataframe).
     The "subset" refers to one of the three stages involved in developing ML
@@ -507,7 +178,6 @@ def save_stage_ydf(ydf: pd.DataFrame, stage: str, output_dir: str):
     ydf.to_csv(ydf_fpath, index=False)
 
     return None
-
 
 def store_predictions_df(y_pred: np.array,
                          y_col_name: str,

@@ -24,7 +24,7 @@ from improvelib.initializer.cli_params_def import (
     improve_train_conf,
 )
 from improvelib.initializer.config import Config
-from improvelib.utils import build_paths
+from improvelib.utils_config import build_paths
 
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
 logging.basicConfig(format=FORMAT)
