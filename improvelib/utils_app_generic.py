@@ -29,7 +29,8 @@ def _get_x_data(file, benchmark_dir, column_name, norm, dtype, gene_id=None):
     data = pd.read_csv(file_path, sep='\t')
     # enforce index and type
     data.set_index(column_name, inplace=True)
-    data = data.astype(dtype)
+    if (dtype is not None) and (dtype is not 'None'):
+        data = data.astype(dtype)
     # call normalization if needed
     data = _transform_cell_features(data, norm, gene_id)
     return data

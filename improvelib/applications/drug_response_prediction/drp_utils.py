@@ -174,7 +174,7 @@ def get_cell_methylation(file, benchmark_dir, cell_column_name, norm):
     Returns:
         pd.DataFrame: cell mutation data (with normalization if specified), index set to cell ID.
     """
-    data = _get_x_data(file, benchmark_dir, cell_column_name, norm, dtype='float64')
+    data = _get_x_data(file, benchmark_dir, cell_column_name, norm, dtype=None)
     return data
 
 def get_cell_miRNA(file, benchmark_dir, cell_column_name, norm):
