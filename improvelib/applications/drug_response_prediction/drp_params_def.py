@@ -63,6 +63,25 @@ app_preproc_params = [
         ),
     },
     {
+        "name": "cell_methylation_file",
+        "type": str,
+        "default": None,
+        "help": "'cancer_DNA_methylation.tsv' for benchmark data or path to the mutation data. None if not used."
+    },
+        {
+        "name": "cell_methylation_transform",
+        "type": str,
+        "default": None,
+        "help": (
+            "List of lists with the type of transformation and the option. "
+            "Transformations will be performed in the order of the outer list. "
+            "For example, [['normalize', 'zscale'], ['subset', 'L1000']] will first"
+            "normalize the data with z-scaling and then subset to genes in L1000."
+            "For subset, a path to a text file with Entrez IDs separated by new lines can be given."
+            "None if not used."
+        ),
+    },
+    {
         "name": "cell_miRNA_file",
         "type": str,
         "default": None,

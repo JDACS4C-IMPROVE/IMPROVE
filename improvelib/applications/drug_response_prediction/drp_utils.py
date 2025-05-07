@@ -15,6 +15,7 @@ import pandas as pd
 
 from improvelib.utils_app_generic import _get_full_input_path, _get_stage_splits, _get_all_splits, _get_x_data
 from improvelib.statics import L1000_ENTREZ, L1000_SYMBOL
+from improvelib.applications.drug_response_prediction.drp_statics import methyl_symbol_dict, methyl_entrez_dict, methyl_ensembl_dict
 
 # Set logger for this module
 FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
@@ -251,6 +252,19 @@ def get_drug_ecfp(file, benchmark_dir, drug_column_name, norm=None):
     data = _get_x_data(file, benchmark_dir, drug_column_name, norm, dtype='int')
     return data
 
+def change_gene_identifiers(data, data_type, identifier):
+    if data_type == 'methyl' or data_type == 'methylation':
+        if identifier == 'Symbol' or identifier == 'symbol' or identifier == 'gene_symbol':
+            data = data.rename(columns=methyl_symbol_dict)
+        elif identifier == 'Entrez' or identifier == 'entrez':
+            data = data.rename(columns=methyl_entrez_dict)
+        elif identifier == 'Ensembl' or identifier == 'ensembl':
+            data = data.rename(columns=methyl_ensembl_dict)
+        else:
+            raise ValueError(f"ERROR! Identfied provided was {identifier} but must be one of 'Entrez' or 'Symbol' or 'Ensembl'.\n")
+    else:
+        print("Only methylation has been implemented.")
+    return data
 
 
 
