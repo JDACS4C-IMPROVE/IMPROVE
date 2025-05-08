@@ -58,6 +58,8 @@ class Timer:
                    filename: str='runtime.json',
                    extra_dict: Optional[Dict]=None):
         """ Save runtime to file. """
+        if not hasattr(self, 'time_diff_dict'):
+            self.timer_end()
         if isinstance(extra_dict, dict):
             self.time_diff_dict.update(extra_dict)
         with open(Path(dir_to_save) / filename, 'w') as json_file:
