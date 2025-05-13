@@ -122,7 +122,6 @@ def determine_transform(x_data_df, x_data_name, x_transform_list, output_dir):
     transform_dict = {}
     if (x_transform_list != []) and (x_transform_list != None) and (x_transform_list != 'None'):
         if isinstance(x_transform_list, str):
-            print("x_transform_list is a string. Converting to list.")
             x_transform_list = literal_eval(x_transform_list)
         for n in x_transform_list:
             if not len(n) == 2:
