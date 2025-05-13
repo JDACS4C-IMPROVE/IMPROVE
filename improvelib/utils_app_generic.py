@@ -207,13 +207,13 @@ def _determine_scale(df, subtype, data_name):
     # add check that's it's only numerical
     # determine scaler to use
     if subtype == 'std' or subtype == 'StandardScaler':
-        scaler = StandardScaler()
+        scaler = StandardScaler().set_output(transform="pandas")
     elif subtype == 'minmax' or subtype == 'MinMaxScaler':
-        scaler = MinMaxScaler()
+        scaler = MinMaxScaler().set_output(transform="pandas")
     elif subtype == "minabs" or subtype == 'MaxAbsScaler':
-        scaler = MaxAbsScaler()
+        scaler = MaxAbsScaler().set_output(transform="pandas")
     elif subtype == "robust" or subtype == 'RobustScaler':
-        scaler = RobustScaler()
+        scaler = RobustScaler().set_output(transform="pandas")
     elif subtype == None or subtype == 'None':
         scaler = None
     else:
