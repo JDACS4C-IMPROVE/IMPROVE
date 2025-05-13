@@ -132,10 +132,28 @@ app_preproc_params = [
         "help": "'drug_mordred.tsv' for benchmark data or path to the Mordred data. None if not used."
     },
     {
+        "name": "drug_mordred_transform",
+        "type": str,
+        "default": None,
+        "help": (
+            "List of lists with the type of transformation and the option. "
+            "None if not used."
+        ),
+    },
+    {
         "name": "drug_ecfp_file",
         "type": str,
         "default": None,
         "help": "'drug_ecfp4_nbits512.tsv' for benchmark data or path to the ECFP data. None if not used."
+    },
+    {
+        "name": "drug_ecfp_transform",
+        "type": str,
+        "default": None,
+        "help": (
+            "List of lists with the type of transformation and the option. "
+            "None if not used."
+        ),
     },
     {
         "name": "canc_col_name",
