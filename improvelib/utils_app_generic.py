@@ -90,7 +90,7 @@ def get_response_with_features(response_df, feature_df, column_name):
     if isinstance(feature_df, list):
         for df in feature_df:
             intersect_list = list(set(df.index.tolist()) & set(response_df[column_name]))
-            response_df = response_df[response_df[column_name.isin(intersect_list)]]
+            response_df = response_df[response_df[column_name].isin(intersect_list)]
     else:
         intersect_list = list(set(feature_df.index.tolist()) & set(response_df[column_name]))
         response_df = response_df[response_df[column_name].isin(intersect_list)]
