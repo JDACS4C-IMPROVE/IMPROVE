@@ -207,13 +207,13 @@ def _determine_scale(df, subtype, data_name):
     # add check that's it's only numerical
     # determine scaler to use
     if subtype == 'std' or subtype == 'StandardScaler':
-        scaler = StandardScaler().set_output(transform="pandas")
+        scaler = StandardScaler()
     elif subtype == 'minmax' or subtype == 'MinMaxScaler':
-        scaler = MinMaxScaler().set_output(transform="pandas")
+        scaler = MinMaxScaler()
     elif subtype == "minabs" or subtype == 'MaxAbsScaler':
-        scaler = MaxAbsScaler().set_output(transform="pandas")
+        scaler = MaxAbsScaler()
     elif subtype == "robust" or subtype == 'RobustScaler':
-        scaler = RobustScaler().set_output(transform="pandas")
+        scaler = RobustScaler()
     elif subtype == None or subtype == 'None':
         scaler = None
     else:
@@ -268,7 +268,8 @@ def _impute_features(df, impute_value):
 def _scale_features(df, scaler_path):
     # path is going to be output dir, deal with that here or in above function
     scaler = joblib.load(scaler_path)
-    df = scaler.transform(df)
+    arr = scaler.transform(df)
+    df = pd.DataFrame(arr, index=df.index, columns=df.columns)
     return df
 
 def _subset_features(df, feature_list):
