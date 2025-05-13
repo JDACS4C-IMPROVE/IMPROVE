@@ -133,15 +133,15 @@ def determine_transform(x_data_df, x_data_name, x_transform_list, output_dir):
                     print(f"{strategy} is an invalid strategy. Choose 'impute', 'scale', or 'subset'. Skipping {n}.")
                 elif strategy == 'impute':
                     print(f"Determining {strategy} with {subtype}.")
-                    impute_value = _determine_impute(x_data_df, subtype)
+                    impute_value, x_data_df = _determine_impute(x_data_df, subtype)
                     transform_dict['impute'] = impute_value
                 elif strategy == 'scale':
                     print(f"Determining {strategy} with {subtype}.")
-                    scaler_name = _determine_scale(x_data_df, subtype, x_data_name)
+                    scaler_name, x_data_df = _determine_scale(x_data_df, subtype, x_data_name)
                     transform_dict['scale'] = scaler_name
                 elif strategy == 'subset':
                     print(f"Determining {strategy} with {subtype}.")
-                    subset_list = _determine_subset(x_data_df, subtype)
+                    subset_list, x_data_df = _determine_subset(x_data_df, subtype)
                     transform_dict['subset'] = subset_list
     transform_name = os.path.join(output_dir, x_data_name + '.json')
     with open(transform_name, 'w') as f:
@@ -200,7 +200,8 @@ def _determine_impute(df, subtype):
         impute_value = df.mean()
     else:
         print(f"The specified imputation ({subtype}) is not implemented.")
-    return impute_value
+    df = _impute_features(df, impute_value)
+    return impute_value, df
 
 def _determine_scale(df, subtype, data_name):
     # add check that's it's only numerical
@@ -225,9 +226,9 @@ def _determine_scale(df, subtype, data_name):
         fit_scaler = scaler.fit(df)
     scaler_name = data_name + '_scaler.gz'
     joblib.dump(fit_scaler, scaler_name)
-    return scaler_name
+    df = _scale_features(df, scaler_name)
+    return scaler_name, df
 
-LINCS_SYMBOL
 
 def _determine_subset(df, subtype):
     # add check that it's only numerical
@@ -254,7 +255,8 @@ def _determine_subset(df, subtype):
  
     else:
         print(f"The specified subset ({subtype}) is not implemented.")
-    return subset_list
+    df = _subset_features(df, subset_list)
+    return subset_list, df
 
 
 
