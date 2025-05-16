@@ -1,25 +1,88 @@
+[DEFAULT]
+
 [Preprocess]
+# IMPROVE general params
+log_level = DEBUG
+input_dir = ./
+output_dir = ./
+config_file = None
+param_log_file = param_log_file.txt
+data_format = .parquet
+
+# IMPROVE params
+x_data_dir = x_data
+x_data_dir = y_data
+splits_dir = splits
 train_split_file = CCLE_split_0_train.txt
 val_split_file = CCLE_split_0_val.txt
 test_split_file = CCLE_split_0_test.txt
-data_format = .pt
-y_data_files = [["response.tsv"]]
-x_data_canc_files = [["cancer_gene_expression.tsv", ["Gene_Symbol"]]]
-x_data_drug_files = [["drug_SMILES.tsv"]]
+
+# DRP params
+y_data_file = response.tsv
+cell_transcriptomic_file = None
+cell_transcriptomic_transform = None
+cell_cnv_file = None
+cell_cnv_transform = None
+cell_mutation_file = None
+cell_mutation_transform = None
+cell_methylation_file = None
+cell_methylation_transform = None
+cell_miRNA_file = None
+cell_miRNA_transform = None
+cell_RPPA_file = None
+cell_RPPA_transform = None
+drug_smiles_file = None
+drug_mordred_file = None
+drug_mordred_transform = None
+drug_ecfp_file = None
+drug_ecfp_transform = None
+canc_col_name = improve_sample_id
+drug_col_name = improve_chem_id
+y_col_name = auc
 
 [Train]
-data_format = .pt
+# IMPROVE general params
+log_level = DEBUG
+input_dir = ./
+output_dir = ./
+config_file = None
+param_log_file = param_log_file.txt
+data_format = .parquet
+
+# IMPROVE params
 model_file_name = model
 model_file_format = .pt
-epochs = 50
-batch_size = 256
-val_batch = 256
-learning_rate = 0.0001
-patience = 10
+epochs = 7
+learning_rate = 7
+batch_size = 7
+val_batch = 64
+loss = mse
+early_stop_metric = mse
+patience = 20
+metric_type = regression
 
+# DRP params
+y_col_name = auc
 
 [Infer]
-data_format = .pt
+# IMPROVE general params
+log_level = DEBUG
+input_dir = ./
+output_dir = ./
+config_file = None
+param_log_file = param_log_file.txt
+data_format = .parquet
+
+# IMPROVE params
+infer_batch = 64
 model_file_name = model
 model_file_format = .pt
-infer_batch = 256
+loss = mse
+input_data_dir = ./
+input_model_dir = ./
+calc_infer_score = False
+metric_type = regression
+
+# DRP params
+y_col_name = auc
+
