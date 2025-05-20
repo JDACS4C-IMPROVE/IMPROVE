@@ -195,6 +195,22 @@ app_train_params = [
             "problem it can be IC50, AUC, and others."
         ),
     },
+    {
+        "name": "canc_col_name",
+        "type": str,
+        "default": "improve_sample_id",
+        "help": (
+            "Column name in the y (response) data file that contains the cancer sample IDs."
+        ),
+    },
+    {
+        "name": "drug_col_name",
+        "type": str,
+        "default": "improve_chem_id",
+        "help": (
+            "Column name in the y (response) data file that contains the drug IDs."
+        ),
+    },
 ]
 
 
@@ -207,6 +223,22 @@ app_infer_params = [
             "Column name in the y data file (e.g., response.tsv), that represents "
             "the target variable that the model predicts. In drug response prediction "
             "problem it can be IC50, AUC, and others."
+        ),
+    },
+    {
+        "name": "canc_col_name",
+        "type": str,
+        "default": "improve_sample_id",
+        "help": (
+            "Column name in the y (response) data file that contains the cancer sample IDs."
+        ),
+    },
+    {
+        "name": "drug_col_name",
+        "type": str,
+        "default": "improve_chem_id",
+        "help": (
+            "Column name in the y (response) data file that contains the drug IDs."
         ),
     },
 ]
