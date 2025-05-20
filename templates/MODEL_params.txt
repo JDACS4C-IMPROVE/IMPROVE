@@ -63,6 +63,8 @@ metric_type = regression
 
 # DRP params
 y_col_name = auc
+canc_col_name = improve_sample_id
+drug_col_name = improve_chem_id
 
 [Infer]
 # IMPROVE general params
@@ -85,4 +87,6 @@ metric_type = regression
 
 # DRP params
 y_col_name = auc
+canc_col_name = improve_sample_id
+drug_col_name = improve_chem_id
 
