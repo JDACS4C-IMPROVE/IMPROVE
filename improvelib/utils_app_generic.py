@@ -14,7 +14,7 @@ import json
 from sklearn.preprocessing import StandardScaler, MaxAbsScaler, MinMaxScaler, RobustScaler
 from improvelib.statics import L1000_ENTREZ, L1000_SYMBOL, LINCS_SYMBOL
 
-def get_response_data(split_file, benchmark_dir, response_file, sep='\t'):
+def get_response_data(split_file, benchmark_dir, response_file, split_id='split_id', sep='\t'):
     """Gets response data for a given split file.
 
     Args:
@@ -29,10 +29,12 @@ def get_response_data(split_file, benchmark_dir, response_file, sep='\t'):
     # get path to y_data file, read data
     response_path = _get_full_input_path(response_file, benchmark_dir, 'y_data')
     df = pd.read_csv(response_path, sep=sep)
+    if split_id not in df.columns:
+        df = df.reset_index()
     # get path to splits file, read data
     ids = _get_stage_splits(split_file, benchmark_dir)
     # subset y_data based on split given
-    df = df.loc[ids]
+    df = df[df[split_id].isin(ids)]
     return df
 
 
