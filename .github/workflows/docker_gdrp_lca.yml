@@ -1,5 +1,6 @@
 name: Docker GraphDRP LCA workflow
-on: [push]
+on:
+  workflow_dispatch
 jobs:
   test:
     runs-on: ubuntu-latest
