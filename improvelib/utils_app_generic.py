@@ -118,9 +118,6 @@ def determine_transform(x_data_df, x_data_name, x_transform_list, output_dir):
         output_dir: Should be set to params['output_dir'].
     """
     # NEED TO EITHER: limit to one of each, or enforce some sort of limit / order
-
-    # need to loop through the tranformation list
-    # need to save all in a dictionary
     transform_dict = {}
     if (x_transform_list != []) and (x_transform_list != None) and (x_transform_list != 'None'):
         if isinstance(x_transform_list, str):
@@ -193,6 +190,17 @@ def transform_data(df, transform_file_name, preprocess_dir):
 # requires ID to be index
 
 def _determine_impute(df, subtype):
+    """
+    Determines the imputation based on the training set with the specified imputation type. 
+
+    Args:
+        df (pd.DataFrame): The input feature DataFrame, column names must be feature IDs (e.g. gene names), index must be IDs (e.g. cell line names).
+        subtype (str): The type of imputation to be performed.
+
+    Returns:
+        impute_value (numeric or list of numerics): The imputation value(s).
+        df (pd.DataFrame): The df with NaN values imputed by the given impute_value(s).
+    """
     # add check that it's only numerical
     if subtype == 'zero':
         impute_value = 0
@@ -200,12 +208,28 @@ def _determine_impute(df, subtype):
         impute_value = df.mean(axis=None)
     if subtype == 'mean_col':
         impute_value = df.mean()
+    if subtype == 'median':
+        impute_value = df.median(axis=None)
+    if subtype == 'median_col':
+        impute_value = df.median()
     else:
         print(f"The specified imputation ({subtype}) is not implemented.")
     df = _impute_features(df, impute_value)
     return impute_value, df
 
 def _determine_scale(df, subtype, data_name):
+    """
+    Determines the scaler based on the training set with the specified scaler type. Uses scikit-learn scalers.
+
+    Args:
+        df (pd.DataFrame): The input feature DataFrame, column names must be feature IDs (e.g. gene names), index must be IDs (e.g. cell line names).
+        subtype (str): The type of scaler to be used.
+        data_name (str): String representing data being scaled, used to save the scaler.
+
+    Returns:
+        scaler_name (str): The name of the saved scaler (data_name + '_scaler.gz').
+        df (pd.DataFrame): The scaled df with the given scaler type.
+    """
     # add check that's it's only numerical
     # determine scaler to use
     if subtype == 'std' or subtype == 'StandardScaler':
@@ -233,6 +257,17 @@ def _determine_scale(df, subtype, data_name):
 
 
 def _determine_subset(df, subtype):
+    """
+    Determines the feature subset based on the training set with the specified subset type. 
+
+    Args:
+        df (pd.DataFrame): The input feature DataFrame, column names must be feature IDs (e.g. gene names), index must be IDs (e.g. cell line names).
+        subtype (str): The type of subset to be used. Can be a path to a plain text file.
+
+    Returns:
+        subset_list (list of str): List of the feature IDs to be used.
+        df (pd.DataFrame): The subsetted df with the given subset type.
+    """
     # add check that it's only numerical
     if subtype == 'L1000_SYMBOL':
         # need id type and check here
