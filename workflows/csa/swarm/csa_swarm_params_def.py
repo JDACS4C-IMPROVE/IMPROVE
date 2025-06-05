@@ -23,7 +23,7 @@ additional_definitions = [
     },
     {"name": "epochs",
      "type": int,
-     "default": 10,
+     "default": None,
      "help": "Number of epochs"
     },
     {"name": "source_datasets",
