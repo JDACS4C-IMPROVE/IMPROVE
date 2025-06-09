@@ -348,3 +348,39 @@ def check_path_and_files(folder_name: str, file_list: List, inpath: Path) -> Pat
         raise Exception(f"ERROR ! {folder_name} folder not available.\n")
 
     return outpath
+
+def get_common_samples(
+        df1: pd.DataFrame,
+        df2: pd.DataFrame,
+        ref_col: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Search for common data in a reference column and retain only those rows.
+
+    Args:
+        df1 (pd.DataFrame): First dataframe.
+        df2 (pd.DataFrame): Second dataframe.
+        ref_col (str): The reference column to find the common values.
+
+    Returns:
+        Tuple[pd.DataFrame, pd.DataFrame]: Tuple of DataFrames after filtering for common data.
+    """
+    common_ids = list(set(df1[ref_col]).intersection(df2[ref_col]))
+    df1 = df1[df1[ref_col].isin(common_ids)].reset_index(drop=True)
+    df2 = df2[df2[ref_col].isin(common_ids)].reset_index(drop=True)
+    return df1, df2
+
+
+def get_common_elements(list1: List, list2: List, verbose: bool = False) -> List:
+    """Return a list of elements that the provided lists have in common.
+
+    Args:
+        list1 (List): One list.
+        list2 (List): Another list.
+        verbose (bool): Flag for verbosity. If True, info about computations is displayed. Default is False.
+
+    Returns:
+        List: List of common elements.
+    """
+    in_common = list(set(list1).intersection(set(list2)))
+    if verbose:
+        print("Elements in common count: ", len(in_common))
+    return in_common
