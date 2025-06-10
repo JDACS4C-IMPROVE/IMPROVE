@@ -21,6 +21,7 @@ def get_response_data(split_file, benchmark_dir, response_file, split_id='split_
         split_file (Union[str, Path, list of str, list of Path]): Name of split file if in benchmark data, otherwise path to split file. Can be a list of str or Path.
         benchmark_dir (Union[str, Path]): Path to benchmark data directory.
         response_file (str): Name of response file.
+        split_id (str): Name of column containing the split ID (default: 'split_id').
         sep (str): Separator for response file (default: '\t').
 
     Returns:
@@ -68,7 +69,7 @@ def get_all_response_data(train_split_file, val_split_file, test_split_file, ben
 
 
 
-def get_x_data(file, benchmark_dir, column_name, dtype=None, gene_id=None):
+def get_x_data(file, benchmark_dir, column_name, dtype=None):
     """Generic function to get x data. Sets index to ID. Sets dtype if specified.
 
     Args:
@@ -89,6 +90,19 @@ def get_x_data(file, benchmark_dir, column_name, dtype=None, gene_id=None):
     return data
 
 def get_response_with_features(response_df, feature_df, column_name):
+    """Takes a response DataFrame and feature DataFrame(s) and returns a response DataFrame
+    that contains only rows that have available features for the feature type(s) provided. 
+    All features in the list must have the same ID type (e.g. drug or cell). If a list is given, 
+    only rows will be retained if all features in the list are available.
+
+    Args:
+        response_df (pd.DataFrame): Response DataFrame.
+        feature_df (pd.DataFrame or List of pd.DataFrame): Feature DataFrame or a list of feature DataFrames of the same ID (drug or cell). ID must be index, as with all improvelib functions.
+        column_name (str): Name of ID column for x data.
+    
+    Returns:
+        pd.DataFrame: Response DataFrame containing only the rows with features available.
+    """
     if isinstance(feature_df, list):
         for df in feature_df:
             intersect_list = list(set(df.index.tolist()) & set(response_df[column_name]))
@@ -99,6 +113,18 @@ def get_response_with_features(response_df, feature_df, column_name):
     return response_df
 
 def get_features_in_response(feature_df, response_df, column_name):
+    """Takes a feature DataFrame and a response DataFame and returns the feature DataFrame that 
+    contains only features that are present in the given response DataFrame.
+
+    Args:
+        feature_df (pd.DataFrame): Feature DataFrame. ID must be index, as with all improvelib functions.
+        response_df (pd.DataFrame): Response DataFrame.
+        column_name (str): Name of ID column for x data.
+
+    Returns:
+        pd.DataFrame: Feature DataFrame containing only the rows with features that are used in the response.
+
+    """
     intersect_list = list(set(feature_df.index.tolist()) & set(response_df[column_name]))
     feature_df = feature_df[feature_df.index.isin(intersect_list)]
     return feature_df
@@ -114,7 +140,7 @@ def determine_transform(x_data_df, x_data_name, x_transform_list, output_dir):
     Args:
         x_data_df (pd.DataFrame): The input DataFrame, column names must be Entrez IDs, index must be IDs.
         x_data_name (str): Name for the saved tranformation dictionary (.json will be added). 
-        x_transform_list (str): List of lists of [[strategy, subtype]], e.g. [['subset', 'L1000_SYMBOL'], ['scale', 'StandardScaler']].
+        x_transform_list (List): List of lists of [[strategy, subtype]], e.g. [['subset', 'L1000_SYMBOL'], ['scale', 'StandardScaler']].
         output_dir: Should be set to params['output_dir'].
     """
     # NEED TO EITHER: limit to one of each, or enforce some sort of limit / order
