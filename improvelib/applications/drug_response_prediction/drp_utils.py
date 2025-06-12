@@ -5,15 +5,11 @@ functionality to filter dataframes, retaining only the common IDs shared between
 """
 
 # Standard library imports
-from ast import literal_eval
 import logging
 import os
-from pathlib import Path
-from typing import Dict, List, Tuple, Union
-
 import pandas as pd
 
-from improvelib.utils_app_generic import get_x_data, get_response_data, get_all_response_data, determine_transform, transform_data, get_response_with_features, get_features_in_response
+from improvelib.utils import get_x_data, get_response_data, get_all_response_data, determine_transform, transform_data, get_response_with_features, get_features_in_response
 from improvelib.statics import L1000_ENTREZ, L1000_SYMBOL, LINCS_SYMBOL
 from improvelib.applications.drug_response_prediction.drp_statics import methyl_symbol_dict, methyl_entrez_dict, methyl_ensembl_dict
 
