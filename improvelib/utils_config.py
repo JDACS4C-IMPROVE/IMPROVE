@@ -6,10 +6,23 @@ import os
 import time
 from pathlib import Path
 # use NewType becuase TypeAlias is available from python 3.10
-from typing import List, Set, Union, NewType, Dict, Optional
+from typing import List, Set, Union, NewType, Dict, Optional, Any
 
 import numpy as np
 import pandas as pd
+
+
+def str_to_class(str) -> Any:
+    """Convert a string to a class reference.
+
+    Args:
+        class_name (str): The name of the class to retrieve.
+
+    Returns:
+        Any: The class reference corresponding to the class name.
+    """
+    return getattr(sys.modules[__name__], str)
+
 
 class ListOfListsAction(argparse.Action):
     """This class extends the argparse.Action class by instantiating an

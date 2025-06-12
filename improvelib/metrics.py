@@ -6,6 +6,7 @@ from typing import Dict, Any
 import sklearn
 import numpy as np
 from scipy.stats.mstats import pearsonr, spearmanr
+from .utils_config import str_to_class
 
 # Import metrics from sklearn based on version
 if sklearn.__version__ < "1.4.0":
@@ -39,17 +40,7 @@ else:
     )
 
 
-# TODO: rename str2Class to str_to_class
-def str2Class(str) -> Any:
-    """Convert a string to a class reference.
 
-    Args:
-        class_name (str): The name of the class to retrieve.
-
-    Returns:
-        Any: The class reference corresponding to the class name.
-    """
-    return getattr(sys.modules[__name__], str)
 
 
 def compute_metrics(y_true: np.ndarray,
@@ -89,7 +80,7 @@ def compute_metrics(y_true: np.ndarray,
             mapstr = "spearman"
         elif mapstr == "r2":
             mapstr = "r_square"
-        scores[mtstr] = str2Class(mapstr)(y_true, y_pred)
+        scores[mtstr] = str_to_class(mapstr)(y_true, y_pred)
 
     if metric_type == "classification":
         if y_prob is not None:
