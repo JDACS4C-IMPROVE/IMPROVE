@@ -287,3 +287,54 @@ class StoreIfPresent(argparse.Action):
                 this action. (optional)
         """
         setattr(namespace, self.dest, values)
+
+def cast_value(s):
+    """Cast to numeric if possible
+    Note: this doesn't seem to be used anywhere anymore.
+    """
+    try:
+        return int(s)
+    except ValueError:
+        try:
+            return float(s)
+        except ValueError:
+            return s  # Return the original string if it's neither int nor float
+        
+
+def create_outdir(outdir: Union[Path, str]):
+    """ Create directory.
+
+    Args:
+        outdir (Path or str): dir path to create
+
+    Returns:
+        pathlib.Path: returns the created dir path
+
+    Note: no longer used anywhere.
+    """
+    outdir = Path(outdir)
+    if outdir.exists():
+        print(f"Dir already exists: {outdir}")
+    else:
+        print(f"Creating dir: {outdir}")
+        os.makedirs(outdir, exist_ok=True)
+    check_path(outdir)
+    return outdir
+
+def save_subprocess_stdout(
+    result,
+    log_dir: Union[str, Path]='.',
+    log_filename: Optional[str]='logs.txt'):
+    """ Save the captured output from subprocess python package.
+    Args:
+        result: captured output from subprocess python package.
+            E.g. result = subprocess.run(...)
+        log_dir (str or Path): dir to save the logs
+        log_filename (str): file name to save the logs
+
+    Note: no longer used anywhere
+    """
+    result_file_name_stdout = log_dir / log_filename
+    with open(result_file_name_stdout, 'w') as file:
+        file.write(result.stdout)
+    return True

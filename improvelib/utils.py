@@ -6,133 +6,219 @@ import os
 import time
 from pathlib import Path
 # use NewType becuase TypeAlias is available from python 3.10
-from typing import List, Set, Union, NewType, Dict, Optional
+from typing import List, Set, Union, NewType, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-from .utils_config import check_path
 from .metrics import compute_metrics
+from .utils_app_generic import (
+    _determine_impute, 
+    _determine_scale, 
+    _determine_subset, 
+    _impute_features, 
+    _scale_features, 
+    _subset_features, 
+    _get_full_input_path, 
+    _get_full_preprocess_path, 
+    _get_all_splits, 
+    _get_stage_splits
+)
 
 
-def save_subprocess_stdout(
-    result,
-    log_dir: Union[str, Path]='.',
-    log_filename: Optional[str]='logs.txt'):
-    """ Save the captured output from subprocess python package.
-    Args:
-        result: captured output from subprocess python package.
-            E.g. result = subprocess.run(...)
-        log_dir (str or Path): dir to save the logs
-        log_filename (str): file name to save the logs
-    """
-    result_file_name_stdout = log_dir / log_filename
-    with open(result_file_name_stdout, 'w') as file:
-        file.write(result.stdout)
-    return True
-
-
-class Timer:
-    """ Measure time. """
-    def __init__(self):
-        self.start = time.time()
-
-    def timer_end(self):
-        self.end = time.time()
-        self.time_diff = self.end - self.start
-        self.hours = int(self.time_diff // 3600)
-        self.minutes = int((self.time_diff % 3600) // 60)
-        self.seconds = self.time_diff % 60
-        self.time_diff_dict = {'hours': self.hours,
-                               'minutes': self.minutes,
-                               'seconds': self.seconds}
-
-    def display_timer(self, print_fn=print):
-        self.timer_end()
-        tt = self.time_diff_dict
-        print(f"Elapsed Time: {self.hours:02}:{self.minutes:02}:{self.seconds:05}")
-        return self.time_diff_dict
-
-    def save_timer(self,
-                   dir_to_save: Union[str, Path]='.',
-                   filename: str='runtime.json',
-                   extra_dict: Optional[Dict]=None):
-        """ Save runtime to file. """
-        if not hasattr(self, 'time_diff_dict'):
-            self.timer_end()
-        if isinstance(extra_dict, dict):
-            self.time_diff_dict.update(extra_dict)
-        with open(Path(dir_to_save) / filename, 'w') as json_file:
-            json.dump(self.time_diff_dict, json_file, indent=4)
-        return True
-
-
-def str2bool(v: str) -> bool:
-    """
-    This is taken from:
-    https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-
-    argparse Because type=bool is not interpreted as a bool and
-    action='store_true' cannot be undone.
-
-    :param string v: String to interpret
-
-    :return: Boolean value. It raises and exception if the provided string cannot \
-        be interpreted as a boolean type.
-
-        - Strings recognized as boolean True : \
-            'yes', 'true', 't', 'y', '1' and uppercase versions (where applicable).
-        - Strings recognized as boolean False : \
-            'no', 'false', 'f', 'n', '0' and uppercase versions (where applicable).
-    :rtype: boolean
-    """
-    if v.lower() in ("yes", "true", "t", "y", "1"):
-        return True
-    elif v.lower() in ("no", "false", "f", "n", "0"):
-        return False
-    else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
-
-
-def cast_value(s):
-    """Cast to numeric if possbile"""
-    try:
-        return int(s)
-    except ValueError:
-        try:
-            return float(s)
-        except ValueError:
-            return s  # Return the original string if it's neither int nor float
-
-def create_outdir(outdir: Union[Path, str]):
-    """ Create directory.
+def get_response_data(split_file, benchmark_dir, response_file, split_id='split_id', sep='\t'):
+    """Gets response data for a given split file.
 
     Args:
-        outdir (Path or str): dir path to create
+        split_file (Union[str, Path, list of str, list of Path]): Name of split file if in benchmark data, otherwise path to split file. Can be a list of str or Path.
+        benchmark_dir (Union[str, Path]): Path to benchmark data directory.
+        response_file (str): Name of response file.
+        split_id (str): Name of column containing the split ID (default: 'split_id').
+        sep (str): Separator for response file (default: '\t').
 
     Returns:
-        pathlib.Path: returns the created dir path
+        pd.DataFrame: Response dataframe for given split.
     """
-    outdir = Path(outdir)
-    if outdir.exists():
-        print(f"Dir already exists: {outdir}")
-    else:
-        print(f"Creating dir: {outdir}")
-        os.makedirs(outdir, exist_ok=True)
-    check_path(outdir)
-    return outdir
+    # get path to y_data file, read data
+    response_path = _get_full_input_path(response_file, benchmark_dir, 'y_data')
+    df = pd.read_csv(response_path, sep=sep)
+    if split_id not in df.columns:
+        df = df.reset_index()
+    # get path to splits file, read data
+    ids = _get_stage_splits(split_file, benchmark_dir)
+    # subset y_data based on split given
+    df = df[df[split_id].isin(ids)]
+    return df
 
-def get_file_format(file_format: Union[str, None] = None):
-    """ Clean file_format.
-    Exmamples of (input, return) pairs:
-    input, return: "", ""
-    input, return: None, ""
-    input, return: "pt", ".pt"
-    input, return: ".pt", ".pt"
+
+def get_all_response_data(train_split_file, val_split_file, test_split_file, benchmark_dir, response_file, sep='\t'):
+    """Gets response data for all given split file. Denotes stage of split in col 'split' with 'train', 'val', or 'test'.
+
+    Args:
+        train_split_file (Union[str, Path, list of str, list of Path]): Name of train split file if in benchmark data, otherwise path to train split file. Can be a list of str or Path.
+        val_split_file (Union[str, Path, list of str, list of Path]): Name of val split file if in benchmark data, otherwise path to val split file. Can be a list of str or Path.
+        test_split_file (Union[str, Path, list of str, list of Path]): Name of test split file if in benchmark data, otherwise path to test split file. Can be a list of str or Path.
+        benchmark_dir (Union[str, Path]): Path to benchmark data directory.
+        response_file (str): Name of response file
+        sep (str): Separator for response file (default: '\t').
+
+    Returns:
+        pd.DataFrame: Response dataframe for all splits with col 'split' denoting split type ('train', 'val', or 'test').
     """
-    file_format = "" if file_format is None else file_format
-    if file_format != "" and "." not in file_format:
-        file_format = "." + file_format
-    return file_format
+    # get path to y_data file, read data
+    response_path = _get_full_input_path(response_file, benchmark_dir, 'y_data')
+    df = pd.read_csv(response_path, sep=sep)
+    # get path to splits files, read data
+    train, val, test = _get_all_splits(train_split_file, val_split_file, test_split_file, benchmark_dir)
+    # label y_data with split column, populated with the appropriate stage name
+    df['split'] = "NA"
+    df.loc[train, 'split'] = "train"
+    df.loc[val, 'split'] = "val"
+    df.loc[test, 'split'] = "test"
+    # drop y_data not in any stage
+    df = df[df['split'].notna()]
+    return df
+
+
+
+def get_x_data(file, benchmark_dir, column_name, dtype=None):
+    """Generic function to get x data. Sets index to ID. Sets dtype if specified.
+
+    Args:
+        file (Union[str, Path]): Name of x data file if in benchmark data, otherwise path to x data file. 
+        benchmark_dir (Union[str, Path]): Path to benchmark data directory.
+        column_name (str): Name of ID column for x data.
+        dtype (str): dtype to enforce for this x data.
+
+    Returns:
+        pd.DataFrame: x data (with dtype if specified), index set to ID.
+    """
+    file_path = _get_full_input_path(file, benchmark_dir, 'x_data')
+    data = pd.read_csv(file_path, sep='\t')
+    # enforce index and type
+    data.set_index(column_name, inplace=True)
+    if dtype is not None:
+        data = data.astype(dtype)
+    return data
+
+def get_response_with_features(response_df, feature_df, column_name):
+    """Takes a response DataFrame and feature DataFrame(s) and returns a response DataFrame
+    that contains only rows that have available features for the feature type(s) provided. 
+    All features in the list must have the same ID type (e.g. drug or cell). If a list is given, 
+    only rows will be retained if all features in the list are available.
+
+    Args:
+        response_df (pd.DataFrame): Response DataFrame.
+        feature_df (pd.DataFrame or List of pd.DataFrame): Feature DataFrame or a list of feature DataFrames of the same ID (drug or cell). ID must be index, as with all improvelib functions.
+        column_name (str): Name of ID column for x data.
+    
+    Returns:
+        pd.DataFrame: Response DataFrame containing only the rows with features available.
+    """
+    if isinstance(feature_df, list):
+        for df in feature_df:
+            intersect_list = list(set(df.index.tolist()) & set(response_df[column_name]))
+            response_df = response_df[response_df[column_name].isin(intersect_list)]
+    else:
+        intersect_list = list(set(feature_df.index.tolist()) & set(response_df[column_name]))
+        response_df = response_df[response_df[column_name].isin(intersect_list)]
+    return response_df
+
+def get_features_in_response(feature_df, response_df, column_name):
+    """Takes a feature DataFrame and a response DataFame and returns the feature DataFrame that 
+    contains only features that are present in the given response DataFrame.
+
+    Args:
+        feature_df (pd.DataFrame): Feature DataFrame. ID must be index, as with all improvelib functions.
+        response_df (pd.DataFrame): Response DataFrame.
+        column_name (str): Name of ID column for x data.
+
+    Returns:
+        pd.DataFrame: Feature DataFrame containing only the rows with features that are used in the response.
+
+    """
+    intersect_list = list(set(feature_df.index.tolist()) & set(response_df[column_name]))
+    feature_df = feature_df[feature_df.index.isin(intersect_list)]
+    return feature_df
+
+
+def determine_transform(x_data_df, x_data_name, x_transform_list, output_dir):
+    """
+    Sets the transformations (imputations, scaling, and/or subsetting) features based on a list of lists of [[strategy, subtype]]. 
+    Transformation values are determined by the training set.
+    Saves a dictionary containing the details needed to perform the specified transformations on all sets.
+    Before using this function...
+
+    Args:
+        x_data_df (pd.DataFrame): The input DataFrame, column names must be Entrez IDs, index must be IDs.
+        x_data_name (str): Name for the saved tranformation dictionary (.json will be added). 
+        x_transform_list (List): List of lists of [[strategy, subtype]], e.g. [['subset', 'L1000_SYMBOL'], ['scale', 'StandardScaler']].
+        output_dir: Should be set to params['output_dir'].
+    """
+    # NEED TO EITHER: limit to one of each, or enforce some sort of limit / order
+    transform_dict = {}
+    if (x_transform_list != []) and (x_transform_list != None) and (x_transform_list != 'None'):
+        if isinstance(x_transform_list, str):
+            x_transform_list = literal_eval(x_transform_list)
+        for n in x_transform_list:
+            if not len(n) == 2:
+                print(f"Each transformation list must have two items. Skipping {n}.")
+            else:
+                strategy = n[0]
+                subtype = n[1]
+                if strategy not in ['impute','scale', 'subset']:
+                    print(f"{strategy} is an invalid strategy. Choose 'impute', 'scale', or 'subset'. Skipping {n}.")
+                elif strategy == 'impute':
+                    print(f"Determining {strategy} with {subtype}.")
+                    impute_value, x_data_df = _determine_impute(x_data_df, subtype)
+                    transform_dict['impute'] = impute_value
+                elif strategy == 'scale':
+                    print(f"Determining {strategy} with {subtype}.")
+                    scaler_name, x_data_df = _determine_scale(x_data_df, subtype, x_data_name)
+                    transform_dict['scale'] = scaler_name
+                elif strategy == 'subset':
+                    print(f"Determining {strategy} with {subtype}.")
+                    subset_list, x_data_df = _determine_subset(x_data_df, subtype)
+                    transform_dict['subset'] = subset_list
+    transform_name = os.path.join(output_dir, x_data_name + '.json')
+    with open(transform_name, 'w') as f:
+        json.dump(transform_dict, f, indent=4)
+    # but what if we need to transform multiple x data?
+
+def transform_data(df, transform_file_name, preprocess_dir):
+    """
+    Transforms (imputes, scales, and/or subsets) features based the transformations determined on the training set with determine_transform(). 
+    Reads the saved dictionary containing the details needed to perform the specified transformations on all sets, and performs the 
+    transformations on the given data.
+
+    Args:
+        df (pd.DataFrame): The input feature DataFrame, column names must be feature IDs (e.g. gene names), index must be IDs (e.g. cell line names).
+        transform_file_name (str): Name of the file name used in determine_transform().
+        preprocess_dir (str): Should be params['output_dir'].
+
+    Returns:
+        pd.DataFrame: The transformed DataFrame.
+    """
+
+    # open dictionary
+    # add a check that this doesn't already contain a .json
+    transform_file_name = transform_file_name + '.json'
+    transform_dict_path = _get_full_preprocess_path(transform_file_name, preprocess_dir)
+    with open(transform_dict_path, 'r') as f:
+        transform_dict = json.load(f)
+    for key, value in transform_dict.items():
+        if key == 'impute':
+            print(f"Imputing features with {value}.")
+            df = _impute_features(df, value)
+        elif key == 'scale':
+            print(f"Scaling features with {value}.")
+            df = _scale_features(df, value)
+        elif key == 'subset':
+            print(f"Subsetting features with {value}.")
+            df = _subset_features(df, value)
+        else:
+            print(f"Invalid tranformation type {key}. Must be 'impute', 'scale', or 'subset'.")
+    return df
 
 def build_ml_data_file_name(data_format: str, stage: str):
     """ Returns name of the ML/DL data file. E.g., train_data.pt
@@ -263,7 +349,6 @@ def store_predictions_df(y_pred: np.array,
 
     return None
 
-
 def compute_performance_scores(y_true: np.array,
                                y_pred: np.array,
                                stage: str, 
@@ -320,7 +405,6 @@ def compute_performance_scores(y_true: np.array,
         print("Invalid metric_type provided. Choose 'classification' or 'regression'.")
 
     return scores
-
 
 def check_path_and_files(folder_name: str, file_list: List, inpath: Path) -> Path:
     """Checks if a folder and its files are available in path.
@@ -384,3 +468,81 @@ def get_common_elements(list1: List, list2: List, verbose: bool = False) -> List
     if verbose:
         print("Elements in common count: ", len(in_common))
     return in_common
+
+class Timer:
+    """ Measure time. """
+    def __init__(self):
+        self.start = time.time()
+
+    def timer_end(self):
+        self.end = time.time()
+        self.time_diff = self.end - self.start
+        self.hours = int(self.time_diff // 3600)
+        self.minutes = int((self.time_diff % 3600) // 60)
+        self.seconds = self.time_diff % 60
+        self.time_diff_dict = {'hours': self.hours,
+                               'minutes': self.minutes,
+                               'seconds': self.seconds}
+
+    def display_timer(self, print_fn=print):
+        self.timer_end()
+        tt = self.time_diff_dict
+        print(f"Elapsed Time: {self.hours:02}:{self.minutes:02}:{self.seconds:05}")
+        return self.time_diff_dict
+
+    def save_timer(self,
+                   dir_to_save: Union[str, Path]='.',
+                   filename: str='runtime.json',
+                   extra_dict: Optional[Dict]=None):
+        """ Save runtime to file. """
+        if not hasattr(self, 'time_diff_dict'):
+            self.timer_end()
+        if isinstance(extra_dict, dict):
+            self.time_diff_dict.update(extra_dict)
+        with open(Path(dir_to_save) / filename, 'w') as json_file:
+            json.dump(self.time_diff_dict, json_file, indent=4)
+        return True
+
+
+def str2bool(v: str) -> bool:
+    """
+    This is taken from:
+    https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-
+    argparse Because type=bool is not interpreted as a bool and
+    action='store_true' cannot be undone.
+
+    :param string v: String to interpret
+
+    :return: Boolean value. It raises and exception if the provided string cannot \
+        be interpreted as a boolean type.
+
+        - Strings recognized as boolean True : \
+            'yes', 'true', 't', 'y', '1' and uppercase versions (where applicable).
+        - Strings recognized as boolean False : \
+            'no', 'false', 'f', 'n', '0' and uppercase versions (where applicable).
+    :rtype: boolean
+    """
+    if v.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif v.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
+
+
+
+
+
+
+def get_file_format(file_format: Union[str, None] = None):
+    """ Clean file_format.
+    Exmamples of (input, return) pairs:
+    input, return: "", ""
+    input, return: None, ""
+    input, return: "pt", ".pt"
+    input, return: ".pt", ".pt"
+    """
+    file_format = "" if file_format is None else file_format
+    if file_format != "" and "." not in file_format:
+        file_format = "." + file_format
+    return file_format
