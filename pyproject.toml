@@ -9,15 +9,15 @@ packages = ["improvelib"]
 name = 'improvelib'
 version = '0.1.0'  # Corrected version format
 authors = [
-    { name = "Andreas Wilke", email = "wilke@anl.gov" },
-    { name = "Alexander Partin", email = "apartin@anl.gov" },
-    { name = "Natasha Koussa" },
-    { name = "Sara Jones" },
-    { name = "Priyanka Vasanthakumari", email = "pvasanthakumari@anl.gov" },
-    { name = "Oleksandr Narykov", email = "onarykov@anl.gov" },
-    { name = "Rajeev Jain", email = "rajeeja@gmail.com" },
-    { name = "Justin M Wozniak", email = "woz@anl.gov" },
-    { name = "Rylie Weaver" }
+    { "Alexander Partin <apartin@anl.gov>"},
+    { "Andreas Wilke <wilke@anl.gov>"},
+    { "Natasha Koussa" },
+    { "Sara Jones" },
+    { "Priyanka Vasanthakumari <pvasanthakumari@anl.gov>" },
+    { "Oleksandr Narykov <onarykov@anl.gov>"},
+    { "Rajeev Jain <rajeeja@gmail.com>"},
+    { "Justin M Wozniak <woz@anl.gov>"},
+    { "Rylie Weaver" }
 ]
 description = 'Open-source package for model standardization and comparison in Python'
 readme = 'README_PyPi.md'
