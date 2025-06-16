@@ -4,7 +4,7 @@
 
 ## Installation
 ```bash
-pip install improvelib
+pip install improvelib==0.1.0
 ```
 
 `improvelib` uses Python >= 3.6 and requires the following dependencies:
