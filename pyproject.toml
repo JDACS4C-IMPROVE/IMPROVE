@@ -7,7 +7,7 @@ packages = ["improvelib"]
 
 [project]
 name = 'improvelib'
-version = '0.1.0'  # Corrected version format
+version = '1.0.0'  # Corrected version format
 authors = [
     { name = "Andreas Wilke", email = "wilke@anl.gov" },
     { name = "Alexander Partin", email = "apartin@anl.gov" },
