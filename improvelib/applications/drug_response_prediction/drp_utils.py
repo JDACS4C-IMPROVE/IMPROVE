@@ -1,7 +1,5 @@
 """
-This module provides utilities for loading and processing response data for 
-drug response prediction models in the IMPROVE framework. It also provides 
-functionality to filter dataframes, retaining only the common IDs shared between them.
+This module provides utilities for drug response prediction models in the IMPROVE framework. 
 """
 
 # Standard library imports
@@ -9,8 +7,6 @@ import logging
 import os
 import pandas as pd
 
-from improvelib.utils import get_x_data, get_response_data, get_all_response_data, determine_transform, transform_data, get_response_with_features, get_features_in_response
-from improvelib.statics import L1000_ENTREZ, L1000_SYMBOL, LINCS_SYMBOL
 from improvelib.applications.drug_response_prediction.drp_statics import methyl_symbol_dict, methyl_entrez_dict, methyl_ensembl_dict
 
 # Set logger for this module
@@ -18,7 +14,6 @@ FORMAT = '%(levelname)s %(name)s %(asctime)s:\t%(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", logging.ERROR))
-
 
 
 def change_gene_identifiers(data, data_type, identifier):

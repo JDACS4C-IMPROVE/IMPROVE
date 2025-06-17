@@ -27,13 +27,13 @@ from .utils_app_generic import (
 )
 
 
-def get_response_data(split_file, benchmark_dir, response_file, split_id='split_id', sep='\t'):
-    """Gets response data for a given split file.
+def get_y_data(split_file, benchmark_dir, y_data_file, split_id='split_id', sep='\t'):
+    """Gets y data for a given split file.
 
     Args:
         split_file (Union[str, Path, list of str, list of Path]): Name of split file if in benchmark data, otherwise path to split file. Can be a list of str or Path.
         benchmark_dir (Union[str, Path]): Path to benchmark data directory.
-        response_file (str): Name of response file.
+        y_data_file (str): Name of response file.
         split_id (str): Name of column containing the split ID (default: 'split_id').
         sep (str): Separator for response file (default: '\t').
 
@@ -41,7 +41,7 @@ def get_response_data(split_file, benchmark_dir, response_file, split_id='split_
         pd.DataFrame: Response dataframe for given split.
     """
     # get path to y_data file, read data
-    response_path = _get_full_input_path(response_file, benchmark_dir, 'y_data')
+    response_path = _get_full_input_path(y_data_file, benchmark_dir, 'y_data')
     df = pd.read_csv(response_path, sep=sep)
     if split_id not in df.columns:
         df = df.reset_index()
