@@ -32,6 +32,7 @@ def main():
     
     args = parser.parse_args()
     df = pd.read_csv(args.input_y_data, sep='\t')
+    delattr(args, 'input_y_data')
     args.func(df, **vars(args))
 
 
