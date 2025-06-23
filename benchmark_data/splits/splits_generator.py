@@ -53,14 +53,14 @@ def _split_checks(output_dir, ratio, seeds, n_splits):
         sys.exit(1)
     os.makedirs(output_dir, exist_ok=True)
 
-def generate_mixed_splits(df, output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
+def generate_mixed_splits(df, study_col='study', output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
     df = df.reset_index()
     df = df.rename(columns={df.columns[0]: 'index_num'})
-    studies = df['study'].unique()
+    studies = df[study_col].unique()
     _split_checks(output_dir, ratio, seeds, n_splits)
 
     for study_name in studies:  
-        study_df = df[df['study'] == study_name]
+        study_df = df[df[study_col] == study_name]
         study_indexes = study_df['index_num'].to_list()
 
         # save 'all' split file
@@ -89,15 +89,15 @@ def generate_mixed_splits(df, output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list
             save_split(test_path, test_split)
 
 
-def generate_blind_splits(df, blind_col, blind_name, output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
+def generate_blind_splits(df, blind_col, blind_name, study_col='study', output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
     df = df.reset_index()
     df = df.rename(columns={df.columns[0]: 'index_num'})
-    studies = df['study'].unique()
+    studies = df[study_col].unique()
     _split_checks(output_dir, ratio, seeds, n_splits)
 
     for study_name in studies:
         print(f"Starting splits for {study_name}...") 
-        study_df = df[df['study'] == study_name]
+        study_df = df[df[study_col] == study_name]
         targets = study_df[blind_col].unique().tolist()
         print("total cell lines:", len(targets))
         print("targets", targets)
