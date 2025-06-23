@@ -55,14 +55,12 @@ def _split_checks(output_dir, ratio, seeds, n_splits):
 def generate_mixed_splits(df, study_col='study', output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
     if not output_dir.endswith('/'):
         output_dir += '/'
-    df = df.reset_index()
-    df = df.rename(columns={df.columns[0]: 'index_num'})
     studies = df[study_col].unique()
     _split_checks(output_dir, ratio, seeds, n_splits)
 
     for study_name in studies:  
         study_df = df[df[study_col] == study_name]
-        study_indexes = study_df['index_num'].to_list()
+        study_indexes = study_df['split_id'].to_list()
 
         # save 'all' split file
         all_path = output_dir + study_name + "_all.txt"
@@ -93,8 +91,6 @@ def generate_mixed_splits(df, study_col='study', output_dir='./', ratio=(0.8, 0.
 def generate_blind_splits(df, blind_col, blind_name, study_col='study', output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
     if not output_dir.endswith('/'):
         output_dir += '/'
-    df = df.reset_index()
-    df = df.rename(columns={df.columns[0]: 'index_num'})
     studies = df[study_col].unique()
     _split_checks(output_dir, ratio, seeds, n_splits)
 
@@ -125,9 +121,9 @@ def generate_blind_splits(df, blind_col, blind_name, study_col='study', output_d
             val_df = study_df[study_df[blind_col].isin(val_split_targ)]
             train_df = study_df[study_df[blind_col].isin(train_split_targ)]
             # get indexes
-            test_split = test_df['index_num'].tolist()
-            val_split = val_df['index_num'].tolist()
-            train_split = train_df['index_num'].tolist()
+            test_split = test_df['split_id'].tolist()
+            val_split = val_df['split_id'].tolist()
+            train_split = train_df['split_id'].tolist()
 
             if (len(train_df) == 0) or (len(val_df) == 0) or (len(test_df) == 0):
                 print(f"The dataset {study_name} has too few {blind_col} to perform this split. Skipping.")
