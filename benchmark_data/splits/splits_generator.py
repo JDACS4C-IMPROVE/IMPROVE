@@ -32,11 +32,10 @@ def main():
     
     args = parser.parse_args()
     df = pd.read_csv(args.input_y_data, sep='\t')
+    func = args.func
     delattr(args, 'input_y_data')
-    args.func(df, **vars(args))
-
-
-
+    delattr(args, 'func')
+    func(df, **vars(args))
 
 
 def save_split(path, list):
