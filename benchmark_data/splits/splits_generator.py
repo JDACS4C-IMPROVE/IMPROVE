@@ -13,6 +13,31 @@ Natasha: remaining to do
 - Option for blind splits to only be blind for test, not both test and val
 '''
 
+def main():
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument('-i', '--input_y_data', default='./y_data.tsv', help='Path to input y data file.')
+    parent_parser.add_argument('-o', '--output_dir', default='./splits', help='Output directory.')
+    parent_parser.add_argument('-s', '--study_col', default='study', help="Name of the column containing the study ('study' for synergy, 'source' for DRP).")
+
+    parser = argparse.ArgumentParser() 
+    subparsers = parser.add_subparsers()
+
+    parser_mixed = subparsers.add_parser('mixed', parents = [parent_parser])                          
+    parser_mixed.set_defaults(func=generate_mixed_splits)
+
+    parser_blind = subparsers.add_parser('blind', parents = [parent_parser])                          
+    parser_blind.add_argument('-C', '--blind_col', default='DepMapID', help="Name of the column to perform blind splits on.")
+    parser_blind.add_argument('-N', '--blind_name', default='cell', help="Name of the blind split (to be included in the split file name).")
+    parser_blind.set_defaults(func=generate_blind_splits)
+    
+    args = parser.parse_args()
+    df = pd.read_csv(args.input_y_data, sep='\t')
+    args.func(df, **vars(args))
+
+
+
+
+
 def save_split(path, list):
    with open(path, "w") as file:
     for item in list:
@@ -118,3 +143,5 @@ def generate_blind_splits(df, blind_col, blind_name, output_dir='./', ratio=(0.8
                     print(f"Val \t {len(val_df[blind_col].unique())} \t {len(val_df)}")
                     print(f"Test \t {len(test_df[blind_col].unique())} \t {len(test_df)}")
                     
+if __name__ == '__main__':
+    main()
