@@ -6,7 +6,6 @@ from typing import Dict, Any
 import sklearn
 import numpy as np
 from scipy.stats.mstats import pearsonr, spearmanr
-from .utils_config import str_to_class
 
 # Import metrics from sklearn based on version
 if sklearn.__version__ < "1.4.0":
@@ -40,7 +39,16 @@ else:
     )
 
 
+def str_to_class(str) -> Any:
+    """Convert a string to a class reference.
 
+    Args:
+        class_name (str): The name of the class to retrieve.
+
+    Returns:
+        Any: The class reference corresponding to the class name.
+    """
+    return getattr(sys.modules[__name__], str)
 
 
 def compute_metrics(y_true: np.ndarray,
