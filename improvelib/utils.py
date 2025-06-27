@@ -33,12 +33,12 @@ def get_y_data(split_file, benchmark_dir, y_data_file, split_id='split_id', sep=
     Args:
         split_file (Union[str, Path, list of str, list of Path]): Name of split file if in benchmark data, otherwise path to split file. Can be a list of str or Path.
         benchmark_dir (Union[str, Path]): Path to benchmark data directory.
-        y_data_file (str): Name of response file.
+        y_data_file (str): Name of y data file.
         split_id (str): Name of column containing the split ID (default: 'split_id').
-        sep (str): Separator for response file (default: '\t').
+        sep (str): Separator for y data file (default: '\t').
 
     Returns:
-        pd.DataFrame: Response dataframe for given split.
+        pd.DataFrame: Y data dataframe for given split.
     """
     # get path to y_data file, read data
     response_path = _get_full_input_path(y_data_file, benchmark_dir, 'y_data')
@@ -102,43 +102,43 @@ def get_x_data(file, benchmark_dir, column_name, dtype=None):
         data = data.astype(dtype)
     return data
 
-def get_response_with_features(response_df, feature_df, column_name):
-    """Takes a response DataFrame and feature DataFrame(s) and returns a response DataFrame
+def get_y_data_with_features(y_data_df, feature_df, column_name):
+    """Takes a y data DataFrame and feature DataFrame(s) and returns a y data DataFrame
     that contains only rows that have available features for the feature type(s) provided. 
     All features in the list must have the same ID type (e.g. drug or cell). If a list is given, 
     only rows will be retained if all features in the list are available.
 
     Args:
-        response_df (pd.DataFrame): Response DataFrame.
+        y_data_df (pd.DataFrame): Response DataFrame.
         feature_df (pd.DataFrame or List of pd.DataFrame): Feature DataFrame or a list of feature DataFrames of the same ID (drug or cell). ID must be index, as with all improvelib functions.
         column_name (str): Name of ID column for x data.
     
     Returns:
-        pd.DataFrame: Response DataFrame containing only the rows with features available.
+        pd.DataFrame: Y data DataFrame containing only the rows with features available.
     """
     if isinstance(feature_df, list):
         for df in feature_df:
-            intersect_list = list(set(df.index.tolist()) & set(response_df[column_name]))
-            response_df = response_df[response_df[column_name].isin(intersect_list)]
+            intersect_list = list(set(df.index.tolist()) & set(y_data_df[column_name]))
+            y_data_df = y_data_df[y_data_df[column_name].isin(intersect_list)]
     else:
-        intersect_list = list(set(feature_df.index.tolist()) & set(response_df[column_name]))
-        response_df = response_df[response_df[column_name].isin(intersect_list)]
-    return response_df
+        intersect_list = list(set(feature_df.index.tolist()) & set(y_data_df[column_name]))
+        y_data_df = y_data_df[y_data_df[column_name].isin(intersect_list)]
+    return y_data_df
 
-def get_features_in_response(feature_df, response_df, column_name):
-    """Takes a feature DataFrame and a response DataFame and returns the feature DataFrame that 
-    contains only features that are present in the given response DataFrame.
+def get_features_in_y_data(feature_df, y_data_df, column_name):
+    """Takes a feature DataFrame and a y data DataFame and returns the feature DataFrame that 
+    contains only features that are present in the given y data DataFrame.
 
     Args:
         feature_df (pd.DataFrame): Feature DataFrame. ID must be index, as with all improvelib functions.
-        response_df (pd.DataFrame): Response DataFrame.
+        y_data_df (pd.DataFrame): Y data DataFrame.
         column_name (str): Name of ID column for x data.
 
     Returns:
-        pd.DataFrame: Feature DataFrame containing only the rows with features that are used in the response.
+        pd.DataFrame: Feature DataFrame containing only the rows with features that are used in the y data.
 
     """
-    intersect_list = list(set(feature_df.index.tolist()) & set(response_df[column_name]))
+    intersect_list = list(set(feature_df.index.tolist()) & set(y_data_df[column_name]))
     feature_df = feature_df[feature_df.index.isin(intersect_list)]
     return feature_df
 

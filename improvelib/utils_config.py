@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import sys
 import time
 from pathlib import Path
 # use NewType becuase TypeAlias is available from python 3.10
