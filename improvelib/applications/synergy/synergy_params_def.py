@@ -49,7 +49,7 @@ app_preproc_params = [
         "default": None,
         "help": "'cell_mutation_delet.tsv' or 'cell_mutation_nonsynon.tsv' for benchmark data or path to the mutation data. None if not used."
     },
-        {
+    {
         "name": "cell_mutation_transform",
         "type": str,
         "default": None,
@@ -73,6 +73,19 @@ app_preproc_params = [
         "type": str,
         "default": None,
         "help": "'drug_mordred.tsv' for benchmark data or path to the Mordred data. None if not used."
+    },
+    {
+        "name": "drug_mordred_transform",
+        "type": str,
+        "default": None,
+        "help": (
+            "List of lists with the type of transformation and the option. "
+            "Transformations will be performed in the order of the outer list. "
+            "For example, [['normalize', 'zscale'], ['subset', 'L1000']] will first"
+            "normalize the data with z-scaling and then subset to genes in L1000."
+            "For subset, a path to a text file with Entrez IDs separated by new lines can be given."
+            "None if not used."
+        ),
     },
     {
         "name": "drug_infomax_file",
