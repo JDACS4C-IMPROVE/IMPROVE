@@ -87,25 +87,25 @@ app_preproc_params = [
         "help": "'drug_ecfp[2/4/6]_nbits[256/1024].tsv' for benchmark data or path to the ECFP data. None if not used."
     },
     {
-        "name": "cell_column_name",
+        "name": "canc_col_name",
         "type": str,
         "default": "DepMapID",
         "help": "Column name in the y (response) data file that contains the cancer sample IDs."
     },
     {
-        "name": "drug_column_name",
+        "name": "drug_col_name",
         "type": str,
         "default": "DrugID",
         "help": "Column name in the y (response) data file that contains the cancer sample IDs."
     },
     {
-        "name": "drug_1_column_name",
+        "name": "drug_1_col_name",
         "type": str,
         "default": "DrugID_row",
         "help": "Column name in the y (response) data file that contains the first drug IDs."
     },
     {
-        "name": "drug_2_column_name",
+        "name": "drug_2_col_name",
         "type": str,
         "default": "DrugID_col",
         "help": "Column name in the y (response) data file that contains the second drug IDs."
