@@ -116,12 +116,20 @@ def get_y_data_with_features(y_data_df, feature_df, column_name):
     Returns:
         pd.DataFrame: Y data DataFrame containing only the rows with features available.
     """
+    if isinstance(column_name, list):
+        y_data_cols = []
+        for col in column_name:
+            y_data_cols = y_data_cols + list(y_data_df[col])
+        y_data_col_set = set(y_data_cols)
+    else:
+        y_data_col_set = set(y_data_df[column_name])
+
     if isinstance(feature_df, list):
         for df in feature_df:
-            intersect_list = list(set(df.index.tolist()) & set(y_data_df[column_name]))
+            intersect_list = list(set(df.index.tolist()) & set(y_data_col_set))
             y_data_df = y_data_df[y_data_df[column_name].isin(intersect_list)]
     else:
-        intersect_list = list(set(feature_df.index.tolist()) & set(y_data_df[column_name]))
+        intersect_list = list(set(feature_df.index.tolist()) & set(y_data_col_set))
         y_data_df = y_data_df[y_data_df[column_name].isin(intersect_list)]
     return y_data_df
 
