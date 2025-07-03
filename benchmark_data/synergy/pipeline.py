@@ -217,8 +217,8 @@ def run(args):
     synergy.to_csv(y_data_dir / "synergy.tsv", sep='\t', index=False)
 
     #################################### SPLITS ####################################
-    generate_mixed_splits(synergy, output_dir=splits_data_dir)
-    generate_blind_splits(synergy, blind_col='DepMapID', blind_name='cell', output_dir=splits_data_dir)
+    generate_mixed_splits(synergy, output_dir=str(splits_data_dir))
+    generate_blind_splits(synergy, blind_col='DepMapID', blind_name='cell', output_dir=str(splits_data_dir))
 
 def main(args):
     args = parse_args(args)
