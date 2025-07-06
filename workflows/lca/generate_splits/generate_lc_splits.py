@@ -136,6 +136,10 @@ parser.add_argument('--splits_dir',
                     type=str,
                     help='Full path to data splits.')
 # -----------------------------------------------------------------------------
+parser.add_argument('--output_dir',
+                    default='./lca_splits',
+                    type=str,
+                    help='Output path for LCA splits (default: ./lca_splits).')
 parser.add_argument('--lc_sizes',
                     default=10,
                     type=int,
@@ -203,7 +207,8 @@ if n_splits is None:
 #sources = ['CCLE', 'CTRPv2', 'gCSI', 'GDSCv1', 'GDSCv2']
 #n_splits = 10
 
-outdir = filepath / "lc_splits"
+outdir = Path(args['output_dir'])
+#outdir = filepath / "lc_splits"
 os.makedirs(outdir, exist_ok=True)
 logging.info(f"Output directory: {outdir}")
 
