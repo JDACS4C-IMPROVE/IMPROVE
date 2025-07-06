@@ -28,7 +28,11 @@ infer_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_
 print("Created script names.")
 
 # Prefix string for swarm files
-prefix = f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {params['model_scripts_dir']}/{params['model_environment']} ; export PYTHONPATH=../../../../IMPROVE ; "
+if os.path.isdir(params['model_environment']):
+    model_env = params['model_environment']
+else:
+    model_env = f"{params['model_scripts_dir']}/{params['model_environment']}"
+prefix = f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {model_env} ; export PYTHONPATH=../../../../IMPROVE ; "
 
 # Specify dirs
 MAIN_ML_DATA_DIR = output_dir / 'ml_data' # output_dir_pp, input_dir_train, input_dir_infer
@@ -64,8 +68,6 @@ for split_num in params['split_nums']:
 
     # Determines files for training shards from the lca_splits_dir
     lca_split_paths = list(Path(params['lca_splits_dir']).glob(f"{params['dataset']}_split_{split_num}_sz_*.txt"))
-    print(params['lca_splits_dir'])
-    print("lca_split_paths", lca_split_paths)
     lca_split_files = [os.path.basename(x) for x in lca_split_paths]
     print(f"Running LCA on {len(lca_split_files)} shards with the following training splits:", lca_split_files)
 
