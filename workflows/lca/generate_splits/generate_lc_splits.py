@@ -200,6 +200,7 @@ ydata = pd.read_csv(data_file_path, sep='\t')
 
 source_paths = list(Path(splits_dir).glob(f"*_{split_type}_*.txt"))
 source_files = [os.path.basename(x) for x in source_paths]
+print(source_files)
 if sources is None:
     sources = list(set([x.split('_')[0] for x in source_files]))
 if n_splits is None:
