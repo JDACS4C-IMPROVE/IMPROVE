@@ -64,6 +64,7 @@ for split_num in params['split_nums']:
 
     # Determines files for training shards from the lca_splits_dir
     lca_split_paths = list(Path(params['lca_splits_dir']).glob(f"{params['dataset']}_split_{split_num}_sz_*.txt"))
+    print(params['lca_splits_dir'])
     print("lca_split_paths", lca_split_paths)
     lca_split_files = [os.path.basename(x) for x in lca_split_paths]
     print(f"Running LCA on {len(lca_split_files)} shards with the following training splits:", lca_split_files)
