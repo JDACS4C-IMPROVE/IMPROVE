@@ -12,7 +12,7 @@ cfg = Config()
 params = cfg.initialize_parameters(
     section="LCA",
     pathToModelDir=filepath,
-    default_config="lca_bruteforce_params.ini",
+    default_config="lca_swarm_params.ini",
     additional_definitions=lca_swarm_params_def.additional_definitions
 )
 
