@@ -49,7 +49,7 @@ app_preproc_params = [
         "default": None,
         "help": "'cell_mutation_delet.tsv' or 'cell_mutation_nonsynon.tsv' for benchmark data or path to the mutation data. None if not used."
     },
-        {
+    {
         "name": "cell_mutation_transform",
         "type": str,
         "default": None,
@@ -75,6 +75,19 @@ app_preproc_params = [
         "help": "'drug_mordred.tsv' for benchmark data or path to the Mordred data. None if not used."
     },
     {
+        "name": "drug_mordred_transform",
+        "type": str,
+        "default": None,
+        "help": (
+            "List of lists with the type of transformation and the option. "
+            "Transformations will be performed in the order of the outer list. "
+            "For example, [['normalize', 'zscale'], ['subset', 'L1000']] will first"
+            "normalize the data with z-scaling and then subset to genes in L1000."
+            "For subset, a path to a text file with Entrez IDs separated by new lines can be given."
+            "None if not used."
+        ),
+    },
+    {
         "name": "drug_infomax_file",
         "type": str,
         "default": None,
@@ -87,25 +100,25 @@ app_preproc_params = [
         "help": "'drug_ecfp[2/4/6]_nbits[256/1024].tsv' for benchmark data or path to the ECFP data. None if not used."
     },
     {
-        "name": "cell_column_name",
+        "name": "canc_col_name",
         "type": str,
         "default": "DepMapID",
         "help": "Column name in the y (response) data file that contains the cancer sample IDs."
     },
     {
-        "name": "drug_column_name",
+        "name": "drug_col_name",
         "type": str,
         "default": "DrugID",
         "help": "Column name in the y (response) data file that contains the cancer sample IDs."
     },
     {
-        "name": "drug_1_column_name",
+        "name": "drug_1_col_name",
         "type": str,
         "default": "DrugID_row",
         "help": "Column name in the y (response) data file that contains the first drug IDs."
     },
     {
-        "name": "drug_2_column_name",
+        "name": "drug_2_col_name",
         "type": str,
         "default": "DrugID_col",
         "help": "Column name in the y (response) data file that contains the second drug IDs."

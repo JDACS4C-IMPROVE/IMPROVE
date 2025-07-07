@@ -12,7 +12,7 @@ cfg = Config()
 params = cfg.initialize_parameters(
     section="LCA",
     pathToModelDir=filepath,
-    default_config="lca_bruteforce_params.ini",
+    default_config="lca_swarm_params.ini",
     additional_definitions=lca_swarm_params_def.additional_definitions
 )
 
@@ -28,7 +28,11 @@ infer_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_
 print("Created script names.")
 
 # Prefix string for swarm files
-prefix = f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {params['model_scripts_dir']}/{params['model_environment']} ; export PYTHONPATH=../../../../IMPROVE ; "
+if os.path.isdir(params['model_environment']):
+    model_env = params['model_environment']
+else:
+    model_env = f"{params['model_scripts_dir']}/{params['model_environment']}"
+prefix = f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {model_env} ; export PYTHONPATH=../../../../IMPROVE ; "
 
 # Specify dirs
 MAIN_ML_DATA_DIR = output_dir / 'ml_data' # output_dir_pp, input_dir_train, input_dir_infer

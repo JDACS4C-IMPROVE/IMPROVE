@@ -1,8 +1,11 @@
 import sys
+import os
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import argparse
 from chem_utils import canonicalize_smiles, generate_fingerprints, generate_mordred, generate_infomax
+from benchmark_data.splits.splits_generator import generate_mixed_splits, generate_blind_splits
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description='Generate benchmark synergy data.')
@@ -18,11 +21,17 @@ def parse_args(args):
     return args
 
 def run(args):
-    input_dir = args.input_dir
-    output_dir = args.output_dir
+    input_dir = Path(args.input_dir)
+    output_dir = Path(args.output_dir)
+    x_data_dir = output_dir / 'x_data'
+    y_data_dir = output_dir / 'y_data'
+    splits_data_dir = output_dir / 'splits'
+    os.makedirs(x_data_dir)
+    os.makedirs(y_data_dir)
+    os.makedirs(splits_data_dir)
 
     ### load drugcomb synergy data
-    drugcomb = pd.read_csv(input_dir + "drugcomb_summary_v_1_5.csv")
+    drugcomb = pd.read_csv(input_dir / "drugcomb_summary_v_1_5.csv")
 
     # combine small studies and drop studies that aren't cancer
     NCATS_variants = ["NCATS_ES(FAKI/AURKI)", "NCATS_ES(NAMPT+PARP)", "NCATS_HL", "NCATS_2D_3D"]
@@ -44,9 +53,9 @@ def run(args):
     drugcomb['stripped_cell_line_name'] = drugcomb['stripped_cell_line_name'].str.upper()
 
     # get DepMap IDs and hand-curated DepMap IDs
-    depmap_ids = pd.read_csv(input_dir + "sample_info.csv")
+    depmap_ids = pd.read_csv(input_dir / "sample_info.csv")
     depmap_ids = depmap_ids[['DepMap_ID', 'stripped_cell_line_name']]
-    depmap_curated = pd.read_csv(input_dir + "drugcomb_BIG_notindepmap_curated.csv")
+    depmap_curated = pd.read_csv(input_dir / "drugcomb_BIG_notindepmap_curated.csv")
     depmap_curated = depmap_curated[depmap_curated['DepMap_ID'].notna()]
     depmap_curated['stripped_cell_line_name'] = depmap_curated['cell_line_name'].str.replace('-', '')
     depmap_curated['stripped_cell_line_name'] = depmap_curated['stripped_cell_line_name'].str.replace(' ', '')
@@ -63,7 +72,7 @@ def run(args):
 
     #################################### MUTATION #########################################
     # DepMap data 22Q2 has the same cell lines as 23Q4 so we use that for consistency with mutation data
-    MUT_22Q2 = pd.read_csv(input_dir + "CCLE_mutations.csv")
+    MUT_22Q2 = pd.read_csv(input_dir / "CCLE_mutations.csv")
     MUT_22Q2['names'] = MUT_22Q2['Entrez_Gene_Id'].astype(str)
 
     ### mutation data for deleterious only, binarized
@@ -76,7 +85,7 @@ def run(args):
     MUT_22Q2_del_wide = MUT_22Q2_del_wide.fillna(0)
     MUT_22Q2_del_wide = MUT_22Q2_del_wide.rename_axis(None, axis=1).reset_index()
     MUT_22Q2_del_wide = MUT_22Q2_del_wide[MUT_22Q2_del_wide['DepMap_ID'].isin(cell_lines)]
-    MUT_22Q2_del_wide.to_csv(output_dir + "cell_mutation_delet.tsv", sep='\t', index=False)
+    MUT_22Q2_del_wide.to_csv(x_data_dir / "cell_mutation_delet.tsv", sep='\t', index=False)
 
     ### mutation data for all non-silent mutations, binarized
     MUT_22Q2_notSilent = MUT_22Q2[MUT_22Q2['Variant_annotation'] != 'silent']
@@ -87,10 +96,10 @@ def run(args):
     MUT_22Q2_notSilent_wide = MUT_22Q2_notSilent_wide.fillna(0)
     MUT_22Q2_notSilent_wide = MUT_22Q2_notSilent_wide.rename_axis(None, axis=1).reset_index()
     MUT_22Q2_notSilent_wide = MUT_22Q2_notSilent_wide[MUT_22Q2_notSilent_wide['DepMap_ID'].isin(cell_lines)]
-    MUT_22Q2_notSilent_wide.to_csv(output_dir + "cell_mutation_nonsynon.tsv", sep='\t', index=False)
+    MUT_22Q2_notSilent_wide.to_csv(x_data_dir / "cell_mutation_nonsynon.tsv", sep='\t', index=False)
 
     #################################### COPY NUMBER #########################################
-    CNV_22Q2 = pd.read_csv(input_dir + "CCLE_gene_cn.csv")
+    CNV_22Q2 = pd.read_csv(input_dir / "CCLE_gene_cn.csv")
     CNV_22Q2.rename(columns={CNV_22Q2.columns[0]: "DepMapID" }, inplace = True)
     CNV_22Q2.set_index(CNV_22Q2.columns[0], inplace=True)
     cols = CNV_22Q2.columns.to_list()
@@ -103,7 +112,7 @@ def run(args):
 
     ### continuous
     CNV_22Q2_cont = CNV_22Q2[CNV_22Q2['DepMapID'].isin(cell_lines)]
-    CNV_22Q2_cont.to_csv(output_dir + "cell_cnv_continuous.tsv", sep='\t', index=False)
+    CNV_22Q2_cont.to_csv(x_data_dir / "cell_cnv_continuous.tsv", sep='\t', index=False)
 
     ### discretized
     ### deep del < 0.5210507 < het loss < 0.7311832 < diploid < 1.214125 < gain < 1.422233 < amp
@@ -113,11 +122,11 @@ def run(args):
     bins = [-np.inf, 0.5210507, 0.7311832, 1.214125, 1.422233, np.inf]
     labels = [-2, -1, 0, 1, 2]
     CNV_22Q2_bins = CNV_22Q2_bins.apply(lambda x: pd.cut(x, bins=bins, labels=labels)).reset_index()
-    CNV_22Q2_bins.to_csv(output_dir + "cell_cnv_discretized.tsv", sep='\t', index=False)
+    CNV_22Q2_bins.to_csv(x_data_dir / "cell_cnv_discretized.tsv", sep='\t', index=False)
 
 
     #################################### GENE EXPRESSION #########################################
-    GE_22Q2 = pd.read_csv(input_dir + "CCLE_expression.csv")
+    GE_22Q2 = pd.read_csv(input_dir / "CCLE_expression.csv")
     GE_22Q2.rename(columns={GE_22Q2.columns[0]: "DepMapID" }, inplace = True)
     GE_22Q2.set_index(GE_22Q2.columns[0], inplace=True)
     cols = GE_22Q2.columns.to_list()
@@ -128,14 +137,14 @@ def run(args):
     GE_22Q2.columns = new_cols
     GE_22Q2 = GE_22Q2.reset_index()
     GE_22Q2_all = GE_22Q2[GE_22Q2['DepMapID'].isin(cell_lines)]
-    GE_22Q2_all.to_csv(output_dir + "cell_transcriptomics.tsv", sep='\t', index=False)
+    GE_22Q2_all.to_csv(x_data_dir / "cell_transcriptomics.tsv", sep='\t', index=False)
 
     #################################### DRUGS - SMILES ####################################
 
     ### drugcomb drug info
     # drug info from: 
     # converted from a list of dictionaries to df to csv in python
-    drugcomb_drugs = pd.read_csv(input_dir + "drugcomb_drugs_df.csv")
+    drugcomb_drugs = pd.read_csv(input_dir / "drugcomb_drugs_df.csv")
     drugcomb_drugs = drugcomb_drugs[drugcomb_drugs['dname'].isin(drugs)]
 
     # these are all pairs with the same smiles
@@ -160,7 +169,7 @@ def run(args):
     #duped_now = drugcomb_drugs[drugcomb_drugs.duplicated(subset=['dname'], keep=False)]
     #print(len(duped_now))
     #df_subset = drugcomb_drugs[drugcomb_drugs['smiles'].str.contains(';', na=False)]
-    multiplesmiles_curated = pd.read_csv(input_dir + "checkedsmi_curated.csv")
+    multiplesmiles_curated = pd.read_csv(input_dir / "checkedsmi_curated.csv")
     drugcomb_drugs_final = drugcomb_drugs
     for index, row in multiplesmiles_curated.iterrows():
         drugcomb_drugs_final.loc[drugcomb_drugs_final['id'] == row['id'], 'smiles'] = row['correct_smile']
@@ -168,15 +177,13 @@ def run(args):
     drugcomb_drugs_final['id'] = 'drug_' + drugcomb_drugs_final['id'].astype(str)
     smiles = drugcomb_drugs_final[['id', 'smiles']]
     smiles.rename(columns={'id': 'DrugID'}, inplace=True)
-    smiles.to_csv(output_dir + "drug_smiles.tsv", sep='\t', index=False)
-
-    smi_df = pd.read_csv('drug_smiles.tsv', sep='\t')
+    smiles.to_csv(x_data_dir / "drug_smiles.tsv", sep='\t', index=False)
 
     #################################### DRUGS - OTHER ####################################
     smiles = smiles.reset_index(drop=True)
     good, bad = canonicalize_smiles(smiles)
-    bad.to_csv(output_dir + "drug_smiles_bad.tsv", sep='\t', index=False)
-    good.to_csv(output_dir + "drug_smiles_canonical.tsv", sep='\t', index=False)
+    bad.to_csv(x_data_dir / "drug_smiles_bad.tsv", sep='\t', index=False)
+    good.to_csv(x_data_dir / "drug_smiles_canonical.tsv", sep='\t', index=False)
 
     drug_ecfp2_nbits256 = generate_fingerprints(good, radius=1, nbits=256)
     drug_ecfp4_nbits256 = generate_fingerprints(good, radius=2, nbits=256)
@@ -185,18 +192,18 @@ def run(args):
     drug_ecfp4_nbits1024 = generate_fingerprints(good, radius=2, nbits=1024)
     drug_ecfp6_nbits1024 = generate_fingerprints(good, radius=3, nbits=1024)
 
-    drug_ecfp2_nbits256.to_csv(output_dir + "drug_ecfp2_nbits256.tsv", sep='\t', index=False)
-    drug_ecfp4_nbits256.to_csv(output_dir + "drug_ecfp4_nbits256.tsv", sep='\t', index=False)
-    drug_ecfp6_nbits256.to_csv(output_dir + "drug_ecfp6_nbits256.tsv", sep='\t', index=False)
-    drug_ecfp2_nbits1024.to_csv(output_dir + "drug_ecfp2_nbits1024.tsv", sep='\t', index=False)
-    drug_ecfp4_nbits1024.to_csv(output_dir + "drug_ecfp4_nbits1024.tsv", sep='\t', index=False)
-    drug_ecfp6_nbits1024.to_csv(output_dir + "drug_ecfp6_nbits1024.tsv", sep='\t', index=False)
+    drug_ecfp2_nbits256.to_csv(x_data_dir / "drug_ecfp2_nbits256.tsv", sep='\t', index=False)
+    drug_ecfp4_nbits256.to_csv(x_data_dir / "drug_ecfp4_nbits256.tsv", sep='\t', index=False)
+    drug_ecfp6_nbits256.to_csv(x_data_dir / "drug_ecfp6_nbits256.tsv", sep='\t', index=False)
+    drug_ecfp2_nbits1024.to_csv(x_data_dir / "drug_ecfp2_nbits1024.tsv", sep='\t', index=False)
+    drug_ecfp4_nbits1024.to_csv(x_data_dir / "drug_ecfp4_nbits1024.tsv", sep='\t', index=False)
+    drug_ecfp6_nbits1024.to_csv(x_data_dir / "drug_ecfp6_nbits1024.tsv", sep='\t', index=False)
 
     mordred, _ = generate_mordred(good)
-    mordred.to_csv(output_dir + "drug_mordred.tsv", sep='\t', index=False)
+    mordred.to_csv(x_data_dir / "drug_mordred.tsv", sep='\t', index=False)
 
     infomax = generate_infomax(good)
-    infomax.to_csv(output_dir + "drug_infomax.tsv", sep='\t', index=False)
+    infomax.to_csv(x_data_dir / "drug_infomax.tsv", sep='\t', index=False)
 
     #################################### SYNERGY ####################################
     drug_ids = drugcomb_drugs_final[['id', 'dname']]
@@ -206,7 +213,12 @@ def run(args):
     synergy = synergy[columns_to_keep]
     synergy.rename(columns={'DepMap_ID': 'DepMapID', 'id_x': 'DrugID_row', 'id_y': 'DrugID_col', 'study_name': 'study', 'synergy_loewe': 'loewe', 'synergy_bliss': 'bliss', 'synergy_zip': 'zip', 'synergy_hsa': 'hsa', 'S_mean': 'smean', 'css_ri': 'css'}, inplace=True)
     synergy.replace('\\N', np.nan, inplace=True)
-    synergy.to_csv(output_dir + "synergy.tsv", sep='\t', index=False)
+    synergy = synergy.reset_index(names='split_id')
+    synergy.to_csv(y_data_dir / "synergy.tsv", sep='\t', index=False)
+
+    #################################### SPLITS ####################################
+    generate_mixed_splits(synergy, output_dir=str(splits_data_dir))
+    generate_blind_splits(synergy, blind_col='DepMapID', blind_name='cell', output_dir=str(splits_data_dir))
 
 def main(args):
     args = parse_args(args)

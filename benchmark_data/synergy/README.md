@@ -17,11 +17,23 @@ This repository contains scripts to generate benchmark data for the synergy appl
 * torch 2.2.1
 
 ## Installation and Setup
+Clone the IMPROVE repo:
+
+```bash
+git clone https://github.com/JDACS4C-IMPROVE/IMPROVE
+```
 
 You can install the required packages using Conda and `benchmark_data.yml`:
 
 ```bash
 conda env create -f benchmark_data.yml
+```
+
+Activate the conda environment and set the python path:
+
+```bash
+conda activate benchmark_data
+export PYTHONPATH=<YOUR/PATH/TO/IMPROVE>
 ```
 
 Input data can be found from the following sources or [here] **ADD FTP.
@@ -51,21 +63,23 @@ python pipeline.py --input_dir </input_dir/> --output_dir </output_dir/>
 
 
 ## Output
-
-* cell_cnv_continuous.tsv 
-* cell_cnv_discretized.tsv  
-* cell_mutation_delet.tsv 
-* cell_mutation_nonsynon.tsv
-* cell_transcriptomics.tsv
-* drug_smiles.tsv
-* drug_smiles_canonical.tsv
-* drug_smiles_bad.tsv
-* drug_mordred.tsv
-* drug_infomax.tsv
-* drug_ecfp2_nbits256.tsv	
-* drug_ecfp4_nbits256.tsv	
-* drug_ecfp6_nbits256.tsv 
-* drug_ecfp2_nbits1024.tsv 
-* drug_ecfp4_nbits1024.tsv
-* drug_ecfp6_nbits1024.tsv
-* synergy.tsv
+* x_data
+    * cell_cnv_continuous.tsv 
+    * cell_cnv_discretized.tsv  
+    * cell_mutation_delet.tsv 
+    * cell_mutation_nonsynon.tsv
+    * cell_transcriptomics.tsv
+    * drug_smiles.tsv
+    * drug_smiles_canonical.tsv
+    * drug_smiles_bad.tsv
+    * drug_mordred.tsv
+    * drug_infomax.tsv
+    * drug_ecfp2_nbits256.tsv	
+    * drug_ecfp4_nbits256.tsv	
+    * drug_ecfp6_nbits256.tsv 
+    * drug_ecfp2_nbits1024.tsv 
+    * drug_ecfp4_nbits1024.tsv
+    * drug_ecfp6_nbits1024.tsv
+* y_data
+    * synergy.tsv
+* splits

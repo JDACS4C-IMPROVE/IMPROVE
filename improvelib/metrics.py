@@ -39,8 +39,7 @@ else:
     )
 
 
-# TODO: rename str2Class to str_to_class
-def str2Class(str) -> Any:
+def str_to_class(str) -> Any:
     """Convert a string to a class reference.
 
     Args:
@@ -89,7 +88,7 @@ def compute_metrics(y_true: np.ndarray,
             mapstr = "spearman"
         elif mapstr == "r2":
             mapstr = "r_square"
-        scores[mtstr] = str2Class(mapstr)(y_true, y_pred)
+        scores[mtstr] = str_to_class(mapstr)(y_true, y_pred)
 
     if metric_type == "classification":
         if y_prob is not None:

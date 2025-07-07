@@ -13,6 +13,31 @@ Natasha: remaining to do
 - Option for blind splits to only be blind for test, not both test and val
 '''
 
+def main():
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument('-i', '--input_y_data', default='./y_data.tsv', help='Path to input y data file.')
+    parent_parser.add_argument('-o', '--output_dir', default='./splits', help='Output directory.')
+    parent_parser.add_argument('-s', '--study_col', default='study', help="Name of the column containing the study ('study' for synergy, 'source' for DRP).")
+
+    parser = argparse.ArgumentParser() 
+    subparsers = parser.add_subparsers()
+
+    parser_mixed = subparsers.add_parser('mixed', parents = [parent_parser])                          
+    parser_mixed.set_defaults(func=generate_mixed_splits)
+
+    parser_blind = subparsers.add_parser('blind', parents = [parent_parser])                          
+    parser_blind.add_argument('-C', '--blind_col', default='DepMapID', help="Name of the column to perform blind splits on.")
+    parser_blind.add_argument('-N', '--blind_name', default='cell', help="Name of the blind split (to be included in the split file name).")
+    parser_blind.set_defaults(func=generate_blind_splits)
+    
+    args = parser.parse_args()
+    df = pd.read_csv(args.input_y_data, sep='\t')
+    func = args.func
+    delattr(args, 'input_y_data')
+    delattr(args, 'func')
+    func(df, **vars(args))
+
+
 def save_split(path, list):
    with open(path, "w") as file:
     for item in list:
@@ -27,15 +52,15 @@ def _split_checks(output_dir, ratio, seeds, n_splits):
         sys.exit(1)
     os.makedirs(output_dir, exist_ok=True)
 
-def generate_mixed_splits(df, output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
-    df = df.reset_index()
-    df = df.rename(columns={df.columns[0]: 'index_num'})
-    studies = df['study'].unique()
+def generate_mixed_splits(df, study_col='study', output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
+    if not output_dir.endswith('/'):
+        output_dir += '/'
+    studies = df[study_col].unique()
     _split_checks(output_dir, ratio, seeds, n_splits)
 
     for study_name in studies:  
-        study_df = df[df['study'] == study_name]
-        study_indexes = study_df['index_num'].to_list()
+        study_df = df[df[study_col] == study_name]
+        study_indexes = study_df['split_id'].to_list()
 
         # save 'all' split file
         all_path = output_dir + study_name + "_all.txt"
@@ -63,15 +88,15 @@ def generate_mixed_splits(df, output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list
             save_split(test_path, test_split)
 
 
-def generate_blind_splits(df, blind_col, blind_name, output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
-    df = df.reset_index()
-    df = df.rename(columns={df.columns[0]: 'index_num'})
-    studies = df['study'].unique()
+def generate_blind_splits(df, blind_col, blind_name, study_col='study', output_dir='./', ratio=(0.8, 0.1, 0.1), seeds=list(range(10)), n_splits=10):
+    if not output_dir.endswith('/'):
+        output_dir += '/'
+    studies = df[study_col].unique()
     _split_checks(output_dir, ratio, seeds, n_splits)
 
     for study_name in studies:
         print(f"Starting splits for {study_name}...") 
-        study_df = df[df['study'] == study_name]
+        study_df = df[df[study_col] == study_name]
         targets = study_df[blind_col].unique().tolist()
         print("total cell lines:", len(targets))
         print("targets", targets)
@@ -96,9 +121,9 @@ def generate_blind_splits(df, blind_col, blind_name, output_dir='./', ratio=(0.8
             val_df = study_df[study_df[blind_col].isin(val_split_targ)]
             train_df = study_df[study_df[blind_col].isin(train_split_targ)]
             # get indexes
-            test_split = test_df['index_num'].tolist()
-            val_split = val_df['index_num'].tolist()
-            train_split = train_df['index_num'].tolist()
+            test_split = test_df['split_id'].tolist()
+            val_split = val_df['split_id'].tolist()
+            train_split = train_df['split_id'].tolist()
 
             if (len(train_df) == 0) or (len(val_df) == 0) or (len(test_df) == 0):
                 print(f"The dataset {study_name} has too few {blind_col} to perform this split. Skipping.")
@@ -118,3 +143,5 @@ def generate_blind_splits(df, blind_col, blind_name, output_dir='./', ratio=(0.8
                     print(f"Val \t {len(val_df[blind_col].unique())} \t {len(val_df)}")
                     print(f"Test \t {len(test_df[blind_col].unique())} \t {len(test_df)}")
                     
+if __name__ == '__main__':
+    main()
