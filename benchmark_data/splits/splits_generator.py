@@ -39,7 +39,7 @@ def main():
     args['seeds'] = literal_eval(args['seeds'])
     del args['input_y_data']
     del args['func']
-    func(**vars(args))
+    func(**args)
 
 
 def _save_split(path, list):
