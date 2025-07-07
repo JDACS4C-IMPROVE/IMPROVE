@@ -140,19 +140,14 @@ def generate_blind_splits(df, blind_col, blind_name, study_col='study', output_d
     _split_checks(output_dir, ratio, seeds, n_splits)
 
     for study_name in studies:
-        print(f"Starting splits for {study_name}...") 
         study_df = df[df[study_col] == study_name]
         targets = study_df[blind_col].unique().tolist()
-        print("total cell lines:", len(targets))
-        print("targets", targets)
-        #study_indexes = study_df['index_num'].to_list()
 
         # determine the size of test and val splits (remainder is train)
         test_len = np.floor(len(targets) * ratio[2]).astype(int)
         val_len = np.floor(len(targets) * ratio[1]).astype(int)
 
         for n in range(10):
-            print(f"Generating split {n}...")
             # randomize the indexes
             random.seed(seeds[n])
             targ = random.sample(targets, k=len(targets))
