@@ -83,7 +83,7 @@ for split_num in params['split_nums']:
         lca_name = "sz_" + lca.split('.')[0].split('_')[4]
         ### PREPROCESS
         ml_data_dir = MAIN_ML_DATA_DIR / split_name / lca_name
-        preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(lca_train_path)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)} --y_col_name {str(params['y_col_name'])} "] + preprocess_additional_args
+        preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(lca_train_path)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)}  "] + preprocess_additional_args
         preprocess_list = preprocess_list + preprocess_run
 
         ### TRAIN
