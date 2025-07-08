@@ -21,11 +21,6 @@ additional_definitions = [
      "default": '',
      "help": "Name of your model conda environment"
     },
-    {"name": "epochs",
-     "type": int,
-     "default": None,
-     "help": "Number of epochs"
-    },
     {"name": "source_datasets",
      "nargs" : "+",
      "type": str,
@@ -49,24 +44,24 @@ additional_definitions = [
      "default": False,
      "help": "If only cross study analysis is needed"
     },
-    {"name": "y_col_name",
-     "type": str,
-     "default": 'auc',
-     "help": "y col name"
-    },
-    {"name": "cuda_name",
-     "type": str,
-     "default": None,
-     "help": "Cuda device name.",
-    },
     {"name": "swarm_file_prefix",
      "type": str,
      "default": None,
      "help": "Prefix for swarm files. If none is specfied, they will be prefixed with <model_name>_<dataset>_.",
     },
-    {"name": "input_supp_data_dir",
+    {"name": "preprocess_args",
      "type": str,
-     "default": None,
-     "help": "Supp data dir, if required by the model."
+     "default": '{}',
+     "help": "Additional parameters for preprocess. Should be a dictionary, for example {'supp_input_data_dir': 'supp_data', 'y_col_name': 'loewe'}."
     },
+    {"name": "train_args",
+     "type": str,
+     "default": '{}',
+     "help": "Additional parameters for train. Should be a dictionary, for example {'epochs': 100, 'y_col_name': 'loewe'}."
+    },
+    {"name": "infer_args",
+     "type": str,
+     "default": '{}',
+     "help": "Additional parameters for infer. Should be a dictionary, for example {'cuda_name': 0, 'y_col_name': 'loewe'}."
+    },   
     ]
