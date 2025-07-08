@@ -4,7 +4,7 @@ import lca_swarm_params_def
 from improvelib.initializer.config import Config
 from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
 
-# Sets up parameters
+# Set up parameters
 filepath = Path(__file__).resolve().parent
 cfg = Config() 
 params = cfg.initialize_parameters(
@@ -14,13 +14,13 @@ params = cfg.initialize_parameters(
     additional_definitions=lca_swarm_params_def.additional_definitions
 )
 
-# Makes output_dir
+# Make output_dir
 output_dir = Path(params['output_dir'])
 if output_dir.exists() is False:
     os.makedirs(output_dir, exist_ok=True)
 
 
-# Creates names for model scripts
+# Create names for model scripts
 preprocess_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_preprocess_improve.py")
 train_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
 infer_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_infer_improve.py")
@@ -43,7 +43,7 @@ print("MAIN_ML_DATA_DIR: ", MAIN_ML_DATA_DIR)
 print("MAIN_MODEL_DIR:   ", MAIN_MODEL_DIR)
 print("MAIN_INFER_DIR:   ", MAIN_INFER_DIR)
 
-# Prepares additional parameters
+# Prepare additional parameters
 preprocess_additional_args = get_additional_parameters(params['preprocess_args'])
 if 'input_supp_data_dir' in preprocess_additional_args:
     preprocess_additional_args['input_supp_data_dir'] = check_dir_path_or_model_scripts_dir(preprocess_additional_args['input_supp_data_dir'], params['model_scripts_dir'])
@@ -56,28 +56,28 @@ infer_additional_args = get_additional_parameters(params['infer_args'])
 infer_additional_args = additional_parameters_dict_to_string(infer_additional_args)
 
 
-
+# Create lists for swarm commands
 preprocess_list = []
 train_list = []
 infer_list = []
 
-## Loops through all splits specified in the parameters
+## Loop through all splits specified in the parameters
 for split_num in params['split_nums']:
 
     split_name = "split_" + split_num
     print(f"Running LCA with {params['dataset']} {split_name}...")
 
-    # Determines files for training shards from the lca_splits_dir
+    # Determine files for training shards from the lca_splits_dir
     lca_split_paths = list(Path(params['lca_splits_dir']).glob(f"{params['dataset']}_split_{split_num}_sz_*.txt"))
     lca_split_files = [os.path.basename(x) for x in lca_split_paths]
     print(f"Running LCA on {len(lca_split_files)} shards with the following training splits:", lca_split_files)
 
-    # Sets val and test names
+    # Set val and test names
     val_split_file = f"{params['dataset']}_split_{split_num}_val.txt"
     test_split_file = f"{params['dataset']}_split_{split_num}_test.txt"
 
     
-    ## Loops through all shards for the specified split
+    ## Loop through all shards for the specified split
     for lca in lca_split_files:
         lca_train_path = params['lca_splits_dir'] + '/' + lca
         lca_name = "sz_" + lca.split('.')[0].split('_')[4]
@@ -96,11 +96,13 @@ for split_num in params['split_nums']:
         infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --calc_infer_scores true" + infer_additional_args]
         infer_list = infer_list + infer_run
 
+# Determine prefix for swarm file name
 if params['swarm_file_prefix'] is not None:
     swarm_file_prefix = params['swarm_file_prefix']
 else:
     swarm_file_prefix = params['model_name'] + "_" + params['dataset'] + "_"
 
+# Save lists of swarm commands to file
 with open(params['output_swarmfile_dir'] + swarm_file_prefix + "preprocess.swarm", "w") as file:
     for item in preprocess_list:
         file.write(prefix + item + "\n")
