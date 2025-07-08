@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import lca_swarm_params_def
 from improvelib.initializer.config import Config
-from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_list
+from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
 
 # Sets up parameters
 filepath = Path(__file__).resolve().parent
@@ -47,13 +47,13 @@ print("MAIN_INFER_DIR:   ", MAIN_INFER_DIR)
 preprocess_additional_args = get_additional_parameters(params['preprocess_args'])
 if 'input_supp_data_dir' in preprocess_additional_args:
     preprocess_additional_args['input_supp_data_dir'] = check_dir_path_or_model_scripts_dir(preprocess_additional_args['input_supp_data_dir'], params['model_scripts_dir'])
-preprocess_additional_args = additional_parameters_dict_to_list(preprocess_additional_args)
+preprocess_additional_args = additional_parameters_dict_to_string(preprocess_additional_args)
 
 train_additional_args = get_additional_parameters(params['train_args'])
-train_additional_args = additional_parameters_dict_to_list(train_additional_args)
+train_additional_args = additional_parameters_dict_to_string(train_additional_args)
 
 infer_additional_args = get_additional_parameters(params['infer_args'])
-infer_additional_args = additional_parameters_dict_to_list(infer_additional_args)
+infer_additional_args = additional_parameters_dict_to_string(infer_additional_args)
 
 
 
@@ -83,17 +83,17 @@ for split_num in params['split_nums']:
         lca_name = "sz_" + lca.split('.')[0].split('_')[4]
         ### PREPROCESS
         ml_data_dir = MAIN_ML_DATA_DIR / split_name / lca_name
-        preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(lca_train_path)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)}  "] + preprocess_additional_args
+        preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(lca_train_path)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(ml_data_dir)} " + preprocess_additional_args]
         preprocess_list = preprocess_list + preprocess_run
 
         ### TRAIN
         model_dir = MAIN_MODEL_DIR / split_name / lca_name
-        train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)} "] + train_additional_args
+        train_run = [f"python {train_python_script} --input_dir {str(ml_data_dir)} --output_dir {str(model_dir)}" + train_additional_args]
         train_list = train_list + train_run
 
         ### INFER
         infer_dir = MAIN_INFER_DIR / split_name / lca_name
-        infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --calc_infer_scores true "] + infer_additional_args
+        infer_run = [f"python {infer_python_script} --input_data_dir {str(ml_data_dir)} --input_model_dir {str(model_dir)} --output_dir {str(infer_dir)} --calc_infer_scores true" + infer_additional_args]
         infer_list = infer_list + infer_run
 
 if params['swarm_file_prefix'] is not None:

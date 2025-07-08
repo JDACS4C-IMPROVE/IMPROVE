@@ -49,3 +49,11 @@ def additional_parameters_dict_to_list(param_dict):
         arg_list = arg_list + [str(key)]
         arg_list = arg_list + [str(value)]
     return arg_list
+
+def additional_parameters_dict_to_string(param_dict):
+    prefix_dict = {f"--{key}": value for key, value in param_dict.items()}
+    arg_string = " "
+    for key, value in prefix_dict.items():
+        arg_string = arg_string + str(key) + " "
+        arg_string = arg_string + str(value) + " "
+    return arg_string
