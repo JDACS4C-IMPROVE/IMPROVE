@@ -7,7 +7,7 @@ from improvelib.initializer.config import Config
 from improvelib.utils_workflows import save_log, save_time, check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_list
 
 
-# parameters
+# Sets up parameters
 filepath = Path(__file__).resolve().parent
 cfg = Config() 
 params = cfg.initialize_parameters(
@@ -17,12 +17,13 @@ params = cfg.initialize_parameters(
     additional_definitions=lca_bruteforce_params_def.additional_definitions
 )
 
+# Makes output_dir
 output_dir = Path(params['output_dir'])
 if output_dir.exists() is False:
     os.makedirs(output_dir, exist_ok=True)
 
 
-# Model scripts - this should be fine
+# Creates names for model scripts
 preprocess_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_preprocess_improve.py")
 train_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
 infer_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_infer_improve.py")
@@ -39,7 +40,7 @@ print("MAIN_MODEL_DIR:   ", MAIN_MODEL_DIR)
 print("MAIN_INFER_DIR:   ", MAIN_INFER_DIR)
 
 
-
+# Prepares additional parameters
 preprocess_additional_args = get_additional_parameters(params['preprocess_args'])
 if 'input_supp_data_dir' in preprocess_additional_args:
     preprocess_additional_args['input_supp_data_dir'] = check_dir_path_or_model_scripts_dir(preprocess_additional_args['input_supp_data_dir'], params['model_scripts_dir'])

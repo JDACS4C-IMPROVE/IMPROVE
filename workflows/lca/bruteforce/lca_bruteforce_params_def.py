@@ -30,16 +30,16 @@ additional_definitions = [
     {"name": "preprocess_args",
      "type": str,
      "default": '{}',
-     "help": "Additional parameters for preprocess. Should be a dictionary as a string, for example '{'supp_input_data_dir': 'supp_data', 'y_col_name': 'loewe'}'."
+     "help": "Additional parameters for preprocess. Should be a dictionary, for example {'supp_input_data_dir': 'supp_data', 'y_col_name': 'loewe'}."
     },
     {"name": "train_args",
      "type": str,
      "default": '{}',
-     "help": "Additional parameters for train. Should be a dictionary as a string, for example '{'epochs': 100, 'y_col_name': 'loewe'}'."
+     "help": "Additional parameters for train. Should be a dictionary, for example {'epochs': 100, 'y_col_name': 'loewe'}."
     },
     {"name": "infer_args",
      "type": str,
      "default": '{}',
-     "help": "Additional parameters for infer. Should be a dictionary as a string, for example '{'cuda_name': 0, 'y_col_name': 'loewe'}'."
+     "help": "Additional parameters for infer. Should be a dictionary, for example {'cuda_name': 0, 'y_col_name': 'loewe'}."
     },
     ]
