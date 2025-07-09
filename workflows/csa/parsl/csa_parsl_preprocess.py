@@ -108,9 +108,9 @@ def workflow(params):
                                     conda_env = params['model_environment'],
                                     inputs = [
                                         File(params["input_dir"]),
-                                        File("/".join([input_dir, "splits" , train_split_file])),
-                                        File("/".join([input_dir, "splits" , val_split_file])),
-                                        File("/".join([input_dir, "splits" , test_split_file])),
+                                        File("/".join([str(input_dir), "splits" , train_split_file])),
+                                        File("/".join([str(input_dir), "splits" , val_split_file])),
+                                        File("/".join([str(input_dir), "splits" , test_split_file])),
                                         ],
                                     outputs = [
                                         File(ml_data_dir),
