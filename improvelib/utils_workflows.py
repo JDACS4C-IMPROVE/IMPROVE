@@ -55,5 +55,8 @@ def additional_parameters_dict_to_string(param_dict):
     arg_string = " "
     for key, value in prefix_dict.items():
         arg_string = arg_string + f"{key}" + " "
-        arg_string = arg_string + f"{value}" + " "
+        if isinstance(value, list):
+            arg_string = arg_string + f"\"{value}\"" + " "
+        else:
+            arg_string = arg_string + f"{value}" + " "
     return arg_string
