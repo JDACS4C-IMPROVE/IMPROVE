@@ -35,7 +35,7 @@ def preprocess(script_call = None, conda_env = None, stderr = "stderr.txt", stdo
     import logging 
     logger = logging.getLogger(__name__)
     # Prefix and activate the conda environment
-    prefix = f"START=$(date +%s) ; echo Start:\t$START ; conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} ; python {script_call}"
+    prefix = f"START=$(date +%s) ; echo Start:\t$START ; conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} ; {script_call}"
     SUFFIX=' ; STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1'
     call = prefix + script_call + SUFFIX
     logger.debug(f"Preprocessing command: {call}")
@@ -96,7 +96,7 @@ def workflow(params):
                 val_split_file = f"{source}_split_{split}_val.txt"
                 logger.debug(f"Preprocessing with {script} for {source} and {target} in {split}")
                     # Create the command line interface for preprocessing
-                script_call = [ "time",
+                script_call = [ "python",
                         str(script),
                         "--train_split_file" , str(train_split_file),
                         "--val_split_file" , str(val_split_file),
