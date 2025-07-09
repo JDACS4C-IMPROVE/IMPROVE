@@ -8,7 +8,7 @@ import parsl
 from parsl.data_provider.files import File
 
 from improvelib.initializer.config import Config
-from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir
+from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
 from workflows.csa.parsl.utils_parsl import init_parsl, shutdown_parsl, check_model_script, make_call
 import csa_parsl_params_def
 
@@ -23,6 +23,13 @@ logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", "INFO"))
 def workflow(params):
     model_env = check_dir_path_or_model_scripts_dir(params['model_environment'], params['model_scripts_dir'])
     script = check_model_script(model_dir = params['model_scripts_dir'], model_name = params['model_name'], stage = "preprocess")
+
+    # Prepare additional parameters
+    preprocess_additional_args = get_additional_parameters(params['preprocess_args'])
+    if 'input_supp_data_dir' in preprocess_additional_args:
+        preprocess_additional_args['input_supp_data_dir'] = check_dir_path_or_model_scripts_dir(preprocess_additional_args['input_supp_data_dir'], params['model_scripts_dir'])
+    preprocess_additional_args = additional_parameters_dict_to_string(preprocess_additional_args)
+
     preprocess_futures = []
 
     # Iterate over the datasets
@@ -53,6 +60,7 @@ def workflow(params):
                         "--input_dir" , str(input_dir),
                         "--output_dir" , str(ml_data_dir)]
                 script_call = " ".join(script_call)
+                script_call = script_call + preprocess_additional_args
                 future = make_call(script_call = script_call,
                                     conda_env = model_env,
                                     inputs = [

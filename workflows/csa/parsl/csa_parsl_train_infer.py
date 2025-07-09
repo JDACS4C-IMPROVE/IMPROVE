@@ -7,7 +7,7 @@ from pathlib import Path
 from parsl.data_provider.files import File
 
 from improvelib.initializer.config import Config
-from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir
+from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
 from workflows.csa.parsl.utils_parsl import init_parsl, shutdown_parsl, check_model_script, make_call
 import csa_parsl_params_def
 
@@ -22,6 +22,12 @@ def workflow(params):
     model_env = check_dir_path_or_model_scripts_dir(params['model_environment'], params['model_scripts_dir'])
     train_script = check_model_script(model_dir = params['model_scripts_dir'], model_name = params['model_name'], stage = "train")
     infer_script = check_model_script(model_dir = params['model_scripts_dir'], model_name = params['model_name'], stage = "infer")
+
+    train_additional_args = get_additional_parameters(params['train_args'])
+    train_additional_args = additional_parameters_dict_to_string(train_additional_args)
+
+    infer_additional_args = get_additional_parameters(params['infer_args'])
+    infer_additional_args = additional_parameters_dict_to_string(infer_additional_args)
 
     preprocess_futures = []
     train_futures = []
@@ -48,6 +54,7 @@ def workflow(params):
                             "--input_dir" , str(train_input_dir),
                             "--output_dir" , str(train_output_dir)]
             script_call = " ".join(script_call)
+            script_call = script_call + train_additional_args
             logger.debug(f"Training with {train_script} for {source} and {split}")
             future = make_call(
                 script_call = script_call,
@@ -100,6 +107,7 @@ def workflow(params):
                                     "--output_dir" , str(infer_output_dir),
                                     "--calc_infer_scores true"]
                     script_call = " ".join(script_call)
+                    script_call = script_call + infer_additional_args
                     i_future = make_call(
                                 script_call = script_call,
                                 conda_env = model_env,
