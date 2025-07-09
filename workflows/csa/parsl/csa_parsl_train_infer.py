@@ -169,9 +169,9 @@ def workflow(params):
                 logger.debug(f"Path to model: {model_dir}")
                 for target in params['target_datasets']:
                     logger.info(f"Infering on dataset {source} and {target} for split {split}")
-                    infer_input_data_dir = os.path.join(params['output_dir'], "ml_data", f"{source}-{target}", f"split_{split}")
-                    infer_input_model_dir = os.path.join(params['output_dir'], "models", source, f"split_{split}")
-                    infer_output_dir = os.path.join(params['output_dir'], "infer", f"{source}-{target}", f"split_{split}")
+                    infer_input_data_dir = os.path.join(params['output_dir'], "ml_data", f"{source}-{target}", split)
+                    infer_input_model_dir = os.path.join(params['output_dir'], "models", source, split)
+                    infer_output_dir = os.path.join(params['output_dir'], "infer", f"{source}-{target}", split)
                     if not os.path.exists(infer_input_model_dir):
                         logger.error(f"Missing input directory: {infer_input_data_dir}")
                         raise FileNotFoundError(f"Missing input directory: {infer_input_model_dir}")
