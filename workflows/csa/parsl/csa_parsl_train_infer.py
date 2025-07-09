@@ -38,7 +38,7 @@ def workflow(params):
         logger.info(f"Training dataset {source}.")
         # need only one target dataset for trainig for now ; train file is source dataset specific and identical for all target datasets
         target = params['target_datasets'][0]
-        for split in params['split']:
+        for split in params['split_nums']:
             # print(output_dir)
             # print(os.getcwd())
             logger.info(f"Trainig on dataset {source} and {split}")

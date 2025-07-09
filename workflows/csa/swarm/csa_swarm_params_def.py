@@ -1,11 +1,6 @@
 from improvelib.utils import str2bool
 
 additional_definitions = [
-    {"name": "output_swarmfile_dir",
-     "type": str,
-     "default": './',
-     "help": "Path to save the swarmfiles."
-    },
     {"name": "model_name",
      "type": str,
      "default": 'PathDSP',
@@ -48,6 +43,11 @@ additional_definitions = [
      "type": str,
      "default": None,
      "help": "Prefix for swarm files. If none is specfied, they will be prefixed with <model_name>_<dataset>_.",
+    },
+    {"name": "output_swarmfile_dir",
+     "type": str,
+     "default": './',
+     "help": "Path to save the swarmfiles."
     },
     {"name": "preprocess_args",
      "type": str,

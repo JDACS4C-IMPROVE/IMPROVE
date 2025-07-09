@@ -1,6 +1,16 @@
 from improvelib.utils import str2bool
 
 additional_definitions = [
+    {"name": "model_name",
+     "type": str,
+     "default": 'lgbm',
+     "help": "Name of the deep learning model"
+    },
+    {"name": "model_scripts_dir",
+     "type": str,
+     "default": './', 
+     "help": "Path to the model repository"
+    },
     {"name": "source_datasets",
      "nargs" : "+",
      "type": str,
@@ -23,16 +33,6 @@ additional_definitions = [
      "type": str2bool,
      "default": False,
      "help": "If only cross study analysis is needed"
-    },
-    {"name": "model_name",
-     "type": str,
-     "default": 'lgbm',
-     "help": "Name of the deep learning model"
-    },
-    {"name": "model_scripts_dir",
-     "type": str,
-     "default": './', 
-     "help": "Path to the model repository"
     },
     {"name": "preprocess_args",
      "type": str,

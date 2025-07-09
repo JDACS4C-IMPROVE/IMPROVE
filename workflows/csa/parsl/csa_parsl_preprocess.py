@@ -37,7 +37,7 @@ def workflow(params):
     for source in params['source_datasets']:
         logger.info(f"Preprocessing dataset {source} for {params['model_name']}")
         for target in params['target_datasets']:
-            for split in params['split']:
+            for split in params['split_nums']:
                 logger.info(f"Preprocessing dataset {source} for {params['model_name']} and {split}")
                 # Create directory paths
                 ml_data_dir = os.path.join(params['output_dir'] , "ml_data" ,  f"{source}-{target}" , f"split_{split}")
