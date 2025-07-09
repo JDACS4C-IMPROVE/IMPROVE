@@ -3,6 +3,7 @@ import os
 import importlib
 import parsl
 from pathlib import Path
+from parsl import bash_app
 
 def check_model_script(model_dir, model_name, stage):
     """Check if the model script is valid."""
