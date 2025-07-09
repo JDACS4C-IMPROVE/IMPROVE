@@ -147,62 +147,62 @@ def workflow(params):
             train_futures.append(future)
                
 
-        while train_futures:
-            logger.info(f"Waiting for training {len(train_futures)} tasks to complete.")
-            for f in train_futures:
-                # get source and split from future
-                # future result is a dictionary with source and split
-                if f.done():
-                    if f.exception():
-                        logger.error(f"Future(training) {f.tid} has an exception: {f.exception()}")
-                    else:
-                        logger.info(f"Future(training) {f.tid} is done.")
-                        # logger.info(f"Output: {f.result()}")
-                    
-                    train_futures.remove(f)
-                    model_dir = f.outputs[0].result().filepath
-                    elements = model_dir.split("/")
-                    split = elements[-1]
-                    source = elements[-2]
-            
-                    logger.info(f"Training task {f.tid} completed: {source} {split}")
-                    logger.debug(f"Path to model: {model_dir}")
-                    for target in params['target_datasets']:
-                        logger.info(f"Infering on dataset {source} and {target} for split {split}")
-                        infer_input_data_dir = os.path.join(params['output_dir'], "ml_data", f"{source}-{target}", f"split_{split}")
-                        infer_input_model_dir = os.path.join(params['output_dir'], "models", source, f"split_{split}")
-                        infer_output_dir = os.path.join(params['output_dir'], "infer", f"{source}-{target}", f"split_{split}")
-                        if not os.path.exists(infer_input_model_dir):
-                            logger.error(f"Missing input directory: {infer_input_data_dir}")
-                            raise FileNotFoundError(f"Missing input directory: {infer_input_model_dir}")
-                        script_call = [ "python",
-                                        str(infer_script),
-                                        "--input_data_dir" , str(infer_input_data_dir),
-                                        "--input_model_dir" , str(infer_input_model_dir),
-                                        "--output_dir" , str(infer_output_dir),
-                                        "--calc_infer_scores true"]
-                        script_call = " ".join(script_call)
-                        i_future = make_call(
-                                    script_call = script_call,
-                                    conda_env = params['model_environment'],
-                                    inputs = [
-                                        File(infer_input_data_dir),
-                                        File(infer_input_model_dir),
-                                    ],
-                                    outputs = [
-                                        File(infer_output_dir),  
-                                        File(os.path.join(infer_output_dir, "stderr.txt")),
-                                        File(os.path.join(infer_output_dir, "stdout.txt")),
-                                        File(os.path.join(infer_output_dir, "test_scores.json"))
-                                    ],
-                                    stderr = os.path.join(infer_output_dir, "stderr.txt"),
-                                    stdout = os.path.join(infer_output_dir, "stdout.txt"),
-                                    )
-                        logger.debug(f"Inference task {i_future.tid} submitted: {source} {target} {split}")
-                        infer_futures.append(i_future)
-            # Wait for all the futures to complete
-            time.sleep(30)
-        logger.info("Waiting for infer tasks to complete.")
+    while train_futures:
+        logger.info(f"Waiting for training {len(train_futures)} tasks to complete.")
+        for f in train_futures:
+            # get source and split from future
+            # future result is a dictionary with source and split
+            if f.done():
+                if f.exception():
+                    logger.error(f"Future(training) {f.tid} has an exception: {f.exception()}")
+                else:
+                    logger.info(f"Future(training) {f.tid} is done.")
+                    # logger.info(f"Output: {f.result()}")
+                
+                train_futures.remove(f)
+                model_dir = f.outputs[0].result().filepath
+                elements = model_dir.split("/")
+                split = elements[-1]
+                source = elements[-2]
+        
+                logger.info(f"Training task {f.tid} completed: {source} {split}")
+                logger.debug(f"Path to model: {model_dir}")
+                for target in params['target_datasets']:
+                    logger.info(f"Infering on dataset {source} and {target} for split {split}")
+                    infer_input_data_dir = os.path.join(params['output_dir'], "ml_data", f"{source}-{target}", f"split_{split}")
+                    infer_input_model_dir = os.path.join(params['output_dir'], "models", source, f"split_{split}")
+                    infer_output_dir = os.path.join(params['output_dir'], "infer", f"{source}-{target}", f"split_{split}")
+                    if not os.path.exists(infer_input_model_dir):
+                        logger.error(f"Missing input directory: {infer_input_data_dir}")
+                        raise FileNotFoundError(f"Missing input directory: {infer_input_model_dir}")
+                    script_call = [ "python",
+                                    str(infer_script),
+                                    "--input_data_dir" , str(infer_input_data_dir),
+                                    "--input_model_dir" , str(infer_input_model_dir),
+                                    "--output_dir" , str(infer_output_dir),
+                                    "--calc_infer_scores true"]
+                    script_call = " ".join(script_call)
+                    i_future = make_call(
+                                script_call = script_call,
+                                conda_env = params['model_environment'],
+                                inputs = [
+                                    File(infer_input_data_dir),
+                                    File(infer_input_model_dir),
+                                ],
+                                outputs = [
+                                    File(infer_output_dir),  
+                                    File(os.path.join(infer_output_dir, "stderr.txt")),
+                                    File(os.path.join(infer_output_dir, "stdout.txt")),
+                                    File(os.path.join(infer_output_dir, "test_scores.json"))
+                                ],
+                                stderr = os.path.join(infer_output_dir, "stderr.txt"),
+                                stdout = os.path.join(infer_output_dir, "stdout.txt"),
+                                )
+                    logger.debug(f"Inference task {i_future.tid} submitted: {source} {target} {split}")
+                    infer_futures.append(i_future)
+        # Wait for all the futures to complete
+        time.sleep(30)
+    logger.info("Waiting for infer tasks to complete.")
 
     while infer_futures:
         # Check if the future is done
