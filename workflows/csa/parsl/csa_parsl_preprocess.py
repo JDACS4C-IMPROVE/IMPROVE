@@ -105,7 +105,7 @@ def workflow(params):
                         "--output_dir" , str(ml_data_dir)]
                 script_call = " ".join(script_call)
                 future = preprocess(script_call = script_call,
-                                    conda_env = params['model_env'],
+                                    conda_env = params['model_environment'],
                                     inputs = [
                                         File(params["input_dir"]),
                                         File("/".join([input_dir, "splits" , train_split_file])),
