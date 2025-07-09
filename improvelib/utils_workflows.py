@@ -54,6 +54,6 @@ def additional_parameters_dict_to_string(param_dict):
     prefix_dict = {f"--{key}": value for key, value in param_dict.items()}
     arg_string = " "
     for key, value in prefix_dict.items():
-        arg_string = arg_string + str(key) + " "
-        arg_string = arg_string + str(value) + " "
+        arg_string = arg_string + f"{key}" + " "
+        arg_string = arg_string + f"{value}" + " "
     return arg_string

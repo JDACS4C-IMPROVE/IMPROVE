@@ -155,8 +155,8 @@ def workflow(params):
 
 
 def main(params):
-    """Main function for the preprocessing workflow."""
-    logger.info("Starting preprocessing workflow.")
+    """Main function for the training and inference workflow."""
+    logger.info("Starting training and inference workflow.")
     logger.info("Initializing Parsl configuration.")
     init_parsl(params['parsl_config_file'], params['available_accelerators'])
     logger.info("Parsl configuration initialized.")
@@ -164,7 +164,7 @@ def main(params):
     logger.info("Shutting down Parsl configuration.")
     shutdown_parsl()
     logger.info("Parsl configuration shutdown.")
-    logger.info("Preprocessing workflow completed.")
+    logger.info("Training and inference workflow completed.")
 
 
 if __name__ == "__main__":
