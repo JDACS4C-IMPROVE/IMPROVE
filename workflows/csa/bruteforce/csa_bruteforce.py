@@ -7,7 +7,7 @@ import warnings
 from pathlib import Path
 
 from improvelib.initializer.config import Config
-from improvelib.utils_workflows import save_log, save_time, check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_list
+from workflows.utils_workflows import save_log, save_time, check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_list
 import csa_bruteforce_params_def
 
 

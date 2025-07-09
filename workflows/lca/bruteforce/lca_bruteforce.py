@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import lca_bruteforce_params_def
 from improvelib.initializer.config import Config
-from improvelib.utils_workflows import save_log, save_time, check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_list
+from workflows.utils_workflows import save_log, save_time, check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_list
 
 
 # Sets up parameters

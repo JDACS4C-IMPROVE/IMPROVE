@@ -3,7 +3,7 @@ from pathlib import Path
 
 import csa_swarm_params_def
 from improvelib.initializer.config import Config
-from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
+from workflows.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
 
 
 # parameters

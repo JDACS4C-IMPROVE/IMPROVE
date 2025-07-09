@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import lca_swarm_params_def
 from improvelib.initializer.config import Config
-from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
+from workflows.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
 
 # Set up parameters
 filepath = Path(__file__).resolve().parent

@@ -8,8 +8,8 @@ import parsl
 from parsl.data_provider.files import File
 
 from improvelib.initializer.config import Config
-from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
-from workflows.csa.parsl.utils_parsl import init_parsl, shutdown_parsl, check_model_script, make_call
+from workflows.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
+from workflows.utils_parsl import init_parsl, shutdown_parsl, check_model_script, make_call
 import csa_parsl_params_def
 
 filepath = Path(__file__).resolve().parent
