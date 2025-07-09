@@ -84,7 +84,7 @@ def workflow(params):
                 #print(os.getcwd())
                 logger.info(f"Preprocessing dataset {source} for {params['model_name']} and {split}")
                 # Create directory paths
-                ml_data_dir = os.path.join(params['output_dir'] , "preprocess" , params['model_name'], "-".join([source, target]) , split)
+                ml_data_dir = os.path.join(params['output_dir'] , "ml_data" ,  f"{source}-{target}" , f"split_{split}")
                 input_dir = Path(params['input_dir'])
                 if source == target:
                     # If source and target are the same, then infer on the test split
