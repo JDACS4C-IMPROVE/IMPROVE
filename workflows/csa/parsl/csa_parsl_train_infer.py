@@ -4,12 +4,11 @@ import time
 import logging
 import parsl
 from pathlib import Path
-from parsl import bash_app
-from parsl.config import Config
 from parsl.data_provider.files import File
 
 from improvelib.initializer.config import Config
-from utils_parsl import init_parsl, shutdown_parsl, check_model_script
+from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir
+from utils_parsl import init_parsl, shutdown_parsl, check_model_script, make_call
 import csa_parsl_params_def
 
 filepath = Path(__file__).resolve().parent
@@ -18,90 +17,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", "INFO"))
 
 
-@bash_app
-def make_call(script_call = None, conda_env = None, stderr = "stderr.txt", stdout = "stdout.txt", inputs = [], outputs = []):
-    """Preprocess the input file using the script."""
-    import logging 
-    logger = logging.getLogger(__name__)
-    # Prefix and activate the conda environment
-    prefix = f"START=$(date +%s) ; echo Start:\t$START ; conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} ; "
-    SUFFIX=' ; STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1'
-    call = prefix + script_call + SUFFIX
-    logger.debug(f"Preprocessing command: {call}")
-    return call
-
-
-
-def infer_config(
-        input_dir = None, 
-        output_dir = None, 
-        model = "", 
-        dataset = "",
-        target_dataset = "",
-        source_dataset = "",
-        split = "", 
-        model_dir = None,
-        ) :
-    """Create dataset specifc config."""
-
-    # Output dir is under output_dir/stage/model/source-target-dataset/split
-
-    if not input_dir:
-        raise FileNotFoundError("Input directory is not specified.")
-    if not output_dir:
-        output_dir = input_dir
-
-    # constant for the stage
-    stage = "infer"
-
-    # Check if the source and target datasets are specified
-    if not source_dataset or not target_dataset:
-        raise ValueError("Source and target datasets are not specified.")
-
-    # Create directory paths
-    step_output_dir = make_path(base_dir=output_dir, stage=stage, model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split)
-    step_input_dir = make_path(base_dir=input_dir, stage="preprocess", model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split, make_dir=False)
-
-    # should come from future / output of training
-    trained_model_dir = None
-    try: 
-        trained_model_dir = make_path(base_dir=input_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=target_dataset, split=split, make_dir=False)
-    except FileNotFoundError as e:
-        logger.warning(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
-        try:
-            trained_model_dir = make_path(base_dir=output_dir, stage="train", model=model, source_dataset=source_dataset, target_dataset=None, split=split, make_dir=False)
-            logger.debug(f"Found model directory for {model} {source_dataset} {split}")
-        except FileNotFoundError as e:
-            logger.error(f"Model directory not found for {model} {source_dataset} {target_dataset} {split}")
-            logger.error(f"Model directory not found for {model} {source_dataset} {split}")
-            raise e
-    
-    if not trained_model_dir:
-        raise FileNotFoundError("Model directory is not specified.")
-    
-
-    
-
-    # Train input  data
-    inputs = { 
-        "files": {
-            },
-        "input_dir" : step_input_dir,
-        "output_dir" : step_output_dir,
-        "model_dir" : trained_model_dir,
-        "stdout" : os.path.join(step_output_dir , "stdout.txt"),
-        "stderr" : os.path.join(step_output_dir , "stderr.txt")
-        }
-       
-
-    return inputs
-
-
 
 def workflow(params):
-
-    print(f"config: {params}")
-
+    model_env = check_dir_path_or_model_scripts_dir(params['model_environment'], params['model_scripts_dir'])
     train_script = check_model_script(model_dir = params['model_scripts_dir'], model_name = params['model_name'], stage = "train")
     infer_script = check_model_script(model_dir = params['model_scripts_dir'], model_name = params['model_name'], stage = "infer")
 
@@ -133,7 +51,7 @@ def workflow(params):
             logger.debug(f"Training with {train_script} for {source} and {split}")
             future = make_call(
                 script_call = script_call,
-                conda_env = params['model_environment'],
+                conda_env = model_env,
                 inputs = [File(train_input_dir)],
                 outputs = [
                     File(train_output_dir),
@@ -184,7 +102,7 @@ def workflow(params):
                     script_call = " ".join(script_call)
                     i_future = make_call(
                                 script_call = script_call,
-                                conda_env = params['model_environment'],
+                                conda_env = model_env,
                                 inputs = [
                                     File(infer_input_data_dir),
                                     File(infer_input_model_dir),
@@ -234,7 +152,7 @@ def main(params):
     logger.info("Initializing Parsl configuration.")
     init_parsl(params['parsl_config_file'], params['available_accelerators'])
     logger.info("Parsl configuration initialized.")
-    results = workflow(params)
+    workflow(params)
     logger.info("Shutting down Parsl configuration.")
     shutdown_parsl()
     logger.info("Parsl configuration shutdown.")

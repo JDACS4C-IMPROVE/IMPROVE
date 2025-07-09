@@ -3,15 +3,13 @@ import os
 import time
 from pathlib import Path
 import logging
-import importlib
 
 import parsl
-from parsl import bash_app
-from parsl.config import Config
 from parsl.data_provider.files import File
 
 from improvelib.initializer.config import Config
-from utils_parsl import init_parsl, shutdown_parsl, check_model_script
+from improvelib.utils_workflows import check_dir_path_or_model_scripts_dir
+from utils_parsl import init_parsl, shutdown_parsl, check_model_script, make_call
 import csa_parsl_params_def
 
 filepath = Path(__file__).resolve().parent
@@ -20,24 +18,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", "INFO"))
 
 
-@bash_app
-def preprocess(script_call = None, conda_env = None, stderr = "stderr.txt", stdout = "stdout.txt", inputs = [], outputs = []):
-    """Preprocess the input file using the script."""
-    import logging 
-    logger = logging.getLogger(__name__)
-    # Prefix and activate the conda environment
-    prefix = f"START=$(date +%s) ; echo Start:\t$START ; conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} ; "
-    SUFFIX=' ; STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1'
-    call = prefix + script_call + SUFFIX
-    logger.debug(f"Preprocessing command: {call}")
-    return call
 
 
-
-
-
-
-def workflow(params):    
+def workflow(params):
+    model_env = check_dir_path_or_model_scripts_dir(params['model_environment'], params['model_scripts_dir'])
     script = check_model_script(model_dir = params['model_scripts_dir'], model_name = params['model_name'], stage = "preprocess")
     preprocess_futures = []
 
@@ -69,8 +53,8 @@ def workflow(params):
                         "--input_dir" , str(input_dir),
                         "--output_dir" , str(ml_data_dir)]
                 script_call = " ".join(script_call)
-                future = preprocess(script_call = script_call,
-                                    conda_env = params['model_environment'],
+                future = make_call(script_call = script_call,
+                                    conda_env = model_env,
                                     inputs = [
                                         File(params["input_dir"]),
                                         File("/".join([str(input_dir), "splits" , train_split_file])),
@@ -131,7 +115,7 @@ def main(params):
     logger.info("Initializing Parsl configuration.")
     init_parsl(params['parsl_config_file'], params['available_accelerators'])
     logger.info("Parsl configuration initialized.")
-    results = workflow(params)
+    workflow(params)
     logger.info("Shutting down Parsl configuration.")
     shutdown_parsl()
     logger.info("Parsl configuration shutdown.")

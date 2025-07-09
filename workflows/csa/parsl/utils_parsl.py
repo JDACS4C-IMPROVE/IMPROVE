@@ -48,3 +48,16 @@ def shutdown_parsl():
     parsl.dfk().cleanup()
     parsl.clear()
     return
+
+
+@bash_app
+def make_call(script_call = None, conda_env = None, stderr = "stderr.txt", stdout = "stdout.txt", inputs = [], outputs = []):
+    """Preprocess the input file using the script."""
+    import logging 
+    logger = logging.getLogger(__name__)
+    # Prefix and activate the conda environment
+    prefix = f"START=$(date +%s) ; echo Start:\t$START ; conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {conda_env} ; "
+    SUFFIX=' ; STOP=$(date +%s) ; echo Duration:\t$((STOP-START)) seconds ; sleep 1'
+    call = prefix + script_call + SUFFIX
+    logger.debug(f"Preprocessing command: {call}")
+    return call
