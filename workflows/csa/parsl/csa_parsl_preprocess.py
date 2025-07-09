@@ -97,12 +97,12 @@ def workflow(params):
                 logger.debug(f"Preprocessing with {script} for {source} and {target} in {split}")
                     # Create the command line interface for preprocessing
                 script_call = [ "time",
-                        script,
-                        "--train_split_file" , train_split_file,
-                        "--val_split_file" , val_split_file,
-                        "--test_split_file" , test_split_file,
-                        "--input_dir" , input_dir,
-                        "--output_dir" , ml_data_dir]
+                        str(script),
+                        "--train_split_file" , str(train_split_file),
+                        "--val_split_file" , str(val_split_file),
+                        "--test_split_file" , str(test_split_file),
+                        "--input_dir" , str(input_dir),
+                        "--output_dir" , str(ml_data_dir)]
                 script_call = " ".join(script_call)
                 future = preprocess(script_call = script_call,
                                     conda_env = params['model_env'],
