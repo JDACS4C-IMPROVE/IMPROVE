@@ -132,7 +132,7 @@ def workflow(params):
             script_call = " ".join(script_call)
             logger.debug(f"Training with {train_script} for {source} and {split}")
             future = make_call(
-                script = script_call,
+                script_call = script_call,
                 conda_env = params['model_environment'],
                 inputs = [File(train_input_dir)],
                 outputs = [
@@ -183,7 +183,7 @@ def workflow(params):
                                         "--calc_infer_scores true"]
                         script_call = " ".join(script_call)
                         i_future = make_call(
-                                    script = script_call,
+                                    script_call = script_call,
                                     conda_env = params['model_environment'],
                                     inputs = [
                                         File(infer_input_data_dir),
