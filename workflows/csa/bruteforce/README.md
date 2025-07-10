@@ -64,7 +64,7 @@ This workflow uses IMPROVE parameter handling. You should create a config file f
 
 ## Usage
 
-Activate the IMPROVE environment:
+Activate the model environment:
 
 ```bash
 conda activate <PATH/TO/MODEL>/<MODEL_ENV_NAME>

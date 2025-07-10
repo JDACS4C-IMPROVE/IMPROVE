@@ -1,11 +1,6 @@
 from improvelib.utils import str2bool
 
 additional_definitions = [
-    {"name": "output_swarmfile_dir",
-     "type": str,
-     "default": './',
-     "help": "Path to save the swarmfiles."
-    },
     {"name": "model_name",
      "type": str,
      "default": 'PathDSP',
@@ -37,15 +32,20 @@ additional_definitions = [
      "default": ['0', '1'],
      "help": "Split of the datasets for LCA"
     },
+    {"name": "swarm_prefix",
+     "type": str,
+     "default": None,
+     "help": "Swarm prefix, if an alternate one is needed."
+    },
     {"name": "swarm_file_prefix",
      "type": str,
      "default": None,
      "help": "Prefix for swarm files. If none is specfied, they will be prefixed with <model_name>_<dataset>_.",
     },
-    {"name": "swarm_prefix",
+    {"name": "output_swarmfile_dir",
      "type": str,
-     "default": None,
-     "help": "Swarm prefix, if an alternate one is needed."
+     "default": './',
+     "help": "Path to save the swarmfiles."
     },
     {"name": "preprocess_args",
      "type": str,
