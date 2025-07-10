@@ -2,7 +2,7 @@ from parsl.config import Config
 from parsl.executors import HighThroughputExecutor
 from parsl.providers import SlurmProvider
 from parsl.addresses import address_by_interface
-
+from parsl.launchers import SrunLauncher
 
 def get_parsl_config(available_accelerators = None):
     parsl_config = Config(
