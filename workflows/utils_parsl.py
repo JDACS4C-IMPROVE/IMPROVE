@@ -14,7 +14,7 @@ def check_model_script(model_dir, model_name, stage):
         # Make absolute path
         script = os.path.abspath(model_preprocess_path)
     else:
-        raise FileNotFoundError(f"Script {script} does not exist.")
+        raise FileNotFoundError(f"Script {model_preprocess_path} does not exist.")
     return script
 
 def _load_parsl_config(parsl_config_file, available_accelerators):
