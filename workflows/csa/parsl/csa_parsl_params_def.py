@@ -3,12 +3,12 @@ from improvelib.utils import str2bool
 additional_definitions = [
     {"name": "model_name",
      "type": str,
-     "default": 'PathDSP',
+     "default": 'lgbm',
      "help": "Name of the deep learning model"
     },
     {"name": "model_scripts_dir",
      "type": str,
-     "default": './', 
+     "default": './',
      "help": "Path to the model repository"
     },
     {"name": "model_environment",
@@ -16,36 +16,39 @@ additional_definitions = [
      "default": '',
      "help": "Name of your model conda environment"
     },
-    {"name": "lca_splits_dir",
+    {"name": "source_datasets",
+     "nargs" : "+",
      "type": str,
-     "default": './',
-     "help": "Path to LCA splits"
+     "default": ['CCLE'],
+     "help": "source_datasets for cross study analysis"
     },
-    {"name": "dataset",
+    {"name": "target_datasets",
+     "nargs" : "+",
      "type": str,
-     "default": 'CCLE',
-     "help": "Dataset to use."
+     "default": ["CCLE", "gCSI"],
+     "help": "target_datasets for cross study analysis"
     },
     {"name": "split_nums",
      "nargs" : "+",
      "type": str,
-     "default": ['0', '1'],
-     "help": "Split of the datasets for LCA"
+     "default": ['0'],
+     "help": "Split of the source datasets for CSA"
     },
-    {"name": "swarm_prefix",
-     "type": str,
-     "default": None,
-     "help": "Swarm prefix, if an alternate one is needed."
+    {"name": "only_cross_study",
+     "type": bool,
+     "default": False,
+     "help": "If only cross study analysis is needed"
     },
-    {"name": "swarm_file_prefix",
+    {"name": "parsl_config_file",
      "type": str,
-     "default": None,
-     "help": "Prefix for swarm files. If none is specfied, they will be prefixed with <model_name>_<dataset>_.",
+     "default": './parsl_configs/lambda.py',
+     "help": "Path to Parsl configuration file."
     },
-    {"name": "output_swarmfile_dir",
+    {"name": "available_accelerators",
+     "nargs" : "+",
      "type": str,
-     "default": './',
-     "help": "Path to save the swarmfiles."
+     "default": ["0", "1"],
+     "help": "GPU IDs to assign jobs"
     },
     {"name": "preprocess_args",
      "type": str,
@@ -61,5 +64,5 @@ additional_definitions = [
      "type": str,
      "default": '{}',
      "help": "Additional parameters for infer. Should be a dictionary, for example {'cuda_name': 0, 'y_col_name': 'loewe'}."
-    },
-    ]
+    },   
+]

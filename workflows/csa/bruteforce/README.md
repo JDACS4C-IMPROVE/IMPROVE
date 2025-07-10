@@ -1,80 +1,132 @@
-# Step-by-step instructions to run cross study analysis using the brute force method
+# Cross-Study Analysis (CSA) with Brute Force Method
 
-### 1. Clone the model repository
+## Overview 
+
+The scripts contained here run the Cross-Study Analysis sequentially (non-parallelized) and produce results that are standardized and compatible with IMPROVE CSA postprocessing scripts.
+
+## Requirements
+
+* [IMPROVE general environment](https://jdacs4c-improve.github.io/docs/content/INSTALLATION.html)
+* An IMPROVE-compliant model and its environment
+
+
+## Installation and Setup
+
+Create the IMPROVE general environment:
+
 ```bash
-git clone <MODEL_REPO>
-cd <MODEL_REPO>
-git checkout <BRANCH>
+conda create -n IMPROVE python=3.6
+conda activate IMPROVE
+pip install improvelib
 ```
 
-**Requirements**:
-1. Model scripts must be organized as:
-    - <MODEL_NAME>_preprocess_improve.py
-    - <MODEL_NAME>_train_improve.py
-    - <MODEL_NAME>_infer_improve.py
-2. Make sure to follow the IMPROVE lib [documentation](https://jdacs4c-improve.github.io/docs) to ensure the model is compliant with the IMPROVE framework
-3. If the model uses supplemental data (i.e. author data), use the provided script in the repo to download this data (e.g. PathDSP/download_author_data.sh).
-
-### 2. Set up model environment
-Follow the steps in the model repo to set up the environment for the model and activate the model.
+Download the IMPROVE repo containing the workflows:
 
 ```bash
-conda activate <MODEL_ENV>
-```
-
-### 3. Clone IMPROVE repo and set PYTHONPATH
-Clone the [IMPROVE](https://github.com/JDACS4C-IMPROVE/IMPROVE/tree/develop) repository to a directory of your preference (outside your model directory).
-
-```bash
-cd ..
 git clone https://github.com/JDACS4C-IMPROVE/IMPROVE
-cd IMPROVE
-git checkout develop
-source setup_improve.sh
 ```
 
-### 4. Download benchmark data for cross study analysis
-
-Download benchmark data to the data destination directory using [this](https://github.com/JDACS4C-IMPROVE/IMPROVE/blob/develop/scripts/get-benchmarks). For example:
+Download the repo for the model of choice:
 
 ```bash
-./scripts/get-benchmarks ./workflows/bruteforce_csa
+cd <WORKING_DIR>
+git clone https://github.com/JDACS4C-IMPROVE/<MODEL>
 ```
 
-### 4. Configure the parameters for cross study analysis
-
-#### These should be changed in csa_bruteforce_params.ini:
-
-`model_scripts_dir` set to the path to the model directory containing the model scripts (from step 1).
-
-`model_name` set to your model name (this should have the same capitalization pattern as your model scripts, e.g. deepttc for deepttc_preprocess_improve.py, etc).
-
-`epochs` set to max epochs appropriate for your model, or a low number for testing.
-
-`uses_cuda_name` set to True if your model uses cuda_name as parameter, leave as False if it does not. Also set `cuda_name` if your model uses this.
-
-`input_supp_data_dir` add this if your model uses supplemental data. Set to the path to this folder, or the name of the folder if it is located in `model_scripts_dir`.
-
-#### These you may want to change in csa_bruteforce_params.ini:
-
-`csa_outdir` is `./bruteforce_output` but you can change to whatever directory you like.
-
-`source_datasets`, `target_datasets`, and `split_nums` can be modified for testing purposes or quicker runs.
-
-### 5. Run brute force workflow
-To run with provided config file:
-```
-python csa_bruteforce_wf.py
+Download the benchmark dataset:
+```bash
+# Give examples here
 ```
 
-To run with an alternate config file:
+Create a Conda environment path for the model in the model directory (or location of your choice):
+
+```bash
+conda env create -f <MODEL_ENV>.yml -p ./<MODEL_ENV_NAME>/
 ```
-python csa_bruteforce_wf.py --config <YOUR_CONFIG_FILE>
+
+
+## Parameter Configuration
+
+This workflow uses IMPROVE parameter handling. You should create a config file following the template of `csa_bruteforce_params.ini` with the parameters appropriate for your experiment. Parameters may also be specified on the command line.
+
+* `input_dir`: Path to benchmark data. 
+* `output_dir`: Path to save the CSA results. 
+* `model_name`: Name of the model as used in scripts (i.e. `<model_name>_preprocess_improve.py`). Note that this is case-sensitive.
+* `model_scripts_dir`: Path to the model repository as cloned above. Can be an absolute or relative path.
+* `source_datasets`: List of datasets to train with (default: ['CCLE']).
+* `target_datasets`: List of datasets to infer on (default: ["CCLE", "gCSI"]).
+* `split_nums`: List of splits to use (default: ['0']).
+* `only_cross_study` Boolean indicating whether to omit within-study comparisions (default: False).
+* `preprocess_args`: Dictionary of additional model preprocess parameters to include, otherwise the defaults in the model's `<MODEL>_params.ini` will be used (default: {}).
+* `train_args`: Dictionary of additional model train parameters to include, otherwise the defaults in the model's `<MODEL>_params.ini` will be used (default: {}).
+* `infer_args`: Dictionary of additional model infer parameters to include, otherwise the defaults in the model's `<MODEL>_params.ini` will be used (default: {}).
+
+
+## Usage
+
+Activate the model environment:
+
+```bash
+conda activate <PATH/TO/MODEL>/<MODEL_ENV_NAME>
+```
+
+Run CSA brute force with your configuration file:
+
+```bash
+python csa_bruteforce.py --config <YOUR_CONFIG_FILE>.ini
 ```
 
 If submitting a job:
-```
+```bash
 conda activate <MODEL_ENV>
 export PYTHONPATH=/YOUR/PATH/TO/IMPROVE
-python csa_bruteforce_wf.py --config <YOUR_CONFIG_FILE>
+python csa_bruteforce.py --config <YOUR_CONFIG_FILE>.ini
 ```
+
+## Output
+
+The output will be in the specified `output_dir` with the following structure (with the used source and target names and splits):
+```
+output_dir/
+├── infer
+│   ├── source[0]-target[0]
+│   │   ├── split_0
+│   │   │   ├── param_log_file.txt
+│   │   │   ├── test_scores.json
+│   │   │   └── test_y_data_predicted.csv
+│   │   ├── split_1
+│   │   ├── ...
+│   │   └── split_9
+│   ├── source[0]-target[1]
+│   ├── ...
+│   └── source[4]-target[4]
+├── ml_data
+│   ├── source[0]-target[0]
+│   │   ├── split_0
+│   │   │   ├── param_log_file.txt
+│   │   │   ├── train_y_data.csv
+│   │   │   ├── val_y_data.csv
+│   │   │   ├── test_y_data.csv
+│   │   │   └── train/val/test x_data, and other files per model
+│   │   ├── split_1
+│   │   ├── ...
+│   │   └── split_9
+│   ├── source[0]-target[1]
+│   ├── ...
+│   └── source[4]-target[4]
+└── models
+    ├── source[0]
+    │   ├── split_0
+    │   │   ├── param_log_file.txt
+    │   │   ├── val_scores.json
+    │   │   ├── val_y_data_predicted.csv
+    │   │   └── trained model file
+    │   ├── split_1
+    │   ├── ...
+    │   └── split_9
+    ├── source[1]
+    ├── ...
+    └── source[4]
+ ```
+
+ We recommend using the postprocessing script for CSA to aggregate the results. See [here](https://github.com/JDACS4C-IMPROVE/IMPROVE/tree/develop/workflows/csa/postprocess).

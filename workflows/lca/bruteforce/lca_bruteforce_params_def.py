@@ -3,7 +3,7 @@ from improvelib.utils import str2bool
 additional_definitions = [
     {"name": "model_name",
      "type": str,
-     "default": 'PathDSP',
+     "default": 'lgbm',
      "help": "Name of the deep learning model"
     },
     {"name": "model_scripts_dir",
@@ -27,24 +27,19 @@ additional_definitions = [
      "default": ['0', '1'],
      "help": "Split of the datasets for LCA"
     },
-    {"name": "y_col_name",
+    {"name": "preprocess_args",
      "type": str,
-     "default": 'auc',
-     "help": "y col name"
+     "default": '{}',
+     "help": "Additional parameters for preprocess. Should be a dictionary, for example {'supp_input_data_dir': 'supp_data', 'y_col_name': 'loewe'}."
     },
-    {"name": "cuda_name",
+    {"name": "train_args",
      "type": str,
-     "default": None,
-     "help": "Cuda device name.",
+     "default": '{}',
+     "help": "Additional parameters for train. Should be a dictionary, for example {'epochs': 100, 'y_col_name': 'loewe'}."
     },
-    {"name": "epochs",
-     "type": int,
-     "default": None,
-     "help": "Number of epochs"
-    },
-    {"name": "input_supp_data_dir",
+    {"name": "infer_args",
      "type": str,
-     "default": None,
-     "help": "Supp data dir, if required by the model."
+     "default": '{}',
+     "help": "Additional parameters for infer. Should be a dictionary, for example {'cuda_name': 0, 'y_col_name': 'loewe'}."
     },
     ]

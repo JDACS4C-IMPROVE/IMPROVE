@@ -176,7 +176,8 @@ def determine_transform(x_data_df, x_data_name, x_transform_list, output_dir):
                     transform_dict['impute'] = impute_value
                 elif strategy == 'scale':
                     print(f"Determining {strategy} with {subtype}.")
-                    scaler_name, x_data_df = _determine_scale(x_data_df, subtype, x_data_name)
+                    scaler_path = str(os.path.join(output_dir, x_data_name))
+                    scaler_name, x_data_df = _determine_scale(x_data_df, subtype, scaler_path)
                     transform_dict['scale'] = scaler_name
                 elif strategy == 'subset':
                     print(f"Determining {strategy} with {subtype}.")

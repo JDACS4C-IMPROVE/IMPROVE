@@ -1,15 +1,15 @@
 from improvelib.utils import str2bool
 
-csa_bruteforce_params = [
-    {"name": "cuda_name",
+additional_definitions = [
+    {"name": "model_name",
      "type": str,
-     "default": "cuda:0",
-     "help": "Cuda device name.",
+     "default": 'lgbm',
+     "help": "Name of the deep learning model"
     },
-    {"name": "csa_outdir",
+    {"name": "model_scripts_dir",
      "type": str,
-     "default": "./run.csa.full",
-     "help": "Outdir for workflow.",
+     "default": './', 
+     "help": "Path to the model repository"
     },
     {"name": "source_datasets",
      "nargs" : "+",
@@ -34,25 +34,19 @@ csa_bruteforce_params = [
      "default": False,
      "help": "If only cross study analysis is needed"
     },
-    {"name": "model_name",
+    {"name": "preprocess_args",
      "type": str,
-     "default": 'graphdrp', ## Change the default to LGBM??
-     "help": "Name of the deep learning model"
+     "default": '{}',
+     "help": "Additional parameters for preprocess. Should be a dictionary, for example {'supp_input_data_dir': 'supp_data', 'y_col_name': 'loewe'}."
     },
-    {"name": "epochs",
-     "type": int,
-     "default": 10,
-     "help": "Number of epochs"
-    },
-    {"name": "uses_cuda_name",
-     "type": str2bool,
-     "default": True,
-     "help": "Change to false if the model doesn't have a cuda_name parameter."
-    },
-    {"name": "model_scripts_dir",
+    {"name": "train_args",
      "type": str,
-     "default": './', 
-     "help": "Path to the model repository"
+     "default": '{}',
+     "help": "Additional parameters for train. Should be a dictionary, for example {'epochs': 100, 'y_col_name': 'loewe'}."
     },
-    
+    {"name": "infer_args",
+     "type": str,
+     "default": '{}',
+     "help": "Additional parameters for infer. Should be a dictionary, for example {'cuda_name': 0, 'y_col_name': 'loewe'}."
+    },    
 ]
