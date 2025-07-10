@@ -134,13 +134,14 @@ def main(params):
 if __name__ == "__main__":
     # Initialize the CLI
     cfg = Config() 
+    print(Config)
     params = cfg.initialize_parameters(
         section="CSA",
         pathToModelDir=filepath,
         default_config="csa_parsl_params.ini",
         additional_definitions=csa_parsl_params_def.additional_definitions)
     
-    logger.info("Configuration parameters:")
+    print(params)
     # Run the main function
     main(params)
     sys.exit(0)
