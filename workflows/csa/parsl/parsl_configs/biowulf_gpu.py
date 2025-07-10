@@ -21,6 +21,7 @@ def get_parsl_config(available_accelerators = None):
                     max_blocks=2,
                     partition="gpu",
                     scheduler_options="#SBATCH --gres=gpu:k80:4",
+                    regex_job_id=r"(?P<id>^\d+$)",
                     launcher=SrunLauncher(),
                 ),
             )
