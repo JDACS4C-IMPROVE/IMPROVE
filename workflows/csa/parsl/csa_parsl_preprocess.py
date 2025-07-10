@@ -21,6 +21,7 @@ logger.setLevel(os.getenv("IMPROVE_LOG_LEVEL", "INFO"))
 
 
 def workflow(params):
+    print(params)
     model_env = check_dir_path_or_model_scripts_dir(params['model_environment'], params['model_scripts_dir'])
     script = check_model_script(model_dir = params['model_scripts_dir'], model_name = params['model_name'], stage = "preprocess")
 
