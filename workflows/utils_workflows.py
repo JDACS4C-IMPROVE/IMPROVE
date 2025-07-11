@@ -6,14 +6,14 @@ from pathlib import Path
 from ast import literal_eval
 
 
-def save_log(dir, result):
-    result_file_name_stdout = dir / 'logs.txt'
+def save_log(dir, result, prefix=""):
+    result_file_name_stdout = dir / f'{prefix}logs.txt'
     if dir.exists() is False: 
         os.makedirs(dir, exist_ok=True)
     with open(result_file_name_stdout, 'w') as file:
         file.write(result.stdout)
 
-def save_time(dir, start):
+def save_time(dir, start, prefix=""):
     time_diff = time.time() - start
     hours = int(time_diff // 3600)
     minutes = int((time_diff % 3600) // 60)
@@ -21,7 +21,7 @@ def save_time(dir, start):
     time_diff_dict = {'hours': hours,
                     'minutes': minutes,
                     'seconds': seconds}
-    with open(Path(dir) / 'runtime.json', 'w') as json_file:
+    with open(Path(dir) / f'{prefix}runtime.json', 'w') as json_file:
         json.dump(time_diff_dict, json_file, indent=4)
 
 
