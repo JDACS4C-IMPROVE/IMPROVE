@@ -76,7 +76,8 @@ for dataset in params['datasets']:
                 for n, file_type in enumerate(list_of_file_types):
                     file_value = file_tuple[n]
                     if file_value == 'default':
-                        str_to_append = ""
+                        type_to_append = ""
+                        value_to_append = ""
                         file_rep = 'default'
                     else:
                         type_to_append = f"--{file_type}"
