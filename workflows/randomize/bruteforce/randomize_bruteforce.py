@@ -80,7 +80,7 @@ for dataset in params['datasets']:
                         str_to_append = ""
                         file_rep = 'default'
                     else:
-                        str_to_append = f" --{file_type} datadir/{file_value}"
+                        str_to_append = f" --{file_type} {params['randomized_data_dir']}/{file_value}"
                         file_rep = file_value.split('.')[0]
                     input_data_string = input_data_string + str_to_append
                     folder_string = folder_string + file_rep + '-'
