@@ -50,9 +50,9 @@ infer_additional_args = additional_parameters_dict_to_list(infer_additional_args
 ###  Generate CSA results 
 # ===============================================================
 
-print("source_datasets:", params["source_datasets"])
-print("target_datasets:", params["target_datasets"])
-print("split_nums:", params["split_nums"])
+print("DATASETS:", params["datasets"])
+print("SPLIT_TYPES:", params["split_type"])
+print("SPLITS:", params["split_nums"])
 
 for dataset in params['datasets']:
     for split_type in params['split_type']:
