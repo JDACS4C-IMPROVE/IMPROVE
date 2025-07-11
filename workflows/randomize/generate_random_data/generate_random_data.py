@@ -89,6 +89,7 @@ def main():
     args = parser.parse_args()
     func = args.func
     args = vars(args)
+    del args['func']
     func(**args)
 
 
