@@ -121,7 +121,7 @@ for dataset in params['datasets']:
                 print(f"Training.")
                 train_run = ["python", train_python_script,
                     "--input_dir", str(output_dir),
-                    "--output_dir", str(output_dir)] + shlex.split(data_string) + train_additional_args
+                    "--output_dir", str(output_dir)] + train_additional_args
                 train_start = time.time()
                 train_result = subprocess.run(train_run,
                                         stdout=subprocess.PIPE,
@@ -138,7 +138,7 @@ for dataset in params['datasets']:
                     "--input_data_dir", str(output_dir),
                     "--input_model_dir", str(output_dir),
                     "--output_dir", str(output_dir),
-                    "--calc_infer_scores", "true"] + shlex.split(data_string) + infer_additional_args
+                    "--calc_infer_scores", "true"] + infer_additional_args
                 infer_start = time.time()
                 infer_result = subprocess.run(infer_run,
                                         stdout=subprocess.PIPE,
@@ -148,7 +148,7 @@ for dataset in params['datasets']:
                 # Log and Time
                 print(f"infer returncode = {infer_result.returncode}")
                 save_log(output_dir, infer_result, prefix='infer_')
-                save_time(output_dir, infer_start, prefix='infer_q  ')
+                save_time(output_dir, infer_start, prefix='infer_')
 
 
 
