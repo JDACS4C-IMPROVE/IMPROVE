@@ -71,7 +71,7 @@ for dataset in params['datasets']:
             list_of_input_data = []
             list_of_output_dirs = []
             for file_tuple in file_combos:
-                input_data_string = ""
+                input_data_list = []
                 folder_string = ""
                 for n, file_type in enumerate(list_of_file_types):
                     file_value = file_tuple[n]
@@ -79,11 +79,12 @@ for dataset in params['datasets']:
                         str_to_append = ""
                         file_rep = 'default'
                     else:
-                        str_to_append = f" --{file_type} datadir/{file_value}"
+                        type_to_append = f"--{file_type}"
+                        value_to_append = f"{params['randomized_data_dir']}/{file_value}"
                         file_rep = file_value.split('.')[0]
-                    input_data_string = input_data_string + str_to_append
+                    input_data_list = input_data_list + [type_to_append] + [value_to_append]
                     folder_string = folder_string + file_rep + '-'
-                list_of_input_data = list_of_input_data + [input_data_string]
+                list_of_input_data = list_of_input_data + [input_data_list]
                 folder_string = folder_string[:-1]
                 list_of_output_dirs = list_of_output_dirs + [folder_string]
 
