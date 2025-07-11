@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 import itertools
 from ast import literal_eval
+import shlex
 
 from improvelib.initializer.config import Config
 from workflows.utils_workflows import save_log, save_time, check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_list
@@ -71,21 +72,19 @@ for dataset in params['datasets']:
             list_of_input_data = []
             list_of_output_dirs = []
             for file_tuple in file_combos:
-                input_data_list = []
+                input_data_string = ""
                 folder_string = ""
                 for n, file_type in enumerate(list_of_file_types):
                     file_value = file_tuple[n]
                     if file_value == 'default':
-                        type_to_append = ""
-                        value_to_append = ""
+                        str_to_append = ""
                         file_rep = 'default'
                     else:
-                        type_to_append = f"--{file_type}"
-                        value_to_append = f"{params['randomized_data_dir']}/{file_value}"
+                        str_to_append = f" --{file_type} datadir/{file_value}"
                         file_rep = file_value.split('.')[0]
-                    input_data_list = input_data_list + [type_to_append] + [value_to_append]
+                    input_data_string = input_data_string + str_to_append
                     folder_string = folder_string + file_rep + '-'
-                list_of_input_data = list_of_input_data + [input_data_list]
+                list_of_input_data = list_of_input_data + [input_data_string]
                 folder_string = folder_string[:-1]
                 list_of_output_dirs = list_of_output_dirs + [folder_string]
 
@@ -104,7 +103,7 @@ for dataset in params['datasets']:
                     "--val_split_file", str(val_split_file),
                     "--test_split_file", str(test_split_file),
                     "--input_dir", params['input_dir'], 
-                    "--output_dir", str(output_dir)] + data_string + preprocess_additional_args
+                    "--output_dir", str(output_dir)] + shlex.split(data_string) + preprocess_additional_args
                 preprocess_start = time.time()
                 preprocess_result = subprocess.run(preprocess_run,
                                         stdout=subprocess.PIPE,
@@ -146,7 +145,7 @@ for dataset in params['datasets']:
                 # Log and Time
                 print(f"infer returncode = {infer_result.returncode}")
                 save_log(output_dir, infer_result, prefix='infer_')
-                save_time(output_dir, infer_start, prefix='infer')
+                save_time(output_dir, infer_start, prefix='infer_q  ')
 
 
 
