@@ -51,11 +51,11 @@ infer_additional_args = additional_parameters_dict_to_list(infer_additional_args
 # ===============================================================
 
 print("DATASETS:", params["datasets"])
-print("SPLIT_TYPES:", params["split_type"])
+print("SPLIT_TYPES:", params["split_types"])
 print("SPLITS:", params["split_nums"])
 
 for dataset in params['datasets']:
-    for split_type in params['split_type']:
+    for split_type in params['split_types']:
         for split in params['split_nums']:
             # Create split file names
             test_split_file = f"{dataset}_{split_type}_{split}_test.txt"
