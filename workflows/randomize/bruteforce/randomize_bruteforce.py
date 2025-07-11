@@ -5,10 +5,12 @@ import time
 import subprocess
 from pathlib import Path
 import itertools
+from ast import literal_eval
 
 from improvelib.initializer.config import Config
 from workflows.utils_workflows import save_log, save_time, check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_list
 import randomize_bruteforce_params_def
+
 
 
 start_full_wf = time.time()
@@ -62,8 +64,9 @@ for dataset in params['datasets']:
             train_split_file = f"{dataset}_{split_type}_{split}_train.txt"
             val_split_file = f"{dataset}_{split_type}_{split}_val.txt"
             #files_dict = {'cell_transcriptomics_file': ['default', 'cell_shuffle_full_1.tsv', 'cell_shuffle_full_2.tsv'], 'drug_mordred_file': ['default', 'drug_mordred_shuffle_full_1.tsv']}
-            list_of_files = list(params['randomized_data'].values())
-            list_of_file_types = list(params['randomized_data'].keys())
+            randomized_data = literal_eval(params['randomized_data'])
+            list_of_files = list(randomized_data.values())
+            list_of_file_types = list(randomized_data.keys())
             file_combos = list(itertools.product(*list_of_files))
             list_of_input_data = []
             list_of_output_dirs = []
