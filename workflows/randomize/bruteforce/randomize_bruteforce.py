@@ -97,6 +97,9 @@ for dataset in params['datasets']:
                 output_dir = main_output_dir/ dataset / split_type / f"split_{split}" / folder_name
                 data_string = list_of_input_data[n]
                 ### PREPROCESS
+                print(f"Dataset {dataset}, split type {split_type}, split {split}")
+                print(f"Data string {data_string}")
+                print(f"Saves to {output_dir}")
                 print(f"Preprocessing.")
                 preprocess_run = ["python", preprocess_python_script,
                     "--train_split_file", str(train_split_file),
