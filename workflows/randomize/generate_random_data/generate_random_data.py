@@ -34,7 +34,7 @@ def shuffle_data(input_file, output_file, strategy, seed=42):
             df_copy.iloc[:, c] = random.choices(all_df_values, k=df.shape[0]) # with replacement
     else:
         raise ValueError(f"Strategy {strategy} is invalid. Choose 'column' or 'full'.")
-    df.to_csv(output_file, sep='\t', index=True)
+    df_copy.to_csv(output_file, sep='\t', index=True)
 
 
 def random_SMILES_from_file(input_file, output_file, reference_file='./DrugSpaceX-10S.smi', reference_col_name='SMILES', length_min=1, length_max=np.inf, seed=42):

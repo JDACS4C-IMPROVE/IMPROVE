@@ -13,7 +13,7 @@ additional_definitions = [
     },
     {"name": "randomized_data",
      "type": str,
-     "default": "{'cell_transcriptomics_file': ['default', 'cell_shuffle_full_1.tsv', 'cell_shuffle_full_2.tsv'], 'drug_mordred_file': ['default', 'drug_mordred_shuffle_full_1.tsv']}", 
+     "default": "{'cell_transcriptomics_file': ['default', 'cancer_gene_expression_shuffle_full_1.tsv', 'cancer_gene_expression_shuffle_full_2.tsv'], 'drug_mordred_file': ['default', 'drug_mordred_shuffle_full_1.tsv']}", 
      "help": "."
     },
     {"name": "randomized_data_dir",
