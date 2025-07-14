@@ -102,6 +102,7 @@ def fps_single_smile(smi, radius=1, nbits=2048):
     from rdkit import Chem
     from rdkit.Chem import AllChem, DataStructs
     # smi=pybel.readstring("smi", row["smiles"]).write("can").strip()
+    print(smi)
     mol = Chem.MolFromSmiles( smi )
     fp = AllChem.GetMorganFingerprintAsBitVect(mol=mol, radius=radius, nBits=nbits)
     fp_arr = np.array(fp) # .tolist()
