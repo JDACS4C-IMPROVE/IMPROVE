@@ -213,6 +213,9 @@ def run(args):
     synergy = synergy[columns_to_keep]
     synergy.rename(columns={'DepMap_ID': 'DepMapID', 'id_x': 'DrugID_row', 'id_y': 'DrugID_col', 'study_name': 'study', 'synergy_loewe': 'loewe', 'synergy_bliss': 'bliss', 'synergy_zip': 'zip', 'synergy_hsa': 'hsa', 'S_mean': 'smean', 'css_ri': 'css'}, inplace=True)
     synergy.replace('\\N', np.nan, inplace=True)
+    synergy['loewe'] = pd.to_numeric(synergy['loewe'])
+    # average duplicates/triplicates in studies
+    synergy = synergy.groupby(['DepMapID', 'DrugID_row', 'DrugID_col', 'study'])[['loewe', 'bliss', 'zip', 'hsa', 'smean', 'css']].mean().reset_index()
     synergy = synergy.reset_index(names='split_id')
     synergy.to_csv(y_data_dir / "synergy.tsv", sep='\t', index=False)
 
