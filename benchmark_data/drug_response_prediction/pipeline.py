@@ -121,10 +121,10 @@ def run(args):
     ChemStructures_Consistent['improve_chem_id'] = 'NSC.' + ChemStructures_Consistent['NSC'].astype(str)
     nci60_drugs = ChemStructures_Consistent[ChemStructures_Consistent['improve_chem_id'].isin(nci60_response['improve_chem_id'].tolist())]
     nci60_drugs = nci60_drugs.drop('NSC', axis=1)
-    nci60_drugs = nci60_drugs[['improve_chem_id', 'SMILES']].reset_index(drop=True)
+    nci60_drugs = nci60_drugs[['improve_chem_id', 'canSMILES']].reset_index(drop=True)
 
     # check that these are canonical
-    good, bad = canonicalize_smiles(nci60_drugs, id_col_name='improve_chem_id', smiles_col_name='SMILES')
+    good, bad = canonicalize_smiles(nci60_drugs, id_col_name='improve_chem_id', smiles_col_name='canSMILES')
 
     new_drugs = pd.concat([drp_drugs, good], ignore_index=True)
     print(new_drugs)
@@ -133,11 +133,11 @@ def run(args):
     bad.to_csv(output_x_path / "bad_SMILES.tsv", sep='\t', index=False)
 
     # save fingerprints
-    drug_ecfp4_nbits512 = generate_fingerprints(new_drugs, radius=2, nbits=512, smiles_col_name='SMILES')
+    drug_ecfp4_nbits512 = generate_fingerprints(new_drugs, radius=2, nbits=512, smiles_col_name='canSMILES')
     drug_ecfp4_nbits512.to_csv(output_x_path / "drug_ecfp4_nbits512.tsv", sep='\t', index=False)
 
     # save descriptors
-    mordred, _ = generate_mordred(new_drugs, smiles_col_name='SMILES')
+    mordred, _ = generate_mordred(new_drugs, smiles_col_name='canSMILES')
     mordred.to_csv(output_x_path / "drug_mordred.tsv", sep='\t', index=False)
 
     new_response = new_response[new_response['improve_chem_id'].isin(new_drugs['improve_chem_id'].tolist())]
