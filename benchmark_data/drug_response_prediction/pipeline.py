@@ -120,7 +120,7 @@ def run(args):
     ChemStructures_Consistent = pd.read_csv(input_dir / "ChemStructures_Consistent.smiles", sep="\t")
     ChemStructures_Consistent['improve_chem_id'] = 'NSC.' + ChemStructures_Consistent['NSC'].astype(str)
     nci60_drugs = ChemStructures_Consistent[ChemStructures_Consistent['improve_chem_id'].isin(nci60_response['improve_chem_id'].tolist())]
-    nci60_drugs = nci60_drugs.drop('NSC', axis=1)
+    nci60_drugs = nci60_drugs.rename(columns={'SMILES': 'canSMILES'})
     nci60_drugs = nci60_drugs[['improve_chem_id', 'canSMILES']].reset_index(drop=True)
 
     # check that these are canonical
