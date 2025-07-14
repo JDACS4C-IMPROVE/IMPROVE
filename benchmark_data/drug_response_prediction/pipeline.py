@@ -46,7 +46,7 @@ def run(args):
     os.makedirs(output_x_path)
     os.makedirs(output_y_path)
     os.makedirs(output_splits_path)
-
+    """
     #################################### CELL DATA #########################################
     # removes triple header, ensures valid NaN values
     # no addition for NCI-60 data (only 11 cell lines are missing)
@@ -89,7 +89,7 @@ def run(args):
     cancer_miRNA_expression.to_csv(output_x_path / "cancer_miRNA_expression.tsv", sep='\t', index_label='improve_sample_id')
     cancer_DNA_methylation.to_csv(output_x_path / "cancer_DNA_methylation.tsv", sep='\t', index_label='improve_sample_id')
     del cancer_copy_number, cancer_discretized_copy_number, cancer_gene_expression, cancer_mutation_count, cancer_RPPA, cancer_miRNA_expression, cancer_DNA_methylation
-    
+    """
     #################################### Y DATA #########################################
     # adds split ID
     # adds NCI-60 data 
@@ -127,7 +127,7 @@ def run(args):
     good, bad = canonicalize_smiles(nci60_drugs, id_col_name='improve_chem_id', smiles_col_name='SMILES')
 
     new_drugs = pd.concat([drp_drugs, good], ignore_index=True)
-
+    print(new_drugs)
     # save smiles
     new_drugs.to_csv(output_x_path / "drug_SMILES.tsv", sep='\t', index=False)
     bad.to_csv(output_x_path / "bad_SMILES.tsv", sep='\t', index=False)
