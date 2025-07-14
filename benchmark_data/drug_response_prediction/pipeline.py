@@ -4,6 +4,7 @@
 # all other drug data has been regenerated from SMILES
 
 import os
+import sys
 import pandas as pd
 import argparse
 from pathlib import Path
