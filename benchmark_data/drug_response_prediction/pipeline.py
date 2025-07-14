@@ -10,6 +10,7 @@ import argparse
 from pathlib import Path
 
 from benchmark_data.synergy.chem_utils import canonicalize_smiles, generate_fingerprints, generate_mordred
+from benchmark_data.splits.splits_generator import generate_mixed_splits, generate_blind_splits
 
 
 
@@ -123,7 +124,7 @@ def run(args):
     nci60_drugs = nci60_drugs[['improve_chem_id', 'SMILES']].reset_index(drop=True)
 
     # check that these are canonical
-    good, bad = canonicalize_smiles(nci60_drugs)
+    good, bad = canonicalize_smiles(nci60_drugs, id_col_name='improve_chem_id', smiles_col_name='SMILES')
 
     new_drugs = pd.concat([drp_drugs, good], ignore_index=True)
 
@@ -132,17 +133,22 @@ def run(args):
     bad.to_csv(output_x_path / "bad_SMILES.tsv", sep='\t', index=False)
 
     # save fingerprints
-    drug_ecfp4_nbits512 = generate_fingerprints(new_drugs, radius=2, nbits=512)
+    drug_ecfp4_nbits512 = generate_fingerprints(new_drugs, radius=2, nbits=512, smiles_col_name='SMILES')
     drug_ecfp4_nbits512.to_csv(output_x_path / "drug_ecfp4_nbits512.tsv", sep='\t', index=False)
 
     # save descriptors
-    mordred, _ = generate_mordred(new_drugs)
+    mordred, _ = generate_mordred(new_drugs, smiles_col_name='SMILES')
     mordred.to_csv(output_x_path / "drug_mordred.tsv", sep='\t', index=False)
 
     new_response = new_response[new_response['improve_chem_id'].isin(new_drugs['improve_chem_id'].tolist())]
     new_response = new_response.reset_index().rename(columns={'index': 'split_id'})
     new_response.to_csv(output_y_path / "response.tsv", sep='\t')
 
+    #################################### SPLITS #########################################
+    response_only_nci60 = new_response[new_response['source'] == 'NCI60']
+    generate_mixed_splits(response_only_nci60, study_col='source', output_dir=str(output_splits_path))
+    generate_blind_splits(new_response, study_col='source', blind_col='improve_sample_id', blind_name='cell', output_dir=str(output_splits_path))
+    generate_blind_splits(new_response, study_col='source', blind_col='improve_chem_id', blind_name='drug', output_dir=str(output_splits_path))
 
 def main(args):
     args = parse_args(args)
