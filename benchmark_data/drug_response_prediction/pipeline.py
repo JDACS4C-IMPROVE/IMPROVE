@@ -120,7 +120,7 @@ def run(args):
     ChemStructures_Consistent['improve_chem_id'] = 'NSC.' + ChemStructures_Consistent['NSC'].astype(str)
     nci60_drugs = ChemStructures_Consistent[ChemStructures_Consistent['improve_chem_id'].isin(nci60_response['improve_chem_id'].tolist())]
     nci60_drugs = nci60_drugs.drop('NSC', axis=1)
-    nci60_drugs = nci60_drugs['improve_chem_id', 'SMILES'].reset_index(drop=True)
+    nci60_drugs = nci60_drugs[['improve_chem_id', 'SMILES']].reset_index(drop=True)
 
     # check that these are canonical
     good, bad = canonicalize_smiles(nci60_drugs)
