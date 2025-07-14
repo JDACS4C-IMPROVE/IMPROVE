@@ -113,7 +113,7 @@ def run(args):
 
 
     #################################### DRUG DATA #########################################
-    drp_drugs = pd.read_csv(csa_x_path + "drug_SMILES.tsv", sep='\t', header=[0])
+    drp_drugs = pd.read_csv(csa_x_path / "drug_SMILES.tsv", sep='\t', header=[0])
     # NCI60 drugs
 
     ChemStructures_Consistent = pd.read_csv(input_dir / "ChemStructures_Consistent.smiles", sep="\t")
