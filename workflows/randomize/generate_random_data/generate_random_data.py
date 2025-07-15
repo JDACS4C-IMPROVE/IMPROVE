@@ -82,7 +82,7 @@ def main():
     parser_SMILES = subparsers.add_parser('random_SMILES', parents = [parent_parser])                          
     parser_SMILES.add_argument('--reference_file', default='./DrugSpaceX-10S.smi', help="File to pull random SMILES from.")
     parser_SMILES.add_argument('--reference_col_name', default='SMILES', help="Name of the column in the reference file to pull SMILES from.")
-    parser_SMILES.add_argument('--length_mix', default=1, help="Minimum SMILES length to include.")
+    parser_SMILES.add_argument('--length_min', default=1, help="Minimum SMILES length to include.")
     parser_SMILES.add_argument('--length_max', default=np.inf, help="Maximum SMILES length to include.")
     parser_SMILES.set_defaults(func=random_SMILES_from_file)
     
