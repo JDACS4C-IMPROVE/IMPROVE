@@ -9,26 +9,32 @@ from ast import literal_eval
 import shlex
 
 from improvelib.initializer.config import Config
-from workflows.utils_workflows import save_log, save_time, check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_list
-import randomize_bruteforce_params_def
+from workflows.utils_workflows import check_dir_path_or_model_scripts_dir, get_additional_parameters, additional_parameters_dict_to_string
+import randomize_swarm_params_def
 
 
-
-start_full_wf = time.time()
 filepath = Path(__file__).resolve().parent
 
 cfg = Config() 
 params = cfg.initialize_parameters(
     section="RANDOMIZE",
     pathToModelDir=filepath,
-    default_config="randomize_bruteforce_params.ini",
-    additional_definitions=randomize_bruteforce_params_def.additional_definitions
+    default_config="randomize_swarm_params.ini",
+    additional_definitions=randomize_swarm_params_def.additional_definitions
 )
 
 # Make output_dir
 main_output_dir = Path(params['output_dir'])
 if main_output_dir.exists() is False:
     os.makedirs(main_output_dir, exist_ok=True)
+
+# Prefix string for swarm files
+if params['swarm_prefix'] is not None:
+    prefix = params['swarm_prefix']
+else:
+    model_env = check_dir_path_or_model_scripts_dir(params['model_environment'], params['model_scripts_dir'])
+    prefix = f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {params['model_scripts_dir']}/{params['model_environment']} ; export PYTHONPATH=../../../../IMPROVE ; "
+
 
 #Model scripts
 preprocess_python_script = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_preprocess_improve.py")
@@ -41,17 +47,21 @@ print("Created script names.")
 preprocess_additional_args = get_additional_parameters(params['preprocess_args'])
 if 'input_supp_data_dir' in preprocess_additional_args:
     preprocess_additional_args['input_supp_data_dir'] = check_dir_path_or_model_scripts_dir(preprocess_additional_args['input_supp_data_dir'], params['model_scripts_dir'])
-preprocess_additional_args = additional_parameters_dict_to_list(preprocess_additional_args)
+preprocess_additional_args = additional_parameters_dict_to_string(preprocess_additional_args)
 
 train_additional_args = get_additional_parameters(params['train_args'])
-train_additional_args = additional_parameters_dict_to_list(train_additional_args)
+train_additional_args = additional_parameters_dict_to_string(train_additional_args)
 
 infer_additional_args = get_additional_parameters(params['infer_args'])
-infer_additional_args = additional_parameters_dict_to_list(infer_additional_args)
+infer_additional_args = additional_parameters_dict_to_string(infer_additional_args)
 
 # ===============================================================
-###  Generate CSA results 
+###  Generate Randomization results 
 # ===============================================================
+
+preprocess_list = []
+train_list = []
+infer_list = []
 
 print("DATASETS:", params["datasets"])
 print("SPLIT_TYPES:", params["split_types"])
@@ -101,59 +111,40 @@ for dataset in params['datasets']:
                 print(f"Data string {data_string}")
                 print(f"Saves to {output_dir}")
                 print(f"Preprocessing.")
-                preprocess_run = ["python", preprocess_python_script,
-                    "--train_split_file", str(train_split_file),
-                    "--val_split_file", str(val_split_file),
-                    "--test_split_file", str(test_split_file),
-                    "--input_dir", params['input_dir'], 
-                    "--output_dir", str(output_dir)] + shlex.split(data_string) + preprocess_additional_args
-                preprocess_start = time.time()
-                preprocess_result = subprocess.run(preprocess_run,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        universal_newlines=True)
-                # Log and Time
-                print(f"preprocess returncode = {preprocess_result.returncode}")
-                save_log(output_dir, preprocess_result, prefix='preprocess_')
-                save_time(output_dir, preprocess_start, prefix='preprocess_')
-
+                preprocess_run = [f"python {preprocess_python_script} --train_split_file {str(train_split_file)} --val_split_file {str(val_split_file)} --test_split_file {str(test_split_file)} --input_dir {params['input_dir']} --output_dir {str(output_dir)}" + data_string + preprocess_additional_args]
+                preprocess_list = preprocess_list + preprocess_run
                 ### TRAIN
                 print(f"Training.")
-                train_run = ["python", train_python_script,
-                    "--input_dir", str(output_dir),
-                    "--output_dir", str(output_dir)] + train_additional_args
-                train_start = time.time()
-                train_result = subprocess.run(train_run,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        universal_newlines=True)
-                
-                print(f"train returncode = {train_result.returncode}")
-                save_log(output_dir, train_result, prefix='train_')
-                save_time(output_dir, train_start, prefix='train_')
+                train_run = [f"python {train_python_script} --input_dir {str(output_dir)} --output_dir {str(output_dir)}" + train_additional_args]
+                train_list = train_list + train_run
                 ### INFER
-                start_infer = time.time()
                 print(f"Inference.")
-                infer_run = ["python", infer_python_script,
-                    "--input_data_dir", str(output_dir),
-                    "--input_model_dir", str(output_dir),
-                    "--output_dir", str(output_dir),
-                    "--calc_infer_scores", "true"] + infer_additional_args
-                infer_start = time.time()
-                infer_result = subprocess.run(infer_run,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        universal_newlines=True)
-                
-                # Log and Time
-                print(f"infer returncode = {infer_result.returncode}")
-                save_log(output_dir, infer_result, prefix='infer_')
-                save_time(output_dir, infer_start, prefix='infer_')
+                infer_run = [f"python {infer_python_script} --input_data_dir {str(output_dir)} --input_model_dir {str(output_dir)} --output_dir {str(output_dir)} --calc_infer_scores true" + infer_additional_args]
+                infer_list = infer_list + infer_run
 
 
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-save_time(output_dir, start_full_wf, prefix='workflow_')
-print('Finished full randomize run.')
+# Determine prefix for swarm file name
+if params['swarm_file_prefix'] is not None:
+    swarm_file_prefix = params['swarm_file_prefix']
+else:
+    swarm_file_prefix = params['model_name'] + "_" 
+
+# Save lists of swarm commands to file
+with open(params['output_swarmfile_dir'] + swarm_file_prefix + "preprocess.swarm", "w") as file:
+    for item in preprocess_list:
+        file.write(prefix + item + "\n")
+
+with open(params['output_swarmfile_dir'] + swarm_file_prefix + "train.swarm", "w") as file:
+    for item in train_list:
+        file.write(prefix + item + "\n")
+
+with open(params['output_swarmfile_dir'] + swarm_file_prefix + "infer.swarm", "w") as file:
+    for item in infer_list:
+        file.write(prefix + item + "\n")
+
+print(f"Finished swarm files. Swarm files are in {params['output_swarmfile_dir']} and prefixed with {swarm_file_prefix}. Results will be in {params['output_dir']}")
+
 
 
