@@ -1,5 +1,5 @@
 ## randomize features
-
+import os
 import pandas as pd
 import numpy as np
 import random
@@ -90,6 +90,7 @@ def main():
     func = args.func
     args = vars(args)
     del args['func']
+    os.makedirs(os.path.dirname(args['output_file']), exist_ok=True)
     func(**args)
 
 
