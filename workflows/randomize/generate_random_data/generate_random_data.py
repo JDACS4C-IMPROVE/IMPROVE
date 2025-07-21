@@ -58,19 +58,14 @@ def random_SMILES_from_file(input_file, output_file, reference_file='./DrugSpace
     df = pd.read_csv(input_file, header=0, index_col=0, sep='\t')
     smiles_col_name = df.columns[0]
     ref_df = pd.read_csv(reference_file, sep='\t')
-    print("ref_df before subset", ref_df.head())
     ref_df = ref_df[
         (ref_df[reference_col_name].str.len() >= length_min) &
         (ref_df[reference_col_name].str.len() <= length_max)
         ]
-    print("ref_df after subset", ref_df.head())
-    random_smi = ref_df[reference_col_name].sample(n=df.shape[0]) # may need to drop index?
-    print("random_smi", random_smi)
-    df[smiles_col_name] = random_smi
-    print("df", df.head())
-    df.to_csv(output_file, sep='\t', index=True)
+    df.reset_index()
+    df[smiles_col_name] = ref_df[reference_col_name].sample(n=df.shape[0]).reset_index(drop=True)
+    df.to_csv(output_file, sep='\t', index=False)
     if also_generate_mordred:
-        df = df.reset_index(keep=True)
         mordred, _ = generate_mordred(df)
         mordred.to_csv(output_file_mordred, sep='\t', index=False)
 
