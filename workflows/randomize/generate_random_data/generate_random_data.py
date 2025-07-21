@@ -55,15 +55,15 @@ def random_SMILES_from_file(input_file, output_file, reference_file='./DrugSpace
     """
     random.seed(seed)
     #check input
-    df = pd.read_csv(input_file, header=0, index_col=0, sep='\t')
-    smiles_col_name = df.columns[0]
+    df = pd.read_csv(input_file, header=0, sep='\t')
+    smiles_col_name = df.columns[1]
     ref_df = pd.read_csv(reference_file, sep='\t')
     ref_df = ref_df[
         (ref_df[reference_col_name].str.len() >= length_min) &
         (ref_df[reference_col_name].str.len() <= length_max)
         ]
-    df.reset_index()
     df[smiles_col_name] = ref_df[reference_col_name].sample(n=df.shape[0]).reset_index(drop=True)
+    print(df)
     df.to_csv(output_file, sep='\t', index=False)
     if also_generate_mordred:
         mordred, _ = generate_mordred(df)
