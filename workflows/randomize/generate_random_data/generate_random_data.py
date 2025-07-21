@@ -64,7 +64,9 @@ def random_SMILES_from_file(input_file, output_file, reference_file='./DrugSpace
         (ref_df[reference_col_name].str.len() <= length_max)
         ]
     print("ref_df after subset", ref_df.head())
-    df[smiles_col_name] = ref_df[reference_col_name].sample(n=df.shape[0]) # may need to drop index?
+    random_smi = ref_df[reference_col_name].sample(n=df.shape[0]) # may need to drop index?
+    print("random_smi", random_smi)
+    df[smiles_col_name] = random_smi
     print("df", df.head())
     df.to_csv(output_file, sep='\t', index=True)
     if also_generate_mordred:
