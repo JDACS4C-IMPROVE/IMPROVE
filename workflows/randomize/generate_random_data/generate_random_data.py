@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import random
 import argparse
-
+from benchmark_data.synergy.chem_utils import generate_mordred
 
 def shuffle_data(input_file, output_file, strategy, seed=42):
     """Shuffles any tablular data either completely, or within column. 
@@ -37,7 +37,7 @@ def shuffle_data(input_file, output_file, strategy, seed=42):
     df_copy.to_csv(output_file, sep='\t', index=True)
 
 
-def random_SMILES_from_file(input_file, output_file, reference_file='./DrugSpaceX-10S.smi', reference_col_name='SMILES', length_min=1, length_max=np.inf, seed=42, generate_mordred=False, output_file_mordred='./mordred.tsv'):
+def random_SMILES_from_file(input_file, output_file, reference_file='./DrugSpaceX-10S.smi', reference_col_name='SMILES', length_min=1, length_max=np.inf, seed=42, also_generate_mordred=False, output_file_mordred='./mordred.tsv'):
     """Replaces SMILES strings with random SMILES strings pulled from a reference file, within the range of lengths specified.
     ID column must be index, with the SMILES strings in the first column, with column names, and tab-separated.
     Saves the resulting dataframe to the output_path.
@@ -50,7 +50,7 @@ def random_SMILES_from_file(input_file, output_file, reference_file='./DrugSpace
         length_min (int): Minimum SMILES length to include (default: 1).
         length_max (int): Maximum SMILES length to include (default: np.inf).
         seed (int): Random seed (default: 42).
-        generate_mordred (bool): Whether to create mordred from the random SMILES (default: False).
+        also_generate_mordred (bool): Whether to create mordred from the random SMILES (default: False).
         output_file_mordred (str): File name to save mordred data (including path if not in this directory).
     """
     random.seed(seed)
@@ -67,7 +67,7 @@ def random_SMILES_from_file(input_file, output_file, reference_file='./DrugSpace
     df[smiles_col_name] = ref_df[reference_col_name].sample(n=df.shape[0]) # may need to drop index?
     print("df", df.head())
     df.to_csv(output_file, sep='\t', index=True)
-    if generate_mordred:
+    if also_generate_mordred:
         df = df.reset_index(keep=True)
         mordred, _ = generate_mordred(df)
         mordred.to_csv(output_file_mordred, sep='\t', index=False)
@@ -94,7 +94,7 @@ def main():
     parser_SMILES.add_argument('--reference_col_name', default='SMILES', help="Name of the column in the reference file to pull SMILES from.")
     parser_SMILES.add_argument('--length_min', default=1, help="Minimum SMILES length to include.")
     parser_SMILES.add_argument('--length_max', default=np.inf, help="Maximum SMILES length to include.")
-    parser_SMILES.add_argument('--generate_mordred', default=False, help="If set to True, will also generate the mordred.")
+    parser_SMILES.add_argument('--also_generate_mordred', default=False, help="If set to True, will also generate the mordred.")
     parser_SMILES.add_argument('--output_file_mordred', default=False, help="File name to save mordred data (including path if not in this directory).")
     parser_SMILES.set_defaults(func=random_SMILES_from_file)
     
