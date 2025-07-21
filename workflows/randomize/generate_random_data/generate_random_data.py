@@ -63,10 +63,9 @@ def random_SMILES_from_file(input_file, output_file, reference_file='./DrugSpace
         (ref_df[reference_col_name].str.len() <= length_max)
         ]
     df[smiles_col_name] = ref_df[reference_col_name].sample(n=df.shape[0]).reset_index(drop=True)
-    print(df)
     df.to_csv(output_file, sep='\t', index=False)
     if also_generate_mordred:
-        mordred, _ = generate_mordred(df)
+        mordred, _ = generate_mordred(df, smiles_col_name=smiles_col_name)
         mordred.to_csv(output_file_mordred, sep='\t', index=False)
 
 
