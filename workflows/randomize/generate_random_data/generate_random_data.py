@@ -91,7 +91,7 @@ def main():
     parser_SMILES.add_argument('--length_min', default=1, help="Minimum SMILES length to include.")
     parser_SMILES.add_argument('--length_max', default=np.inf, help="Maximum SMILES length to include.")
     parser_SMILES.add_argument('--also_generate_mordred', default=False, help="If set to True, will also generate the mordred.")
-    parser_SMILES.add_argument('--output_file_mordred', default=False, help="File name to save mordred data (including path if not in this directory).")
+    parser_SMILES.add_argument('--output_file_mordred', default='./mordred.tsv', help="File name to save mordred data (including path if not in this directory).")
     parser_SMILES.set_defaults(func=random_SMILES_from_file)
     
     args = parser.parse_args()
