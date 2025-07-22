@@ -33,7 +33,7 @@ if params['swarm_prefix'] is not None:
     prefix = params['swarm_prefix']
 else:
     model_env = check_dir_path_or_model_scripts_dir(params['model_environment'], params['model_scripts_dir'])
-    prefix = f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {params['model_scripts_dir']}/{params['model_environment']} ; export PYTHONPATH=../../../../IMPROVE ; "
+    prefix = f"conda_path=$(dirname $(dirname $(which conda))) ; source $conda_path/bin/activate {model_env} ; export PYTHONPATH=../../../../IMPROVE ; "
 
 
 #Model scripts
