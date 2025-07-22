@@ -11,6 +11,11 @@ additional_definitions = [
      "default": './', 
      "help": "Path to the model repository."
     },
+    {"name": "model_environment",
+     "type": str,
+     "default": '',
+     "help": "Name of your model conda environment"
+    },
     {"name": "randomized_data",
      "type": str,
      "default": "{'cell_transcriptomic_file': ['default', 'cancer_gene_expression_shuffle_full_1.tsv', 'cancer_gene_expression_shuffle_full_2.tsv'], 'drug_mordred_file': ['default', 'drug_mordred_shuffle_full_1.tsv']}", 
