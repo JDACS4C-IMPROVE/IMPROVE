@@ -58,7 +58,7 @@ def random_scores(input_dir, output_dir, y_col_name, metric_type, data_file_pref
                         y_true = preds[f"{y_col_name}_true"].values
                         y_pred = preds[f"{y_col_name}_pred"].values
                         scores = compute_metrics(y_true, y_pred, metric_type=metric_type)
-                        scores_df = pd.DataFrame(scores)
+                        scores_df = pd.DataFrame(scores, index=[0])
                         scores_df['dataset'] = dataset_name
                         scores_df['split_type'] = split_type_name
                         scores_df['split_num'] = split_num_name
