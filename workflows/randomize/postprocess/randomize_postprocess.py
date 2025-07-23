@@ -40,7 +40,7 @@ def _file_prefix(model_name, dataset):
     return prefix
 
 
-def lca_scores(input_dir, output_dir, y_col_name, metric_type, model_name, dataset, **kwargs):
+def lca_scores(input_dir, output_dir, y_col_name, metric_type, **kwargs):
     input_dir_path = Path(input_dir).resolve()  # absolute path to result dir
     output_dir = Path(output_dir)
     os.makedirs(output_dir, exist_ok=True)
