@@ -103,7 +103,7 @@ def gen_lc_splits(ytr_ids: List,
         #     sizes = sizes[:-1]
 
     # Create a list of lists with indices corresponding to the training set sizes
-    split_lists = [row_indices[:size].tolist() for size in sizes]
+    split_lists = [row_indices[:size] for size in sizes]
     return split_lists
 
 
