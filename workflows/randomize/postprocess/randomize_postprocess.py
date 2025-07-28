@@ -34,18 +34,18 @@ def random_scores(input_dir, output_dir, y_col_name, metric_type, data_file_pref
     print(datasets)
     for dataset in datasets:
         dataset_name = os.path.basename(os.path.normpath(dataset))
-        print(f"This dataset is {dataset}")
+        print(f"Processing dataset {dataset_name}...")
         split_types = sorted(list(dataset.glob("*")))
         split_types = [path for path in split_types if os.path.isdir(path)]
         print(split_types)
         for split_type in split_types:
             split_type_name = os.path.basename(os.path.normpath(split_type))
-            print(f"This split_type is {split_type}")
+            print(f"Processing split_type {split_type_name}...")
             split_nums = sorted(list(split_type.glob("*")))
             split_nums = [path for path in split_nums if os.path.isdir(path)]
             for split_num in split_nums:
                 split_num_name = os.path.basename(os.path.normpath(split_num))
-                print(f"This split_num is {split_num}")
+                print(f"Processing split_num {split_num}...")
                 rands = sorted(list(split_num.glob("*")))
                 rands = [path for path in rands if os.path.isdir(path)]
                 for rand in rands:
