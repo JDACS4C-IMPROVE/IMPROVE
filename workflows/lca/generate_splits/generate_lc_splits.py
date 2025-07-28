@@ -73,7 +73,6 @@ def gen_lc_splits(ytr_ids: List,
 
     # Create an array of shuffled row indices
     row_indices = ytr_ids
-    print("row_indices", row_indices[:10])
     np.random.shuffle(row_indices)
 
     # breakpoint()
@@ -220,8 +219,6 @@ for src in sources:
 
         train_split_file_name = f'{src}_split_{split_id}_train.txt'
         tr_ids = pd.read_csv(splits_dir / train_split_file_name, header=None)[0].tolist()
-        print("tr_ids", tr_ids[:10])
-        #ytr = ydata.loc[tr_ids] #here
         ytr = ydata[ydata['split_id'].isin(tr_ids)]
         ytr_ids = ytr['split_id'].to_list()
         split_lists = gen_lc_splits(ytr_ids, min_size=min_size, max_size=max_size,
