@@ -76,7 +76,8 @@ def _determine_substitute_zeros(feature_df, zeros):
         value_arr = feature_df.to_numpy().flatten()
         nonzero_arr = [x for x in value_arr if x != 0]
         nonzero_arr = np.sort(nonzero_arr)
-        bottom10_arr = np.round(len(nonzero_arr) * 0.1).astype(int)
+        bottom10 = np.round(len(nonzero_arr) * 0.1).astype(int)
+        bottom10_arr = nonzero_arr[:bottom10]
         max_val = max(bottom10_arr)
         min_val = min(bottom10_arr)
         feature_df = _substitue_zeros(feature_df, min_val, max_val)
@@ -172,6 +173,7 @@ def main():
     save_df(fuzzy_df, output_dir / args['output_file'])
     print(f"File {args['output_file']} saved to {output_dir}")
     if args['post_shuffle'] or args['post_shuffle'] == 'True' or args['post_shuffle'] == 'true':
+        print("Post-shuffling data...")
         fuzzy_df_shuffle = post_shuffle_data(fuzzy_df, strategy='full')
         save_df(fuzzy_df_shuffle, output_dir / args['output_file_post_shuffle'])
         print(f"File {args['output_file_post_shuffle']} saved to {output_dir}")
