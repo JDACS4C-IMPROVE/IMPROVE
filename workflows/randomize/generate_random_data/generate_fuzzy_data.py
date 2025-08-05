@@ -45,6 +45,7 @@ def _get_single_fuzzy(df_row, id_col, randomize, percent):
         val = df_row.iloc[g]
         print("g: ", g)
         print("val: ", val)
+        print("val type : ", type(val))
         new_val = _randomize_GE(val, count, randomize, percent)
         cols_fuzzy = cols_fuzzy + [new_val]
         #df_fuzzy[gene_name] = new_val
