@@ -102,6 +102,7 @@ def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001,
         print("done with", r, "out of", count_df.shape[0])
     all_fuzzy_df = pd.concat(all_fuzzy, axis=0)
     all_fuzzy_df = all_fuzzy_df.set_index(0)
+    all_fuzzy_df.index.name = id_col
     all_fuzzy_df.columns = feature_df.columns
     return all_fuzzy_df
     
