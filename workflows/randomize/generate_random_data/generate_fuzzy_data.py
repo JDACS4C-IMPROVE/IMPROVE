@@ -135,6 +135,11 @@ def post_shuffle_data(df, strategy, seed=42):
     return df_copy
 
 def save_df(df, path):
+    import polars as pl
+    print("Saving with Polars.")
+    pl_df = pl.from_pandas(df)
+    pl_df.write_csv(path, separator='\t')
+    '''
     try:
         import polars as pl
         print("Saving with Polars.")
@@ -143,6 +148,7 @@ def save_df(df, path):
     except:
         print("Polars not present. Using pandas to save.")
         df.to_csv(str(path), sep='\t')
+    '''
 
 
 def main():
