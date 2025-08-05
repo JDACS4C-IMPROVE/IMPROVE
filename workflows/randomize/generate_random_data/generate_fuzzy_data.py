@@ -19,6 +19,8 @@ def _get_count_df(response_df, feature_df, id_col):
 
 def _randomize_GE(val, count, randomize, percent):
     # find high and low of val given the percent to randomize (default is 0.1%)
+    print("val type : ", type(val))
+    print("percent type : ", type(percent))
     if randomize:
         val_min = val - (val * percent)
         val_max = val + (val * percent)
