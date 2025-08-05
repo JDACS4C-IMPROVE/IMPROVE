@@ -89,7 +89,8 @@ def _determine_substitute_zeros(feature_df, zeros):
 def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001, zeros=None):
     feature_df = _determine_substitute_zeros(feature_df, zeros)
     count_df = _get_count_df(response_df, feature_df, id_col)
-    #count_df = count_df.head(10) # testing only
+    count_df = count_df.head(10) # testing only
+    print("count_df", count_df)
     all_fuzzy = []
     # loop through every row
     for r in range(count_df.shape[0]):
