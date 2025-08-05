@@ -11,8 +11,8 @@ import argparse
 def _get_count_df(response_df, feature_df, id_col):
     #response_df = response_df[response_df["source"] == "GDSCv1"]
     response_count = response_df[id_col].value_counts() #here
-    print("response_count:", response_count)
     response_count = pd.DataFrame(response_count)
+    print("response_count:", response_count)
     response_count_withfeature = response_count.join(feature_df, how='left').reset_index()
     return response_count_withfeature
 
