@@ -168,7 +168,7 @@ def main():
     response_df = pd.read_csv(args['y_data_file'], sep='\t')
     feature_df = pd.read_csv(args['feature_file'], sep='\t', header=[0], index_col=[0])
 
-    fuzzy_df = create_fuzzy(response_df=response_df, feature_df=feature_df, id_col=args['id_col_name'], randomize=args['randomize'], percent=args['percent'], zeros=args['zeros'])
+    fuzzy_df = create_fuzzy(response_df=response_df, feature_df=feature_df, id_col=args['id_col_name'], randomize=args['randomize'], percent=float(args['percent']), zeros=args['zeros'])
     save_df(fuzzy_df, output_dir / args['output_file'])
     print(f"File {args['output_file']} saved to {output_dir}")
     if args['post_shuffle']:
