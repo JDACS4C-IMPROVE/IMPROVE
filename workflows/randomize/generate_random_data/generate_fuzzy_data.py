@@ -138,6 +138,7 @@ def save_df(df, path):
     import polars as pl
     print("Saving with Polars.")
     pl_df = pl.from_pandas(df)
+    print(pl_df)
     pl_df.write_csv(path, separator='\t')
     '''
     try:
