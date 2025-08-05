@@ -42,7 +42,7 @@ def _get_single_fuzzy(df_row, id_col, randomize, percent):
     cols_fuzzy = []
     cols_fuzzy = cols_fuzzy + [pd.Series(names)]
     for g in range(2, df_row.size):
-        val = df_row[[g]]
+        val = df_row.iloc[g]
         print("g: ", g)
         print("val: ", val)
         new_val = _randomize_GE(val, count, randomize, percent)
