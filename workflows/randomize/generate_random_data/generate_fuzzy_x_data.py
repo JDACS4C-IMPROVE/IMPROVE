@@ -9,18 +9,14 @@ import argparse
 
 
 def _get_count_df(response_df, feature_df, id_col):
-    #response_df = response_df[response_df["source"] == "GDSCv1"]
-    response_count = response_df[id_col].value_counts().to_frame().reset_index() #here
+    response_count = response_df[id_col].value_counts().to_frame().reset_index()
     response_count.columns = [id_col, 'count']
-    #response_count = pd.DataFrame(response_count, columns=['count'])
     print("response_count:", response_count)
     response_count_withfeature = response_count.join(feature_df, how='left', on=id_col)
     return response_count_withfeature
 
 def _randomize_GE(val, count, randomize, percent):
     # find high and low of val given the percent to randomize (default is 0.1%)
-    print("val type : ", type(val))
-    print("percent type : ", type(percent))
     if randomize:
         val_min = val - (val * percent)
         val_max = val + (val * percent)
@@ -45,12 +41,8 @@ def _get_single_fuzzy(df_row, id_col, randomize, percent):
     cols_fuzzy = cols_fuzzy + [pd.Series(names)]
     for g in range(2, df_row.size):
         val = df_row.iloc[g]
-        print("g: ", g)
-        print("val: ", val)
-        print("val type : ", type(val))
         new_val = _randomize_GE(val, count, randomize, percent)
         cols_fuzzy = cols_fuzzy + [new_val]
-        #df_fuzzy[gene_name] = new_val
     df_fuzzy = pd.concat(cols_fuzzy,axis=1)
     return df_fuzzy
 
@@ -95,7 +87,7 @@ def _determine_substitute_zeros(feature_df, zeros):
 def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001, zeros=None):
     feature_df = _determine_substitute_zeros(feature_df, zeros)
     count_df = _get_count_df(response_df, feature_df, id_col)
-    count_df = count_df.head(10) # testing only
+    #count_df = count_df.head(10) # testing only
     print("count_df", count_df)
     all_fuzzy = []
     # loop through every row
