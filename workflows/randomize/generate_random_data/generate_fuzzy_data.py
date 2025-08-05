@@ -171,7 +171,7 @@ def main():
     fuzzy_df = create_fuzzy(response_df=response_df, feature_df=feature_df, id_col=args['id_col_name'], randomize=args['randomize'], percent=float(args['percent']), zeros=args['zeros'])
     save_df(fuzzy_df, output_dir / args['output_file'])
     print(f"File {args['output_file']} saved to {output_dir}")
-    if args['post_shuffle']:
+    if args['post_shuffle'] or args['post_shuffle'] == 'True' or args['post_shuffle'] == 'true':
         fuzzy_df_shuffle = post_shuffle_data(fuzzy_df, strategy='full')
         save_df(fuzzy_df_shuffle, output_dir / args['output_file_post_shuffle'])
         print(f"File {args['output_file_post_shuffle']} saved to {output_dir}")
