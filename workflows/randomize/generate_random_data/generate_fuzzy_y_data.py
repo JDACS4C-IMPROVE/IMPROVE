@@ -14,7 +14,7 @@ def _modify_ids(df, id_cols):
         count_df.columns = [id_col, 'count']
         dfs_list = []
         for index, row in count_df.iterrows():
-            reduced_df = df[df[id_col] == row[id_col]]
+            reduced_df = df[df[id_col] == row[id_col]].copy()
             suff_nums = list(range(row['count']))
             suffixed = [row[id_col]+'_'+str(suff) for suff in suff_nums]
             reduced_df[id_col] = suffixed
