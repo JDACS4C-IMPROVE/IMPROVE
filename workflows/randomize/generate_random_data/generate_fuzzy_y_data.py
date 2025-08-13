@@ -50,6 +50,7 @@ def main():
     output_dir = Path(args['output_dir'])
     os.makedirs(output_dir, exist_ok=True)
     response_df = pd.read_csv(args['y_data_file'], sep='\t', index_col=0)
+    print("id_cols", args['id_col_names'])
     id_cols = literal_eval(args['id_col_names'])
     print("id_cols", id_cols)
     fuzzy_response = _modify_ids(response_df, id_cols)
