@@ -10,6 +10,7 @@ import argparse
 
 def _modify_ids(df, id_cols):
     for id_col in id_cols:
+        print(f"Modifying IDs for {id_col}.")
         count_df = df[id_col].value_counts().to_frame().reset_index() #here
         count_df.columns = [id_col, 'count']
         dfs_list = []
@@ -19,7 +20,10 @@ def _modify_ids(df, id_cols):
             suffixed = [row[id_col]+'_'+str(suff) for suff in suff_nums]
             reduced_df[id_col] = suffixed
             dfs_list = dfs_list + [reduced_df]
+        print(f"Generating dataframe of modifying IDs for {id_col}.")
         df = pd.concat(dfs_list)
+    print(f"IDs {id_cols} modified. Sorting dataframe.")
+    df = df.sort_values(by='split_id')
     return df
 
 
@@ -45,7 +49,7 @@ def main():
     args = vars(parser.parse_args())
     output_dir = Path(args['output_dir'])
     os.makedirs(output_dir, exist_ok=True)
-    response_df = pd.read_csv(args['y_data_file'], sep='\t')
+    response_df = pd.read_csv(args['y_data_file'], sep='\t', index_col=0)
     id_cols = args['id_col_names']
     print("id_cols", id_cols)
     fuzzy_response = _modify_ids(response_df, id_cols)
