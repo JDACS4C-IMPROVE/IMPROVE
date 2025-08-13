@@ -3,15 +3,24 @@ import os
 from pathlib import Path
 import pandas as pd
 import numpy as np
-import random
 import argparse
 
-def _get_counts(df, id_col):
-    response_count = df[id_col].value_counts().to_frame().reset_index() #here
-    response_count.columns = [id_col, 'count']
-    print("response_count:", response_count)
-    response_count_withdata = response_count.join(df, how='left', on=id_col)
-    return response_count_withdata
+
+
+
+def _modify_ids(df, id_cols):
+    for id_col in id_cols:
+        count_df = df[id_col].value_counts().to_frame().reset_index() #here
+        count_df.columns = [id_col, 'count']
+        dfs_list = []
+        for index, row in count_df.iterrows():
+            reduced_df = df[df[id_col] == row[id_col]]
+            suff_nums = list(range(row['count']))
+            suffixed = [row[id_col]+'_'+str(suff) for suff in suff_nums]
+            reduced_df[id_col] = suffixed
+            dfs_list = dfs_list + [reduced_df]
+        df = pd.concat(dfs_list)
+    return df
 
 
 
@@ -37,16 +46,11 @@ def main():
     output_dir = Path(args['output_dir'])
     os.makedirs(output_dir, exist_ok=True)
     response_df = pd.read_csv(args['y_data_file'], sep='\t')
-    feature_df = pd.read_csv(args['feature_file'], sep='\t', header=[0], index_col=[0])
-
-    fuzzy_df = create_fuzzy(response_df=response_df, feature_df=feature_df, id_col=args['id_col_name'], randomize=args['randomize'], percent=float(args['percent']), zeros=args['zeros'])
-    save_df(fuzzy_df, output_dir / args['output_file'])
+    id_cols = args['id_col_names']
+    print("id_cols", id_cols)
+    fuzzy_response = _modify_ids(response_df, id_cols)
+    save_df(fuzzy_response, output_dir / args['output_file'])
     print(f"File {args['output_file']} saved to {output_dir}")
-    if args['post_shuffle'] or args['post_shuffle'] == 'True' or args['post_shuffle'] == 'true':
-        print("Post-shuffling data...")
-        fuzzy_df_shuffle = post_shuffle_data(fuzzy_df, strategy='full')
-        save_df(fuzzy_df_shuffle, output_dir / args['output_file_post_shuffle'])
-        print(f"File {args['output_file_post_shuffle']} saved to {output_dir}")
     print("Script complete.")
 
 if __name__ == '__main__':
