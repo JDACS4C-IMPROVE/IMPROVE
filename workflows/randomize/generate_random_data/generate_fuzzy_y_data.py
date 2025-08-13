@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import argparse
-
+from ast import literal_eval
 
 
 
@@ -50,7 +50,7 @@ def main():
     output_dir = Path(args['output_dir'])
     os.makedirs(output_dir, exist_ok=True)
     response_df = pd.read_csv(args['y_data_file'], sep='\t', index_col=0)
-    id_cols = args['id_col_names']
+    id_cols = literal_eval(args['id_col_names'])
     print("id_cols", id_cols)
     fuzzy_response = _modify_ids(response_df, id_cols)
     save_df(fuzzy_response, output_dir / args['output_file'])
