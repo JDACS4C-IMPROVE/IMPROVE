@@ -4,7 +4,6 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import argparse
-from ast import literal_eval
 
 
 
@@ -45,13 +44,12 @@ def main():
     parser.add_argument('--y_data_file', default='./response.tsv')
     parser.add_argument('--output_dir', default='./fuzzy_files')
     parser.add_argument('--output_file', default='response_fuzzy.tsv')
-    parser.add_argument('--id_col_names', default=['improve_chem_id', 'improve_sample_id'])
+    parser.add_argument('--id_col_names', nargs='+', default=['improve_chem_id', 'improve_sample_id'])
     args = vars(parser.parse_args())
     output_dir = Path(args['output_dir'])
     os.makedirs(output_dir, exist_ok=True)
     response_df = pd.read_csv(args['y_data_file'], sep='\t', index_col=0)
-    print("id_cols", args['id_col_names'])
-    id_cols = literal_eval(args['id_col_names'])
+    id_cols = args['id_col_names']
     print("id_cols", id_cols)
     fuzzy_response = _modify_ids(response_df, id_cols)
     save_df(fuzzy_response, output_dir / args['output_file'])
