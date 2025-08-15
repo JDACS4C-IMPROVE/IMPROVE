@@ -132,6 +132,12 @@ def post_shuffle_data(df, strategy, seed=42):
     return df_copy
 
 def save_df(df, path):
+    """Saves dataframe using polars if present in the environment (faster), otherwise using pandas.
+
+    Args:
+        df (pd.DataFrame): DataFrame to save.
+        path (Union[Path, str]): Path to save DataFrame (including file name).
+    """
     try:
         import polars as pl
         print("Saving with Polars.")
