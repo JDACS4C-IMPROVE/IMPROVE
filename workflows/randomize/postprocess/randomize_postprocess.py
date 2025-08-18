@@ -88,7 +88,7 @@ def random_scores(input_dir, output_dir, y_col_name, metric_type, data_file_pref
     if len(missing_pred_files) > 0:
         with open(f"{output_dir}/{missing_preds_filename}", "w") as f:
             for line in missing_pred_files:
-                f.write(line + "\n")
+                f.write(str(line) + "\n")
 
 
     
