@@ -40,8 +40,10 @@ def _get_single_fuzzy(df_row, id_col, randomize, percent):
         names = names + [name + "_" + str(n)]
     cols_fuzzy = []
     cols_fuzzy = cols_fuzzy + [pd.Series(names)]
+    print(f"Name: {name}")
     for g in range(2, df_row.size):
         val = df_row.iloc[g]
+        print(f"Col: {g}")
         new_val = _randomize_GE(val, count, randomize, percent)
         cols_fuzzy = cols_fuzzy + [new_val]
     df_fuzzy = pd.concat(cols_fuzzy,axis=1)
