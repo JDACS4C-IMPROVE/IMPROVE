@@ -23,6 +23,7 @@ def _randomize_GE(val, count, randomize, percent):
     else:
         val_min = val
         val_max = val
+    print(f"val_min: {val_min}, val_max: {val_max}")
     rng = np.random.default_rng()
     # to deal with negative numbers
     if val_min.item() > val_max.item():
