@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import random
 import argparse
+import sys
 
 
 
@@ -84,11 +85,12 @@ def _determine_substitute_zeros(feature_df, zeros):
     
         
 
-def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001, zeros=None):
+def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001, zeros=None, use_polars=False):
     feature_df = _determine_substitute_zeros(feature_df, zeros)
+    original_cols =  feature_df.columns.tolist()
     count_df = _get_count_df(response_df, feature_df, id_col)
     count_df = count_df.dropna()
-    #count_df = count_df.head(10) # testing only
+    count_df = count_df.head(10) # testing only
     print("count_df", count_df)
     all_fuzzy = []
     # loop through every row
@@ -97,10 +99,13 @@ def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001,
         this_fuzzy = _get_single_fuzzy(df_row, id_col, randomize, percent)
         all_fuzzy = all_fuzzy + [this_fuzzy]
         print("done with", r, "out of", count_df.shape[0])
-    all_fuzzy_df = pd.concat(all_fuzzy, axis=0)
-    all_fuzzy_df = all_fuzzy_df.set_index(0)
-    all_fuzzy_df.index.name = id_col
-    all_fuzzy_df.columns = feature_df.columns
+    if use_polars:
+        all_fuzzy_df = pl.concat(all_fuzzy)
+    else:
+        all_fuzzy_df = pd.concat(all_fuzzy, axis=0)
+        #all_fuzzy_df = all_fuzzy_df.set_index(0)
+        col_names = [id_col] + original_cols
+        all_fuzzy_df.columns = col_names
     return all_fuzzy_df
     
 def post_shuffle_data(df, strategy, seed=42):
@@ -120,6 +125,7 @@ def post_shuffle_data(df, strategy, seed=42):
         pd.DataFrame: Shuffled data.
     """
     random.seed(seed)
+    df = df.set_index(0)
     all_df_values = pd.Series(df.values.ravel())
     df_copy = df.copy()
     if strategy == 'column':
@@ -130,23 +136,23 @@ def post_shuffle_data(df, strategy, seed=42):
             df_copy.iloc[:, c] = random.choices(all_df_values, k=df.shape[0]) # with replacement
     else:
         raise ValueError(f"Strategy {strategy} is invalid. Choose 'column' or 'full'.")
+    df_copy = df_copy.reset_index()
     return df_copy
 
-def save_df(df, path):
+def save_df(df, path, use_polars=False):
     """Saves dataframe using polars if present in the environment (faster), otherwise using pandas.
 
     Args:
         df (pd.DataFrame): DataFrame to save.
         path (Union[Path, str]): Path to save DataFrame (including file name).
     """
-    try:
-        import polars as pl
-        print("Saving with Polars.")
-        pl_df = pl.from_pandas(df.reset_index())
+    if use_polars:
+        print("Saving with polars.")
+        pl_df = pl.from_pandas(df)
         pl_df.write_csv(path, separator='\t')
-    except:
-        print("Polars not present. Using pandas to save.")
-        df.to_csv(str(path), sep='\t')
+    else:
+        print("Saving with pandas.")
+        df.to_csv(str(path), sep='\t', index=False)
 
 
 
@@ -162,14 +168,21 @@ def main():
     parser.add_argument('--randomize', default=False)
     parser.add_argument('--percent', default=0.01)
     parser.add_argument('--post_shuffle', default=False)
+    parser.add_argument('--polars', action='store_true')
     args = vars(parser.parse_args())
+    if args['polars']:
+        try:
+            import polars as pl
+        except:
+            print("--polars given as argument but polars not present in environment. Exiting.")
+            sys.exit(1)
     output_dir = Path(args['output_dir'])
     os.makedirs(output_dir, exist_ok=True)
     response_df = pd.read_csv(args['y_data_file'], sep='\t')
     feature_df = pd.read_csv(args['feature_file'], sep='\t', header=[0], index_col=[0])
 
-    fuzzy_df = create_fuzzy(response_df=response_df, feature_df=feature_df, id_col=args['id_col_name'], randomize=args['randomize'], percent=float(args['percent']), zeros=args['zeros'])
-    save_df(fuzzy_df, output_dir / args['output_file'])
+    fuzzy_df = create_fuzzy(response_df=response_df, feature_df=feature_df, id_col=args['id_col_name'], randomize=args['randomize'], percent=float(args['percent']), zeros=args['zeros'], use_polars=args['polars'])
+    save_df(fuzzy_df, output_dir / args['output_file'], use_polars=args['polars'])
     print(f"File {args['output_file']} saved to {output_dir}")
     if args['post_shuffle'] or args['post_shuffle'] == 'True' or args['post_shuffle'] == 'true':
         print("Post-shuffling data...")
