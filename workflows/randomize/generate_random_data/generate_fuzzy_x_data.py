@@ -94,15 +94,21 @@ def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001,
     print("count_df", count_df)
     all_fuzzy = []
     # loop through every row
-    for r in range(count_df.shape[0]):
-        df_row = count_df.iloc[r]
-        this_fuzzy = _get_single_fuzzy(df_row, id_col, randomize, percent)
-        all_fuzzy = all_fuzzy + [this_fuzzy]
-        print("done with", r, "out of", count_df.shape[0])
+
     if use_polars:
         import polars as pl
+        for r in range(count_df.shape[0]):
+            df_row = count_df.iloc[r]
+            this_fuzzy = _get_single_fuzzy(df_row, id_col, randomize, percent)
+            all_fuzzy = all_fuzzy + [pl.from_pandas(this_fuzzy)]
+            print("done with", r, "out of", count_df.shape[0])
         all_fuzzy_df = pl.concat(all_fuzzy)
     else:
+        for r in range(count_df.shape[0]):
+            df_row = count_df.iloc[r]
+            this_fuzzy = _get_single_fuzzy(df_row, id_col, randomize, percent)
+            all_fuzzy = all_fuzzy + [this_fuzzy]
+            print("done with", r, "out of", count_df.shape[0])
         all_fuzzy_df = pd.concat(all_fuzzy, axis=0)
         #all_fuzzy_df = all_fuzzy_df.set_index(0)
         col_names = [id_col] + original_cols
