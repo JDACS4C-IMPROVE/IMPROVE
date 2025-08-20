@@ -100,6 +100,7 @@ def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001,
         all_fuzzy = all_fuzzy + [this_fuzzy]
         print("done with", r, "out of", count_df.shape[0])
     if use_polars:
+        import polars as pl
         all_fuzzy_df = pl.concat(all_fuzzy)
     else:
         all_fuzzy_df = pd.concat(all_fuzzy, axis=0)
@@ -148,6 +149,7 @@ def save_df(df, path, use_polars=False):
     """
     if use_polars:
         print("Saving with polars.")
+        import polars as pl
         pl_df = pl.from_pandas(df)
         pl_df.write_csv(path, separator='\t')
     else:
