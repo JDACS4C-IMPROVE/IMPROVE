@@ -44,6 +44,11 @@ additional_definitions = [
      "default": False,
      "help": "If only cross study analysis is needed"
     },
+    {"name": "swarm_prefix",
+     "type": str,
+     "default": None,
+     "help": "Swarm prefix, if an alternate one is needed."
+    },
     {"name": "swarm_file_prefix",
      "type": str,
      "default": None,
