@@ -34,6 +34,11 @@ additional_definitions = [
      "default": ['0'],
      "help": "Split of the source datasets for CSA"
     },
+    {"name": "split_type",
+     "type": str,
+     "default": 'split',
+     "help": "Type of splits to use. One of ['split', 'cell', 'drug']."
+    },
     {"name": "only_cross_study",
      "type": str2bool,
      "default": False,

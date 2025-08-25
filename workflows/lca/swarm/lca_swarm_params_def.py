@@ -32,6 +32,11 @@ additional_definitions = [
      "default": ['0', '1'],
      "help": "Split of the datasets for LCA"
     },
+    {"name": "split_type",
+     "type": str,
+     "default": 'split',
+     "help": "Type of splits to use. One of ['split', 'cell', 'drug']."
+    },
     {"name": "swarm_prefix",
      "type": str,
      "default": None,
