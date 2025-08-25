@@ -70,7 +70,7 @@ infer_additional_args = additional_parameters_dict_to_string(infer_additional_ar
 print("source_datasets:", params["source_datasets"])
 print("target_datasets:", params["target_datasets"])
 print("split_nums:", params["split_nums"])
-print("split_type:", params["split_type"])
+print("split_type:", params['split_type'])
 
 preprocess_list = []
 train_list = []
@@ -81,14 +81,14 @@ for source_data_name in params["source_datasets"]:
     # This parsing assumes splits file names are: SOURCE_split_NUM_[train/val/test].txt
     if len(params["split_nums"]) == 0:
         # Get all splits
-        split_files = list((splits_dir).glob(f"{source_data_name}_{params["split_type"]}_*.txt"))
+        split_files = list((splits_dir).glob(f"{source_data_name}_{params['split_type']}_*.txt"))
         params["split_nums"] = [str(s).split("split_")[1].split("_")[0] for s in split_files]
         params["split_nums"] = sorted(set(params["split_nums"]))
     else:
         # Use the specified splits
         split_files = []
         for s in params["split_nums"]:
-            split_files.extend(list((splits_dir).glob(f"{source_data_name}_{params["split_type"]}_{s}_*.txt")))
+            split_files.extend(list((splits_dir).glob(f"{source_data_name}_{params['split_type']}_{s}_*.txt")))
 
     files_joined = [str(s) for s in split_files]
     print("FILES JOINED:", files_joined)
@@ -98,7 +98,7 @@ for source_data_name in params["source_datasets"]:
         print(f"Split id {split} out of {len(params['split_nums'])} splits.")
         # Check that train, val, and test are available. Otherwise, continue to the next split.
         for phase in ["train", "val", "test"]:
-            fname = f"{source_data_name}_{params["split_type"]}_{split}_{phase}.txt"
+            fname = f"{source_data_name}_{params['split_type']}_{split}_{phase}.txt"
             if fname not in "\t".join(files_joined):
                 print(f"\nThe {phase} split file {fname} is missing (continue to next split)")
                 continue
@@ -108,15 +108,15 @@ for source_data_name in params["source_datasets"]:
                 continue # only cross-study
 
             # set dirs
-            ml_data_dir = MAIN_ML_DATA_DIR / f"{source_data_name}-{target_data_name}" / f"{params["split_type"]}_{split}"
-            model_dir = MAIN_MODEL_DIR / f"{source_data_name}" / f"{params["split_type"]}_{split}"
-            infer_dir = MAIN_INFER_DIR / f"{source_data_name}-{target_data_name}" / f"{params["split_type"]}_{split}"
+            ml_data_dir = MAIN_ML_DATA_DIR / f"{source_data_name}-{target_data_name}" / f"{params['split_type']}_{split}"
+            model_dir = MAIN_MODEL_DIR / f"{source_data_name}" / f"{params['split_type']}_{split}"
+            infer_dir = MAIN_INFER_DIR / f"{source_data_name}-{target_data_name}" / f"{params['split_type']}_{split}"
 
             # set split file names
-            train_split_file = f"{source_data_name}_{params["split_type"]}_{split}_train.txt"
-            val_split_file = f"{source_data_name}_{params["split_type"]}_{split}_val.txt"
+            train_split_file = f"{source_data_name}_{params['split_type']}_{split}_train.txt"
+            val_split_file = f"{source_data_name}_{params['split_type']}_{split}_val.txt"
             if source_data_name == target_data_name: # If source and target are the same, then infer on the test split
-                test_split_file = f"{source_data_name}_{params["split_type"]}_{split}_test.txt"
+                test_split_file = f"{source_data_name}_{params['split_type']}_{split}_test.txt"
             else: # If source and target are different, then infer on the entire target dataset
                 test_split_file = f"{target_data_name}_all.txt"
 
@@ -136,7 +136,7 @@ for source_data_name in params["source_datasets"]:
 if params['swarm_file_prefix'] is not None:
     swarm_file_prefix = params['swarm_file_prefix']
 else:
-    swarm_file_prefix = params['model_name'] + "_" + params["split_type"] + "_"
+    swarm_file_prefix = params['model_name'] + "_" + params['split_type'] + "_"
 
 # Save lists of swarm commands to file
 with open(params['output_swarmfile_dir'] + swarm_file_prefix + "preprocess.swarm", "w") as file:
