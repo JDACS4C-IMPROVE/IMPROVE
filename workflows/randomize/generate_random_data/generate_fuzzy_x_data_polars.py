@@ -105,12 +105,13 @@ def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001,
     count_df = count_df.head(10) # testing only
     print("count_df", count_df)
     all_fuzzy = []
+    r = 0 
     # loop through every row
-    for r in range(count_df.height):
-        df_row = count_df.row(r)
-        this_fuzzy = _get_single_fuzzy(df_row, id_col, randomize, percent)
+    for row in count_df.iter_rows():
+        this_fuzzy = _get_single_fuzzy(row, id_col, randomize, percent)
         all_fuzzy = all_fuzzy + [this_fuzzy]
         print("done with", r, "out of", count_df.height)
+        r = r + 1
     print("Done creating fuzzy, concat starting.")
     all_fuzzy_df = pl.concat(all_fuzzy)
     return all_fuzzy_df
