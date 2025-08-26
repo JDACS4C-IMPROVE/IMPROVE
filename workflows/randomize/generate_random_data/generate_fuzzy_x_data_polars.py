@@ -35,19 +35,19 @@ def _randomize_GE(val, count, randomize, percent):
     rand_vals = rng.uniform(low=val_min, high=val_max, size=count)
     return pl.Series(rand_vals)
 
-def _get_single_fuzzy(df_row, id_col, randomize, percent):
+def _get_single_fuzzy(df_row, col_names, randomize, percent):
     name = df_row[0]
     count = df_row[1]
     names = []
     for n in range(count):
         names = names + [name + "_" + str(n)]
     cols_fuzzy = []
-    cols_fuzzy = cols_fuzzy + [pl.Series(names)]
+    cols_fuzzy = cols_fuzzy + [names]
     for g in range(2, len(df_row)):
         val = df_row[g]
         new_val = _randomize_GE(val, count, randomize, percent)
         cols_fuzzy = cols_fuzzy + [new_val]
-    df_fuzzy = pl.concat(cols_fuzzy, how='horizontal')
+    df_fuzzy = pl.DataFrame(cols_fuzzy, schema=col_names)
     return df_fuzzy
 
 def _substitue_zeros(feature_df, min_val, max_val):
@@ -108,7 +108,7 @@ def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001,
     r = 0 
     # loop through every row
     for row in count_df.iter_rows():
-        this_fuzzy = _get_single_fuzzy(row, id_col, randomize, percent)
+        this_fuzzy = _get_single_fuzzy(row, original_cols, randomize, percent)
         all_fuzzy = all_fuzzy + [this_fuzzy]
         print("done with", r, "out of", count_df.height)
         r = r + 1
