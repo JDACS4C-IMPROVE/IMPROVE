@@ -102,7 +102,7 @@ def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001,
     original_cols =  feature_df.columns
     count_df = _get_count_df(response_df, feature_df, id_col)
     count_df = count_df.drop_nulls()
-    count_df = count_df.head(10) # testing only
+    #count_df = count_df.head(10) # testing only
     print("count_df", count_df)
     all_fuzzy = []
     r = 0 
