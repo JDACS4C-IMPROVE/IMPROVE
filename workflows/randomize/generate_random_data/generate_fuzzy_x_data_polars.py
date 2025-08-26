@@ -43,8 +43,8 @@ def _get_single_fuzzy(df_row, id_col, randomize, percent):
         names = names + [name + "_" + str(n)]
     cols_fuzzy = []
     cols_fuzzy = cols_fuzzy + [pl.Series(names)]
-    for g in range(2, df_row.size):
-        val = df_row.iloc[g]
+    for g in range(2, len(df_row)):
+        val = df_row[g]
         new_val = _randomize_GE(val, count, randomize, percent)
         cols_fuzzy = cols_fuzzy + [new_val]
     df_fuzzy = pl.concat(cols_fuzzy, how='horizontal')
