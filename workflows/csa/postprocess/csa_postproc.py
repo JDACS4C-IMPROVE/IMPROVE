@@ -52,7 +52,7 @@ res_dir_path = Path(res_dir).resolve()  # absolute path to CSA result dir
 if args.outdir is None:
     outdir = res_dir_path.parent / f'postproc.csa.{model_name}.{res_dir_path.name}'
 else:
-    outdir = args.outdir
+    outdir = Path(args.outdir)
 os.makedirs(outdir, exist_ok=True)
 
 
