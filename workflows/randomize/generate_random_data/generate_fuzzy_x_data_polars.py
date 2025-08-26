@@ -36,8 +36,8 @@ def _randomize_GE(val, count, randomize, percent):
     return pl.Series(rand_vals)
 
 def _get_single_fuzzy(df_row, id_col, randomize, percent):
-    name = df_row[id_col]
-    count = df_row['count']
+    name = df_row[0]
+    count = df_row[1]
     names = []
     for n in range(count):
         names = names + [name + "_" + str(n)]
