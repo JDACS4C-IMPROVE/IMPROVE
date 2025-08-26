@@ -39,6 +39,11 @@ parser.add_argument('--outdir',
                     default=None,
                     required=False,
                     help='Dir to save post-processing results.')
+parser.add_argument('--split_type',
+                    type=str,
+                    default='split',
+                    required=False,
+                    help='Split type.')
 args = parser.parse_args()
 
 # Args
@@ -88,6 +93,7 @@ scores = csa_postprocess(res_dir_path,
                          model_name,
                          y_col_name,
                          decimal_places=4,
-                         outdir=outdir)
+                         outdir=outdir,
+                         split_type=args.split_type)
 
 print('\nFinished cross-study post-processing.')
