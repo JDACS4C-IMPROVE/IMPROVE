@@ -29,7 +29,7 @@ def _randomize_GE(val, count, randomize, percent):
         val_max = val
     rng = np.random.default_rng()
     # to deal with negative numbers
-    if val_min.item() > val_max.item():
+    if val_min > val_max:
         val_min, val_max = val_max, val_min
     # get random numbers with given low and high (all equal to val if randomize is False)
     rand_vals = rng.uniform(low=val_min, high=val_max, size=count)
