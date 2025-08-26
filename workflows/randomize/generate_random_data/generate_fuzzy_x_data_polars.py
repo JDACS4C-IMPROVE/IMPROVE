@@ -136,13 +136,11 @@ def post_shuffle_data(df, strategy, seed=42):
     if strategy == 'column':
         print("Not implement in Polars yet")
     elif strategy == 'full':
-        original_col_names = df.columns
-        cols_list = [df.select([df.columns[0]])]
+        df_copy = pl.DataFrame(df.select([df.columns[0]]))
         df = df.drop([df.columns[0]])
         all_df_values = df.to_numpy().flatten().tolist()
         for c in df.columns:
-            cols_list.append(random.choices(all_df_values, k=df.height))
-        df_copy = pl.DataFrame(cols_list, schema=original_col_names)
+            df_copy.with_columns(pl.Series(c, random.choices(all_df_values, k=df.height)))
     else:
         raise ValueError(f"Strategy {strategy} is invalid. Choose 'column' or 'full'.")
     return df_copy
