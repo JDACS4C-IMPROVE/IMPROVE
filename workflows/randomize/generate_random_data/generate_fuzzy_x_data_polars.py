@@ -176,6 +176,7 @@ def main():
     if args['post_shuffle'] or args['post_shuffle'] == 'True' or args['post_shuffle'] == 'true':
         print("Post-shuffling data...")
         fuzzy_df_shuffle = post_shuffle_data(fuzzy_df, strategy='full')
+        print(fuzzy_df_shuffle)
         fuzzy_df_shuffle.write_csv(output_dir / args['output_file_post_shuffle'], separator='\t')
         print(f"File {args['output_file_post_shuffle']} saved to {output_dir}")
     print("Script complete.")
