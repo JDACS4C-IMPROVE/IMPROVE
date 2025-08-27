@@ -57,7 +57,7 @@ def _substitue_zeros(feature_df, min_val, max_val):
         expressions = []
         col_names = feature_df.columns
         for col_name in col_names[1:]:
-            rands = np.random.uniform(min_val, max_val, size=(num_rows, 1))
+            rands = np.random.uniform(min_val, max_val, num_rows)
             expressions.append(
                 pl.when(pl.col(col_name) == 0)
                 .then(pl.Series(rands))
