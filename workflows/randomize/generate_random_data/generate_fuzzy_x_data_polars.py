@@ -139,8 +139,12 @@ def post_shuffle_data(df, strategy, seed=42):
         df_copy = pl.DataFrame(df.select([df.columns[0]]))
         df = df.drop([df.columns[0]])
         all_df_values = df.to_numpy().flatten()
-        for c in df.columns:
-            df_copy = df_copy.with_columns(pl.Series(c, np.random.choice(all_df_values, size=df.height)))
+        df_columns = df.columns
+        df_height = df.height
+        del df
+        print(f"Memory occupied by the array: {all_df_values.nbytes} bytes")
+        for c in df_columns:
+            df_copy = df_copy.with_columns(pl.Series(c, np.random.choice(all_df_values, size=df_height)))
     else:
         raise ValueError(f"Strategy {strategy} is invalid. Choose 'column' or 'full'.")
     return df_copy
