@@ -3,46 +3,46 @@ from improvelib.utils import str2bool
 additional_definitions = [
     {"name": "model_name",
      "type": str,
-     "default": 'PathDSP',
-     "help": "Name of the deep learning model"
+     "default": 'lgbm',
+     "help": "Name of the deep learning model."
     },
     {"name": "model_scripts_dir",
      "type": str,
      "default": './', 
-     "help": "Path to the model repository"
+     "help": "Path to the model repository."
     },
     {"name": "model_environment",
      "type": str,
      "default": '',
      "help": "Name of your model conda environment"
     },
-    {"name": "source_datasets",
+    {"name": "randomized_data",
+     "type": str,
+     "default": "{'cell_transcriptomic_file': ['default', 'cancer_gene_expression_shuffle_full_1.tsv', 'cancer_gene_expression_shuffle_full_2.tsv'], 'drug_mordred_file': ['default', 'drug_mordred_shuffle_full_1.tsv']}", 
+     "help": "."
+    },
+    {"name": "randomized_data_dir",
+     "type": str,
+     "default": './', 
+     "help": "Path to the randomized data."
+    },
+    {"name": "datasets",
      "nargs" : "+",
      "type": str,
      "default": ['CCLE'],
-     "help": "source_datasets for cross study analysis"
-    },
-    {"name": "target_datasets",
-     "nargs" : "+",
-     "type": str,
-     "default": ["CCLE", "gCSI"],
-     "help": "target_datasets for cross study analysis"
+     "help": "Datasets to use."
     },
     {"name": "split_nums",
      "nargs" : "+",
      "type": str,
      "default": ['0'],
-     "help": "Split of the source datasets for CSA"
+     "help": "Split of the datasets to use."
     },
-    {"name": "split_type",
+    {"name": "split_types",
+     "nargs" : "+",
      "type": str,
-     "default": 'split',
-     "help": "Type of splits to use. One of ['split', 'cell', 'drug']."
-    },
-    {"name": "only_cross_study",
-     "type": str2bool,
-     "default": False,
-     "help": "If only cross study analysis is needed"
+     "default": ['split', 'cell', 'drug'],
+     "help": "Type of splits to use"
     },
     {"name": "swarm_prefix",
      "type": str,
@@ -73,5 +73,5 @@ additional_definitions = [
      "type": str,
      "default": '{}',
      "help": "Additional parameters for infer. Should be a dictionary, for example {'cuda_name': 0, 'y_col_name': 'loewe'}."
-    },   
-    ]
+    },    
+]

@@ -64,17 +64,17 @@ infer_list = []
 ## Loop through all splits specified in the parameters
 for split_num in params['split_nums']:
 
-    split_name = "split_" + split_num
+    split_name = params['split_type'] + "_" + split_num
     print(f"Running LCA with {params['dataset']} {split_name}...")
 
     # Determine files for training shards from the lca_splits_dir
-    lca_split_paths = list(Path(params['lca_splits_dir']).glob(f"{params['dataset']}_split_{split_num}_sz_*.txt"))
+    lca_split_paths = list(Path(params['lca_splits_dir']).glob(f"{params['dataset']}_{params['split_type']}_{split_num}_sz_*.txt"))
     lca_split_files = [os.path.basename(x) for x in lca_split_paths]
     print(f"Running LCA on {len(lca_split_files)} shards with the following training splits:", lca_split_files)
 
     # Set val and test names
-    val_split_file = f"{params['dataset']}_split_{split_num}_val.txt"
-    test_split_file = f"{params['dataset']}_split_{split_num}_test.txt"
+    val_split_file = f"{params['dataset']}_{params['split_type']}_{split_num}_val.txt"
+    test_split_file = f"{params['dataset']}_{params['split_type']}_{split_num}_test.txt"
 
     
     ## Loop through all shards for the specified split
@@ -100,7 +100,7 @@ for split_num in params['split_nums']:
 if params['swarm_file_prefix'] is not None:
     swarm_file_prefix = params['swarm_file_prefix']
 else:
-    swarm_file_prefix = params['model_name'] + "_" + params['dataset'] + "_"
+    swarm_file_prefix = params['model_name'] + "_" + params['dataset'] + "_" + params['split_type'] + "_"
 
 # Save lists of swarm commands to file
 with open(params['output_swarmfile_dir'] + swarm_file_prefix + "preprocess.swarm", "w") as file:

@@ -48,7 +48,8 @@ def csa_postprocess(res_dir_path,
                     metric_type: str="regression",
                     decimal_places: int=4,
                     outdir: str="./",
-                    verbose: bool=False):
+                    verbose: bool=False,
+                    split_type: str='split'):
     """ Generates cross-study analysis tables and a figure.
 
     Args:
@@ -106,7 +107,7 @@ def csa_postprocess(res_dir_path,
             print("Experiment:", dir_path)
             src = str(dir_path.name).split("-")[0]
             trg = str(dir_path.name).split("-")[1]
-            split_dirs = sorted(list((dir_path).glob(f"split_*")))
+            split_dirs = sorted(list((dir_path).glob(f"{split_type}_*")))
 
             jj = {}  # dict (key: split id, value: dict of scores)
 
@@ -122,7 +123,7 @@ def csa_postprocess(res_dir_path,
                     y_pred = preds[f"{y_col_name}_pred"].values
                     sc = compute_metrics(y_true, y_pred, metric_type=metric_type)
 
-                    split = int(split_dir.name.split("split_")[1])
+                    split = int(split_dir.name.split(f"{split_type}_")[1])
                     jj[split] = sc
                     # df = pd.DataFrame(jj)
                     # df = df.T.reset_index().rename(columns={"index": "split"})

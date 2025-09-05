@@ -27,7 +27,7 @@ logging.getLogger().addHandler(console_handler)
 filepath = Path(__file__).resolve().parent
 
 
-def gen_lc_splits(df: pd.DataFrame,
+def gen_lc_splits(ytr_ids: List,
                   min_size: int = 1,
                   max_size: Optional[int] = None,
                   n_sizes: int = 10,
@@ -53,11 +53,11 @@ def gen_lc_splits(df: pd.DataFrame,
             a training set size.
     """
 
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("df must be a pandas DataFrame")
+    if not isinstance(ytr_ids, List):
+        raise TypeError("df must be a List")
     if not isinstance(min_size, int) or (max_size is not None and not isinstance(max_size, int)) or not isinstance(n_sizes, int):
         raise TypeError("min_size, max_size (if provided), and n_sizes must all be integers")
-    if min_size < 1 or (max_size is not None and max_size > len(df)) or min_size >= (max_size if max_size is not None else len(df)):
+    if min_size < 1 or (max_size is not None and max_size > len(df)) or min_size >= (max_size if max_size is not None else len(ytr_ids)):
         raise ValueError("min_size must be >= 1 and < max_size (if provided), and max_size must be <= length of df")
     if n_sizes < 1:
         raise ValueError("n_sizes must be a positive integer")
@@ -66,13 +66,13 @@ def gen_lc_splits(df: pd.DataFrame,
 
     # Set max_size to the length of the data if not provided
     if max_size is None:
-        max_size = len(df)
+        max_size = len(ytr_ids)
 
     # Set the random seed for reproducibility
     np.random.seed(random_state)
 
     # Create an array of shuffled row indices
-    row_indices = np.arange(len(df))
+    row_indices = ytr_ids
     np.random.shuffle(row_indices)
 
     # breakpoint()
@@ -102,7 +102,7 @@ def gen_lc_splits(df: pd.DataFrame,
         #     sizes = sizes[:-1]
 
     # Create a list of lists with indices corresponding to the training set sizes
-    split_lists = [row_indices[:size].tolist() for size in sizes]
+    split_lists = [row_indices[:size] for size in sizes]
     return split_lists
 
 
@@ -219,8 +219,9 @@ for src in sources:
 
         train_split_file_name = f'{src}_split_{split_id}_train.txt'
         tr_ids = pd.read_csv(splits_dir / train_split_file_name, header=None)[0].tolist()
-        ytr = ydata.loc[tr_ids]
-        split_lists = gen_lc_splits(ytr, min_size=min_size, max_size=max_size,
+        ytr = ydata[ydata['split_id'].isin(tr_ids)]
+        ytr_ids = ytr['split_id'].to_list()
+        split_lists = gen_lc_splits(ytr_ids, min_size=min_size, max_size=max_size,
                                     n_sizes=lc_sizes, scale=lc_step_scale)
         for ii, ids in enumerate(split_lists):
             lc_size = len(ids)

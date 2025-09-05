@@ -99,13 +99,17 @@ def _determine_subset(df, subtype):
     # add check that it's only numerical
     if subtype == 'L1000_SYMBOL':
         # need id type and check here
-        subset_list = list(set(L1000_SYMBOL) & set(df.columns.to_list()))
+        df_columns = set(df.columns.to_list())
+        subset_list = [item for item in L1000_SYMBOL if item in df_columns]
     elif subtype == 'L1000_ENTREZ':
         # need id type and check here
-        subset_list = list(set(L1000_ENTREZ) & set(df.columns.to_list()))
+        df_columns = set(df.columns.to_list())
+        subset_list = [item for item in L1000_ENTREZ if item in df_columns]
     elif subtype == 'LINCS_SYMBOL':
         # need id type and check here
-        subset_list = list(set(LINCS_SYMBOL) & set(df.columns.to_list()))
+        df_columns = set(df.columns.to_list())
+        subset_list = [item for item in LINCS_SYMBOL if item in df_columns]
+        #subset_list = list(set(LINCS_SYMBOL) & set(df.columns.to_list())) # this does not preserve order!
     elif subtype == 'high_variance':
         vars = df.var()
         var_threshold = 0.8
@@ -114,7 +118,8 @@ def _determine_subset(df, subtype):
     elif os.path.isfile(subtype):
         try:
             loaded_list = list(np.loadtxt(subtype, dtype=str))
-            subset_list = list(set(loaded_list) & set(df.columns.to_list()))
+            df_columns = set(df.columns.to_list())
+            subset_list = [item for item in loaded_list if item in df_columns]
         except:
             print(f"There was an error trying to use {subtype} to subset the data. Ensure the file is a plain text list of gene IDs, with each ID on a new line. \n Skipping subset with {subtype}.")
  

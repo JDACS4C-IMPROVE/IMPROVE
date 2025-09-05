@@ -102,6 +102,7 @@ def fps_single_smile(smi, radius=1, nbits=2048):
     from rdkit import Chem
     from rdkit.Chem import AllChem, DataStructs
     # smi=pybel.readstring("smi", row["smiles"]).write("can").strip()
+    print(smi)
     mol = Chem.MolFromSmiles( smi )
     fp = AllChem.GetMorganFingerprintAsBitVect(mol=mol, radius=radius, nBits=nbits)
     fp_arr = np.array(fp) # .tolist()
@@ -149,6 +150,7 @@ def canonicalize_smiles(smi_df, id_col_name='DrugID', smiles_col_name='smiles', 
     can_smi_df = smi_df
     can_smi_df[smiles_col_name] = pd.Series(smi_vec)
     # Split dataframe into valid and invalid SMILES strings
+    can_smi_df = can_smi_df.replace('nan', np.nan)
     bad_smiles = can_smi_df[can_smi_df[smiles_col_name].isna()]
     good_smiles = can_smi_df[can_smi_df[smiles_col_name].notna()]
     return good_smiles, bad_smiles
