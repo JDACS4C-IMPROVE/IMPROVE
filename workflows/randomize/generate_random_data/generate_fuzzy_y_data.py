@@ -30,7 +30,7 @@ def _modify_ids(df, id_cols):
             reduced_df = df[df[id_col] == row[id_col]].copy()
             # Create unique IDs
             suff_nums = list(range(row['count']))
-            suffixed = [row[id_col]+'_'+str(suff) for suff in suff_nums]
+            suffixed = [row[id_col]+'---'+str(suff) for suff in suff_nums]
             # Replace the IDs in the subsetted df with the unique IDs
             reduced_df[id_col] = suffixed
             # Add the subsetted df to the list
