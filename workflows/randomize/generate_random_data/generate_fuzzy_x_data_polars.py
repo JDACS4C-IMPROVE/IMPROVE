@@ -143,7 +143,7 @@ def post_shuffle_data(df, strategy, seed=42):
 
 def subset_by_study(response_df, feature_df, dataset, id_col_name):
     #unhardcode source
-    small_response_df = response_df[response_df['source'] == dataset]
+    small_response_df = response_df.filter(pl.col('source') == dataset)
     small_response_split_df = small_response_df.with_columns(
         pl.col(id_col_name).str.split_exact("---", 1).alias("name_parts")).unnest("name_parts").rename({"field_0": id_col_name, "field_1": "num_list"})
     count_df = small_response_split_df.group_by(id_col_name).agg(pl.col('num_list'))
