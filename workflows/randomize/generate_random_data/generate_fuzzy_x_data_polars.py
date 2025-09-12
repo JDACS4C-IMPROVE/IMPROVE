@@ -145,11 +145,11 @@ def subset_by_study(response_df, feature_df, dataset, id_col_name):
     #unhardcode source
     small_response_df = response_df.filter(pl.col('source') == dataset)
     small_response_split_df = small_response_df.with_columns(
-        pl.col(id_col_name).str.split_exact("---", 1).alias("name_parts")).unnest("name_parts").rename({"field_0": id_col_name, "field_1": "num_list"})
-    count_df = small_response_split_df.group_by(id_col_name).agg(pl.col('num_list'))
-    count_df = count_df[[id_col_name, 'num_list']]
+        pl.col(id_col_name).str.split_exact("---", 1).alias("name_parts")).unnest("name_parts").rename({"field_0": "id", "field_1": "num_list"})
+    count_df = small_response_split_df.group_by("id").agg(pl.col('num_list'))
+    count_df = count_df[["id", 'num_list']]
     print("response_count:", count_df)
-    response_count_withfeature = count_df.join(feature_df, how='left', on=id_col_name)
+    response_count_withfeature = count_df.join(feature_df, how='left', left_on="id", right_on=id_col_name)
     return response_count_withfeature
 
 def main():
