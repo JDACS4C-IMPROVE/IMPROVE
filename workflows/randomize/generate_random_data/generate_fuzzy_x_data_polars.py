@@ -31,7 +31,7 @@ def _get_single_fuzzy(df_row, col_names, randomize, percent):
     num_list = df_row[1]
     names = []
     for n in range(len(num_list)):
-        names = names + [name + "--" + str(num_list[n])]
+        names = names + [name + "---" + str(num_list[n])]
     cols_fuzzy = []
     cols_fuzzy = cols_fuzzy + [names]
     for g in range(2, len(df_row)):
