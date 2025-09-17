@@ -86,13 +86,13 @@ This workflow uses IMPROVE parameter handling. You should create a config file f
 
 * `model_environment`: should be set to the location of the model environment (from step 1). You can provide a complete or relative path, or the name of the directory if it is in `model_scripts_dir`.
 
-* `max_evals`: should be set to the maximum number of evaluations to check for before launching additional training runs.
+* `max_evals`: Maximum number of evaluations to check for before launching additional training runs.
 
-* `hyperparameter_file` can be set to an alternate .json file containing hyperparameters. You can provide a complete or relative path, or the name of the directory if it is in `model_scripts_dir`. See below (step 5) for how to change hyperparameters.
+* `hyperparameter_file`: can be set to an alternate .json file containing hyperparameters. You can provide a complete or relative path, or the name of the directory if it is in `model_scripts_dir`. See below for how to change hyperparameters.
 
-* `val_metric` can be set to any IMPROVE metric you would like to optimize. 'mse' and 'rmse' are minimized, all other metrics are maximized. Note that this does not change what val loss is used by the model, only what HPO tries to optimize. Default is 'mse'.
+* `val_metric`: can be set to any IMPROVE metric you would like to optimize. 'mse' and 'rmse' are minimized, all other metrics are maximized. Note that this does not change what val loss is used by the model, only what HPO tries to optimize. Default: 'mse'.
 
-* `num_gpus_per_node` should be set to the number of GPUs per node on your system. Default is 2.
+* `num_gpus_per_node`: should be set to the number of GPUs per node on your system. Default: 2.
 
 * `epochs`: Number of epochs to train for. If None is specified, model default parameters will be used (default: None).
 
