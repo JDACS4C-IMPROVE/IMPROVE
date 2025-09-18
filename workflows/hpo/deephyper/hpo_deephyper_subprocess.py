@@ -98,9 +98,9 @@ def run(job, optuna_trial=None):
     ):
         objective = val_scores[params['val_metric']]
 
-    # Checkpoint the model weights
-    with open(f"{params['output_dir']}/model_{job.id}.pkl", "w") as f:
-        f.write("model weights")
+    # # Checkpoint the model weights
+    # with open(f"{params['output_dir']}/model_{job.id}.pkl", "w") as f:
+    #     f.write("model weights")
 
     # return score
     return {"objective": objective, "metadata": val_scores}
