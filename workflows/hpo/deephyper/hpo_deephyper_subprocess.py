@@ -46,12 +46,22 @@ def locate_input(param_to_check, model_scripts_dir):
 
 
 @profile
-def run(job, optuna_trial=None):
+def run(job):
     """Run a single training job and return the optimization objective.
 
-    This builds the subprocess command, executes it, writes stdout to a log
-    file, loads validation scores, computes the objective value, and returns
-    both the objective and the raw scores.
+    Args:
+        job: DeepHyper job object containing hyperparameters and job ID
+
+    Returns:
+        dict: Contains 'objective' (float) and 'metadata' (dict of validation scores)
+
+    Process:
+        1. Builds bash command with hyperparameters
+        2. Executes training subprocess and captures stdout/stderr
+        3. Writes subprocess output to <output_dir>/<job.id>/logs.txt
+        4. Loads validation scores from <job.id>/val_scores.json
+        5. Computes objective (negated for mse/rmse, direct for others)
+        6. Returns objective and raw validation scores
     """
     model_outdir_job_id = Path(params['output_dir'] + f"/{job.id}")
     train_run = [
@@ -202,5 +212,5 @@ if __name__ == "__main__":
             results = results.sort_values(f"m:{params['val_metric']}", ascending=True)
             results.to_csv(f"{params['output_dir']}/hpo_results.csv", index=False)
 
-    print("current node: ", socket.gethostname(), "; current rank: ", rank, "; CUDA_VISIBLE_DEVICE is set to: ", os.environ["CUDA_VISIBLE_DEVICES"])
+    print("node: ", socket.gethostname(), "; rank: ", rank, "; CUDA device: ", os.environ["CUDA_VISIBLE_DEVICES"])
     print("Finished deephyper HPO.")
