@@ -1,17 +1,19 @@
 import json
-import subprocess
-import pandas as pd
-import os
-from pathlib import Path
 import logging
+import os
+import socket
+import subprocess
+from pathlib import Path
+
 import mpi4py
+from mpi4py import MPI
 from deephyper.evaluator import Evaluator, profile
 from deephyper.evaluator.callback import TqdmCallback
-from deephyper.hpo import HpProblem, CBO
-from mpi4py import MPI
-import socket
+from deephyper.hpo import CBO, HpProblem
+
 import hpo_deephyper_params_def
 from improvelib.initializer.config import Config
+
 
 logging.basicConfig(
     # filename=f"deephyper.{rank}.log, # optional if we want to store the logs to disk
@@ -20,53 +22,78 @@ logging.basicConfig(
     force=True,
 )
 
+
 def locate_input(param_to_check, model_scripts_dir):
+    """
+    This func assists in verifying that some essential parameters specified in the
+    config file actually exist. This includes parameters such as:
+    - input_dir (which should contain the preprocessed data)
+    - model_environment (which is activated for the model in the subprocess)
+    - and hyperparameter_file (which contains the hyperparameters and ranges)
+
+    If a parameter is not found, the function checks if it's in model_scripts_dir.
+    If it's not, the function prints a warning.
+    """
+    # TODO: should this be an error? if yes, is it a problem if it's run in parallel?
     checking = param_to_check
-   # checks if param_to_check is a dir/file
+    # checks if param_to_check is a dir/file
     if not os.path.exists(param_to_check):
         # if param_to_check doesn't exist at that path, check if it's in model_scripts_dir
-        param_to_check = os.path.join(model_scripts_dir,param_to_check)
+        param_to_check = os.path.join(model_scripts_dir, param_to_check)
         if not os.path.exists(param_to_check):
             print(f"Parameter {checking} provided but not found at provided path or in model_scripts_dir.") 
     return param_to_check
 
+
 @profile
 def run(job, optuna_trial=None):
-    model_outdir_job_id = Path(params['output_dir'] + f"/{job.id}")
-    train_run = ["bash", "hpo_deephyper_subprocess_train.sh",
-             str(params['model_environment']),
-             str(params['script_name']),
-             str(params['input_dir']),
-             str(model_outdir_job_id),
-             str(os.environ["CUDA_VISIBLE_DEVICES"])
-        ]
-    if params['epochs'] is not None:
-        train_run = train_run + ['epochs'] + [str(params['epochs'])]
-    for hp in params['hyperparams']:
-        train_run = train_run + [str(hp)]
-        train_run = train_run + [str(job.parameters[hp])]
+    """Run a single training job and return the optimization objective.
 
-    print(f"Launching run: ")
+    This builds the subprocess command, executes it, writes stdout to a log
+    file, loads validation scores, computes the objective value, and returns
+    both the objective and the raw scores.
+    """
+    model_outdir_job_id = Path(params['output_dir'] + f"/{job.id}")
+    train_run = [
+        "bash",
+        "hpo_deephyper_subprocess_train.sh",
+        str(params['model_environment']), # Conda env
+        str(params['script_name']), # e.g., graphdrp_train_improve.py
+        str(params['input_dir']),
+        str(model_outdir_job_id),
+        str(os.environ["CUDA_VISIBLE_DEVICES"]),
+    ]
+    if params['epochs'] is not None:
+        train_run.extend(['epochs', str(params['epochs'])])
+    for hp in params['hyperparams']:
+        train_run.extend([str(hp), str(job.parameters[hp])])
+
+    print("Launching run:")
     print(train_run)
-    subprocess_res = subprocess.run(train_run, 
+    subprocess_res = subprocess.run(
+        train_run,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        universal_newlines=True
+        universal_newlines=True,
     )
     # Logger
     print(f"returncode = {subprocess_res.returncode}")
     result_file_name_stdout = model_outdir_job_id / 'logs.txt'
-    if model_outdir_job_id.exists() is False: # If subprocess fails, model_dir may not be created and we need to write the log files in model_dir
+    # If subprocess fails, model_dir may not be created and we need to write the log files in model_dir
+    if model_outdir_job_id.exists() is False:
         os.makedirs(model_outdir_job_id, exist_ok=True)
     with open(result_file_name_stdout, 'w') as file:
         file.write(subprocess_res.stdout)
 
     # Load val_scores and get val_metric. Minimizes mse/rmse, maximizes all else.
-    f = open(model_outdir_job_id / 'val_scores.json')
-    val_scores = json.load(f)
+    with open(model_outdir_job_id / 'val_scores.json') as val_file:
+        val_scores = json.load(val_file)
     if params['val_metric'] in ('mse', 'rmse'):
         objective = -val_scores[params['val_metric']]
-    elif params['val_metric'] in ('pcc', 'scc', 'r2', 'acc', 'recall', 'precision', 'f1', 'kappa', 'bacc', 'roc_auc', 'aupr'):
+    elif params['val_metric'] in (
+        'pcc', 'scc', 'r2', 'acc', 'recall', 'precision', 'f1', 'kappa',
+        'bacc', 'roc_auc', 'aupr'
+    ):
         objective = val_scores[params['val_metric']]
 
     # Checkpoint the model weights
@@ -80,7 +107,7 @@ def run(job, optuna_trial=None):
 if __name__ == "__main__":
     # Initialize parameters for DeepHyper HPO
     filepath = Path(__file__).resolve().parent
-    cfg = Config() 
+    cfg = Config()
     global params
     params = cfg.initialize_parameters(
         section="HPO",
@@ -93,10 +120,11 @@ if __name__ == "__main__":
         os.makedirs(output_dir, exist_ok=True)
 
     # Configure parameters for DeepHyper HPO
-    params['script_name'] = os.path.join(params['model_scripts_dir'],f"{params['model_name']}_train_improve.py")
-    params['input_dir'] = locate_input(params['input_dir'], params['model_scripts_dir'])
-    params['model_environment'] = locate_input(params['model_environment'], params['model_scripts_dir'])
-    params['hyperparameter_file'] = locate_input(params['hyperparameter_file'], params['model_scripts_dir'])
+    # script_name is the script to execute in run(); for HPO is usually the train script
+    params['script_name'] = os.path.join(params['model_scripts_dir'], f"{params['model_name']}_train_improve.py")
+    params['input_dir'] = locate_input(params['input_dir'], model_scripts_dir=params['model_scripts_dir'])
+    params['model_environment'] = locate_input(params['model_environment'], model_scripts_dir=params['model_scripts_dir'])
+    params['hyperparameter_file'] = locate_input(params['hyperparameter_file'], model_scripts_dir=params['model_scripts_dir'])
 
     # Set hyperparameters
     problem = HpProblem()
@@ -104,14 +132,24 @@ if __name__ == "__main__":
         hyperparams = json.load(f)
     for hp in hyperparams:
         if hp['type'] == "categorical":
-            problem.add_hyperparameter(hp['choices'], hp['name'], default_value=hp['default'])
+            problem.add_hyperparameter(
+                value=hp['choices'],
+                name=hp['name'],
+                default_value=hp['default']
+            )
         else:
             if hp['log_uniform']:
-                problem.add_hyperparameter((hp['min'], hp['max'], "log-uniform"), 
-                                        hp['name'], default_value=hp['default'])
+                problem.add_hyperparameter(
+                    value=(hp['min'], hp['max'], "log-uniform"),
+                    name=hp['name'],
+                    default_value=hp['default']
+                )
             else:
-                problem.add_hyperparameter((hp['min'], hp['max']), 
-                                        hp['name'], default_value=hp['default'])
+                problem.add_hyperparameter(
+                    value=(hp['min'], hp['max']),
+                    name=hp['name'],
+                    default_value=hp['default']
+                )
     params['hyperparams'] = [d['name'] for d in hyperparams]
 
     # Enable using multiple GPUs
@@ -128,8 +166,13 @@ if __name__ == "__main__":
     cuda_name = "cuda:" + str(rank % params['num_gpus_per_node'])
 
     # Run DeepHyper
+    # Use method="serial" to step through the code:
+    # python -m pdb hpo_deephyper_subprocess.py --config hpo_deephyper_params.ini
     with Evaluator.create(
-        run, method="mpicomm", method_kwargs={"callbacks": [TqdmCallback()]}
+        run,
+        method="mpicomm",
+        # method="serial", # allows to step through the code
+        method_kwargs={"callbacks": [TqdmCallback()]}
     ) as evaluator:
 
         if evaluator is not None:
@@ -156,5 +199,6 @@ if __name__ == "__main__":
             results = search.search(max_evals=params['max_evals'])
             results = results.sort_values(f"m:{params['val_metric']}", ascending=True)
             results.to_csv(f"{params['output_dir']}/hpo_results.csv", index=False)
+
     print("current node: ", socket.gethostname(), "; current rank: ", rank, "; CUDA_VISIBLE_DEVICE is set to: ", os.environ["CUDA_VISIBLE_DEVICES"])
     print("Finished deephyper HPO.")
