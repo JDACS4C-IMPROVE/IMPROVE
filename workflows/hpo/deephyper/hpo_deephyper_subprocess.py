@@ -14,13 +14,16 @@ from deephyper.hpo import CBO, HpProblem
 import hpo_deephyper_params_def
 from improvelib.initializer.config import Config
 
-
+# Set up logging
+log_level = os.getenv("IMPROVE_LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
-    # filename=f"deephyper.{rank}.log, # optional if we want to store the logs to disk
-    level=logging.INFO,
+    level=getattr(logging, log_level, logging.INFO),
     format="%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s",
     force=True,
 )
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 
 def locate_input(param_to_check, model_scripts_dir):
@@ -41,7 +44,7 @@ def locate_input(param_to_check, model_scripts_dir):
         # if param_to_check doesn't exist at that path, check if it's in model_scripts_dir
         param_to_check = os.path.join(model_scripts_dir, param_to_check)
         if not os.path.exists(param_to_check):
-            print(f"Parameter {checking} provided but not found at provided path or in model_scripts_dir.") 
+            logger.warning(f"Parameter {checking} provided but not found at provided path or in model_scripts_dir.") 
     return param_to_check
 
 
@@ -78,8 +81,8 @@ def run(job):
     for hp in params['hyperparams']:
         train_run.extend([str(hp), str(job.parameters[hp])])
 
-    print("Launching run:")
-    print(train_run)
+    logger.info("Launching run:")
+    logger.info(f"Command: {' '.join(train_run)}")
     subprocess_res = subprocess.run(
         train_run,
         stdout=subprocess.PIPE,
@@ -88,7 +91,7 @@ def run(job):
     )
 
     # Logger
-    print(f"returncode = {subprocess_res.returncode}")
+    logger.info(f"Training subprocess return code: {subprocess_res.returncode}")
     result_file_name_stdout = model_outdir_job_id / 'logs.txt'
     # If subprocess fails, model_outdir_job_id may not be created. If it's not,
     # we create it and then write the logs into result_file_name_stdout
@@ -100,13 +103,17 @@ def run(job):
     # Load val_scores, get val_metric, and set objective. Minimizes mse/rmse, maximizes all else.
     with open(model_outdir_job_id / 'val_scores.json') as val_file:
         val_scores = json.load(val_file)
-    if params['val_metric'] in ('mse', 'rmse'):
-        objective = -val_scores[params['val_metric']]
-    elif params['val_metric'] in (
+    
+    val_metric = params['val_metric']
+    if val_metric in ('mse', 'rmse'):
+        objective = -val_scores[val_metric]
+    elif val_metric in (
         'pcc', 'scc', 'r2', 'acc', 'recall', 'precision', 'f1', 'kappa',
         'bacc', 'roc_auc', 'aupr'
     ):
-        objective = val_scores[params['val_metric']]
+        objective = val_scores[val_metric]
+
+    logger.info(f"Job {job.id} completed - {val_metric}: {val_scores[val_metric]:.6f}, objective: {objective:.6f}")
 
     # # Checkpoint the model weights
     # with open(f"{params['output_dir']}/model_{job.id}.pkl", "w") as f:
@@ -176,6 +183,15 @@ if __name__ == "__main__":
     size = comm.Get_size()
     os.environ["CUDA_VISIBLE_DEVICES"] = str(rank % params['num_gpus_per_node'])
     cuda_name = "cuda:" + str(rank % params['num_gpus_per_node'])
+    
+    # Add per-rank log file (useful for Polaris)
+    log_file = f"{params['output_dir']}/deephyper_rank_{rank}.log"
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s"
+    ))
+    logger.addHandler(file_handler)
+    logger.info(f"Logging to file: {log_file}")
 
     # Run DeepHyper
     # Use method="serial" to step through the code:
@@ -188,7 +204,7 @@ if __name__ == "__main__":
     ) as evaluator:
 
         if evaluator is not None:
-            print(problem)
+            logger.info(f"HPO problem definition: {problem}")
             search = CBO(
                 problem,
                 evaluator,
@@ -208,9 +224,13 @@ if __name__ == "__main__":
                 filter_failures = params['CBO_filter_failures'],
                 max_failures = params['CBO_max_failures'],
             )
+            logger.info(f"Starting HPO search with {params['max_evals']} evaluations")
             results = search.search(max_evals=params['max_evals'])
             results = results.sort_values(f"m:{params['val_metric']}", ascending=True)
             results.to_csv(f"{params['output_dir']}/hpo_results.csv", index=False)
+            logger.info(f"HPO search completed. Results saved to {params['output_dir']}/hpo_results.csv")
+            best_metric_col = f"m:{params['val_metric']}"
+            logger.info(f"Best {params['val_metric']}: {results.iloc[0][best_metric_col]:.6f}")
 
-    print("node: ", socket.gethostname(), "; rank: ", rank, "; CUDA device: ", os.environ["CUDA_VISIBLE_DEVICES"])
-    print("Finished deephyper HPO.")
+    logger.info(f"Node: {socket.gethostname()}, Rank: {rank}, CUDA device: {os.environ['CUDA_VISIBLE_DEVICES']}")
+    logger.info("Finished DeepHyper HPO.")
