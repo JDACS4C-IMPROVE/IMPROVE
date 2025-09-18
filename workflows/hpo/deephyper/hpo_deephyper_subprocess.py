@@ -76,16 +76,18 @@ def run(job, optuna_trial=None):
         stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
+
     # Logger
     print(f"returncode = {subprocess_res.returncode}")
     result_file_name_stdout = model_outdir_job_id / 'logs.txt'
-    # If subprocess fails, model_dir may not be created and we need to write the log files in model_dir
+    # If subprocess fails, model_outdir_job_id may not be created. If it's not,
+    # we create it and then write the logs into result_file_name_stdout
     if model_outdir_job_id.exists() is False:
         os.makedirs(model_outdir_job_id, exist_ok=True)
     with open(result_file_name_stdout, 'w') as file:
         file.write(subprocess_res.stdout)
 
-    # Load val_scores and get val_metric. Minimizes mse/rmse, maximizes all else.
+    # Load val_scores, get val_metric, and set objective. Minimizes mse/rmse, maximizes all else.
     with open(model_outdir_job_id / 'val_scores.json') as val_file:
         val_scores = json.load(val_file)
     if params['val_metric'] in ('mse', 'rmse'):
