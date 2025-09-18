@@ -18,11 +18,11 @@ echo "Activated conda env $CONDA_ENV"
 
 # get mandatory arguments
 SCRIPT=$2
-input_dir=$3
-output_dir=$4
+INPUT_DIR=$3
+OUTPUT_DIR=$4
 CUDA_VISIBLE_DEVICES=$5
 
-command="python $SCRIPT --input_dir $input_dir --output_dir $output_dir "
+command="python $SCRIPT --input_dir $INPUT_DIR --output_dir $OUTPUT_DIR"
 
 
 # append hyperparameter arguments to python call
