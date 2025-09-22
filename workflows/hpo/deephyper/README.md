@@ -4,19 +4,22 @@
 
 The scripts contained here run Hyperparameter Optimization (HPO) using DeepHyper.
 
+
 ## Requirements
 
-* [IMPROVE general environment](https://jdacs4c-improve.github.io/docs/content/INSTALLATION.html)
+* [IMPROVE base environment](https://jdacs4c-improve.github.io/docs/content/INSTALLATION.html)
 * [DeepHyper](https://deephyper.readthedocs.io/en/stable/)
 * MPI (these instructions use [openmpi](https://www.open-mpi.org/))
 * [mpi4py](https://mpi4py.readthedocs.io/en/stable/) 
 * An IMPROVE-compliant model and its environment
 
+
 ## Installation and Setup
 
-Create conda environment for DeepHyper:
+Create conda environment for DeepHyper.
 
-```
+```bash
+# source /etc/profile.d/lmod.sh
 module load openmpi
 conda create -n dh python=3.9 -y
 conda activate dh
@@ -26,32 +29,45 @@ pip install mpi4py
 pip install improvelib
 ```
 
-Install the model of choice, IMPROVE, and benchmark datasets:
+Clone the model you want to use for the workflow (model should be IMPROVE-comliant).
 
-```
+```bash
 cd <WORKING_DIR>
 git clone https://github.com/JDACS4C-IMPROVE/<MODEL>
+# cd <MODEL>
+# source setup_improve.sh
+```
+
+Download the benchmark dataset:
+```bash
+# Give examples here
+```
+
+Create a Conda environment for the model in the model directory (or location of your choice). You'll need to specify the path of model conda env in the `hpo_deephyper_params.ini`.
+
+```bash
 cd <MODEL>
-source setup_improve.sh
-```
-
-Create a Conda environment path for the model in the model directory:
-The workflow will need to know the `<MODEL_ENV_NAME>`.
-
-```
 conda env create -f <MODEL_ENV>.yml -p ./<MODEL_ENV_NAME>/
 ```
 
+Run the preprocess script to generate data for model training and inefernce. The workflow needs to know the `<PATH/TO/PREPROCESSED/DATA>`.
 
-Run the preprocess script:
-The workflow will need to know the `<PATH/TO/PREPROCESSED/DATA>`.
-
-```
-cd <MODEL>
+```bash
+# cd <MODEL>
 conda activate ./<MODEL_ENV_NAME>/
 python <MODEL_NAME>_preprocess_improve.py --input_dir ./csa_data/raw_data --output_dir <PATH/TO/PREPROCESSED/DATA>
 conda deactivate
 ```
+
+Example:
+```bash
+cd GraphDRP
+conda activate graphdrp
+python graphdrp_preprocess_improve.py --input_dir ./csa_data/raw_data --output_dir preprocessed_data/CCLE/split_0
+# python graphdrp_preprocess_improve.py --input_dir ./drp_data_v1.0.0 --output_dir preprocessed_data/CCLE/split_0
+conda deactivate graphdrp
+```
+
 
 ## Parameter Configuration
 
@@ -60,17 +76,26 @@ conda deactivate
 This workflow uses IMPROVE parameter handling. You should create a config file following the template of `hpo_deephyper_params.ini` with the parameters appropriate for your experiment. Parameters may also be specified on the command line.
 
 
-* `model_scripts_dir` should be set to the path to the model directory containing the model scripts (from step 1).
-* `input_dir` should be set to the location of the preprocessed data (above). We highly recommend that the name of this directory includes the source and split (e.g. ./ml_data/CCLE-CCLE/split_0). You can provide a complete or relative path, or the name of the directory if it is in `model_scripts_dir`.
-* `model_name` should be set to your model name (this should have the same capitalization pattern as your model scripts, e.g. deepttc for deepttc_preprocess_improve.py, etc).
-* `model_environment` should be set to the location of the model environment (from step 1). You can provide a complete or relative path, or the name of the directory if it is in `model_scripts_dir`.
-* `output_dir` should be set to path you would like the output to be saved to. We highly recommend that the name of this directory includes the source and split (e.g. ./deephyper/CCLE/split_0)
+* `input_dir`: Path to the preprocessed data (above). We recommend that the name of this directory includes the source and split, if applicable (e.g. ./ml_data/CCLE/split_0). Expects an absolute path.
 
-* `max_evals` should be set to the maximum number of evaluations to check for before launching additional training runs.
-* `hyperparameter_file` can be set to an alternate .json file containing hyperparameters. You can provide a complete or relative path, or the name of the directory if it is in `model_scripts_dir`. See below (step 5) for how to change hyperparameters.
-* `val_metric` can be set to any IMPROVE metric you would like to optimize. 'mse' and 'rmse' are minimized, all other metrics are maximized. Note that this does not change what val loss is used by the model, only what HPO tries to optimize. Default is 'mse'.
-* `num_gpus_per_node` should be set to the number of GPUs per node on your system. Default is 2.
+* `output_dir`: Path to save the workflow results. We recommend that the name of this directory includes the source and split, if applicable (e.g. ./deephyper/CCLE/split_0)
+
+* `model_name`: Name of the model as used in scripts (i.e. <model_name>_preprocess_improve.py). Note that this is case-sensitive.
+
+* `model_scripts_dir`: Path to the model repository as cloned above. Expects an absolute path.
+
+* `model_environment`: should be set to the location of the model environment (from step 1). You can provide a complete or relative path, or the name of the directory if it is in `model_scripts_dir`.
+
+* `max_evals`: Maximum number of evaluations to check for before launching additional training runs.
+
+* `hyperparameter_file`: can be set to an alternate .json file containing hyperparameters. You can provide a complete or relative path, or the name of the directory if it is in `model_scripts_dir`. See below for how to change hyperparameters.
+
+* `val_metric`: can be set to any IMPROVE metric you would like to optimize. 'mse' and 'rmse' are minimized, all other metrics are maximized. Note that this does not change what val loss is used by the model, only what HPO tries to optimize. Default: 'mse'.
+
+* `num_gpus_per_node`: should be set to the number of GPUs per node on your system. Default: 2.
+
 * `epochs`: Number of epochs to train for. If None is specified, model default parameters will be used (default: None).
+
 * Parameters beginning with `CBO_` can be used to change the optimization protocol. The names of these parameters can be found by running `python hpo_deephyper_subprocess.py --help` or looking in `hpo_deephyper_params_def.py`. Documentation of the DeepHyper CBO can be found [here](https://deephyper.readthedocs.io/en/stable/_autosummary/deephyper.hpo.CBO.html#deephyper.hpo.CBO).
 
 **Hyperparameters**
@@ -85,14 +110,15 @@ The default settings are as follows:
 
 You can add more hyperparameters to test by adding additional dictionaries to this list. An example of an alternate hyperparameters file is `hpo_deephyper_hyperparameters_alternate.json`. Insure that the name is a valid parameter for the model you are using. Categorical hyperparameters can be added as follows:
 ```
-    {
-    "name": "early_stopping",
-    "type": "categorical",
-    "choices": [true, false], 
-    "default": false
-    }
+{
+"name": "early_stopping",
+"type": "categorical",
+"choices": [true, false], 
+"default": false
+}
 ```
 Note that boolean values must be lowercase in JSON files.
+
 
 ## Usage
 
