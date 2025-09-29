@@ -9,15 +9,6 @@ import sys
 
 
 
-def _get_count_df(response_df, feature_df, id_col):
-    '''
-    pl.DataFrame
-    '''
-    response_count = response_df[id_col].value_counts()
-    response_count.columns = [id_col, 'count']
-    print("response_count:", response_count)
-    response_count_withfeature = response_count.join(feature_df, how='left', on=id_col)
-    return response_count_withfeature
 
 def _randomize_GE(val, count, randomize, percent):
     # find high and low of val given the percent to randomize (default is 0.1%)
@@ -37,15 +28,15 @@ def _randomize_GE(val, count, randomize, percent):
 
 def _get_single_fuzzy(df_row, col_names, randomize, percent):
     name = df_row[0]
-    count = df_row[1]
+    num_list = df_row[1]
     names = []
-    for n in range(count):
-        names = names + [name + "_" + str(n)]
+    for n in range(len(num_list)):
+        names = names + [name + "---" + str(num_list[n])]
     cols_fuzzy = []
     cols_fuzzy = cols_fuzzy + [names]
     for g in range(2, len(df_row)):
         val = df_row[g]
-        new_val = _randomize_GE(val, count, randomize, percent)
+        new_val = _randomize_GE(val, len(num_list), randomize, percent)
         cols_fuzzy = cols_fuzzy + [new_val]
     df_fuzzy = pl.DataFrame(cols_fuzzy, schema=col_names)
     return df_fuzzy
@@ -97,10 +88,10 @@ def _determine_substitute_zeros(feature_df, zeros):
     
         
 
-def create_fuzzy(response_df, feature_df, id_col, randomize=True, percent=0.001, zeros=None, use_polars=False):
+def create_fuzzy(response_df, feature_df, id_col, dataset, randomize=True, percent=0.001, zeros=None, use_polars=False):
     feature_df = _determine_substitute_zeros(feature_df, zeros)
     original_cols =  feature_df.columns
-    count_df = _get_count_df(response_df, feature_df, id_col)
+    count_df = subset_by_study(response_df, feature_df, dataset, id_col)
     count_df = count_df.drop_nulls()
     #count_df = count_df.head(10) # testing only
     print("count_df", count_df)
@@ -150,8 +141,16 @@ def post_shuffle_data(df, strategy, seed=42):
     return df_copy
 
 
-
-
+def subset_by_study(response_df, feature_df, dataset, id_col_name):
+    #unhardcode source
+    small_response_df = response_df.filter(pl.col('source') == dataset)
+    small_response_split_df = small_response_df.with_columns(
+        pl.col(id_col_name).str.split_exact("---", 1).alias("name_parts")).unnest("name_parts").rename({"field_0": "id", "field_1": "num_list"})
+    count_df = small_response_split_df.group_by("id").agg(pl.col('num_list'))
+    count_df = count_df[["id", 'num_list']]
+    print("response_count:", count_df)
+    response_count_withfeature = count_df.join(feature_df, how='left', left_on="id", right_on=id_col_name)
+    return response_count_withfeature
 
 def main():
     parser = argparse.ArgumentParser()
@@ -165,6 +164,7 @@ def main():
     parser.add_argument('--randomize', default=False)
     parser.add_argument('--percent', default=0.01)
     parser.add_argument('--post_shuffle', default=False)
+    parser.add_argument('--dataset', default='gCSI')
 
     args = vars(parser.parse_args())
  
@@ -173,7 +173,7 @@ def main():
     response_df = pl.read_csv(args['y_data_file'], separator='\t')
     feature_df = pl.read_csv(args['feature_file'], separator='\t')
 
-    fuzzy_df = create_fuzzy(response_df=response_df, feature_df=feature_df, id_col=args['id_col_name'], randomize=args['randomize'], percent=float(args['percent']), zeros=args['zeros'])
+    fuzzy_df = create_fuzzy(response_df=response_df, feature_df=feature_df, id_col=args['id_col_name'], dataset=args['dataset'], randomize=args['randomize'], percent=float(args['percent']), zeros=args['zeros'])
     fuzzy_df.write_csv(output_dir / args['output_file'], separator='\t')
     print(f"File {args['output_file']} saved to {output_dir}")
     if args['post_shuffle'] or args['post_shuffle'] == 'True' or args['post_shuffle'] == 'true':
