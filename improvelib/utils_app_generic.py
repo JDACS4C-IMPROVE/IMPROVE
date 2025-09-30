@@ -32,13 +32,13 @@ def _determine_impute(df, subtype):
     # add check that it's only numerical
     if subtype == 'zero':
         impute_value = 0
-    if subtype == 'mean':
+    elif subtype == 'mean':
         impute_value = df.mean(axis=None)
-    if subtype == 'mean_col':
+    elif subtype == 'mean_col':
         impute_value = df.mean()
-    if subtype == 'median':
+    elif subtype == 'median':
         impute_value = df.median(axis=None)
-    if subtype == 'median_col':
+    elif subtype == 'median_col':
         impute_value = df.median()
     else:
         print(f"The specified imputation ({subtype}) is not implemented.")

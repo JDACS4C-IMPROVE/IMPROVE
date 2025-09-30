@@ -54,6 +54,8 @@ python workflows/utils/csa/csa_postproc.py --res_dir workflows/utils/csa/${MODEL
 
 * `outdir (optional)`: Directory to save the post-processing results, including metrics, summaries, and visualizations. If not specified, results will be saved in the current directory (`./`).
 
+* `split_type (optional)`: Type of splits, if using blind splits. If not specified, uses default (mixed-set) splits (denoted by 'split' in the split file name).
+
 ## Output Files
 
 This pipeline generates in the specified output directory (`outdir`):
@@ -75,3 +77,8 @@ This pipeline generates in the specified output directory (`outdir`):
 4.`<metric>_mean_csa_table.csv`: Files containing the mean of prediction performance scores for a specific metric across all studies.
 
 5.`<metric>_std_csa_table.csv`: Files containing the standard deviation of prediction performance scores for a specific metric across all studies.
+
+
+## Aggregating predictions from CSA results
+
+The script `csa_predictions.py` can be run in the same manner as above, and will save a parquet file with all y_true and y_pred from the CSA results.

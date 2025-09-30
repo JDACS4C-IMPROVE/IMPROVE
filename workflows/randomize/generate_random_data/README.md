@@ -90,3 +90,49 @@ This script will output the randomized data at the path specified by `--output_f
 
 
 
+# Generate 'fuzzy' data
+
+## Overview
+
+This repository contains the script to generate 'fuzzy' data, where each value is change within +/- a percentage of the original value.
+
+## Requirements
+
+* python 3.12.2
+* joblib 1.2.0
+* numpy 1.26.0
+* pandas 2.1.1
+* rdkit 2023.09.2
+* mordred 1.2.0
+* polars
+
+
+## Installation and Setup
+As above, but polars must be installed for generating fuzzy x data due to the size of the data generated. You can provide the percent, the strategy for dealing with zeros, and optionally also generate a shuffled dataset after fuzzying. This does one dataset at a time due to size issues when running models with this data.
+
+Input data:
+* benchmark data for your application (here we use Drug Response Prediction).
+* if creating random SMILES from file, you will need a reference file (we use `DrugSpaceX-10S.smi` which can be downloaded [here](https://drugspacex.simm.ac.cn/download/))
+
+## Parameter Configuration
+
+This script uses command line parameters as follows:
+
+* `generate_fuzzy_y_data.py`
+    * `--y_data_file`: File name of y_data (including path if not in this directory) (default: './response.tsv').
+    * `--output_dir`: Directory to save the fuzzy data (default: './fuzzy_files').
+    * `--output_file`: File name to save shuffled data (default: './response_fuzzy.tsv').
+    * `--id_col_names`: Name of id cols (default: '['improve_chem_id', 'improve_sample_id']').
+* `random_SMILES`
+    * `--y_data_file`: File name of y_data (including path if not in this directory) (default: './response.tsv').
+    * `--feature_file`: File name of feature data to be fuzzied (including path if not in this directory) (default: './fuzzy_files').
+    * `--output_dir`: Directory to save the fuzzy data (default: './fuzzy_files').
+    * `--output_file`: File name to save fuzzy data (default: 'fuzzy.tsv').
+    * `--output_file_post_shuffle`: File name to save shuffled fuzzy data (default: 'fuzzy_shuffle.tsv').
+    * `--id_col_name`: Name of id col for this feature file (default: 'improve_chem_id').  
+
+
+    * `--zeros`: Strategy for dealing with zeros (can be None, 'below_min', or 'bottom_10') (default: 'None').
+    * `--randomize`: True to generate a randomized file as well (default: 'False').
+    * `--percent`: Percent (as a decimal) to fuzzy within (default: 0.01).
+    * `--dataset`: Dataset to generate (default: 'gCSI').
