@@ -71,13 +71,13 @@ def random_scores(input_dir, output_dir, y_col_name, metric_type, data_file_pref
                     except Exception as e:
                         print(f"An unexpected error occurred: {e}")  
     
-    filename = data_file_prefix + "all_predictions.csv"
+    filename = data_file_prefix + "all_predictions.parquet"
     # Concat dfs and save
     if not dfs:
         print("No data found.")
     else:
         scores = pd.concat(dfs, axis=0)
-        scores.to_csv(output_dir / filename, index=False)
+        scores.to_parquet(output_dir / filename, index=False)
         del dfs
 
     missing_preds_filename = data_file_prefix + "missing_pred_files.txt"
